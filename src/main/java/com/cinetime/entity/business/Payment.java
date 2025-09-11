@@ -1,4 +1,4 @@
-package com.cinetime.entity.bussines;
+package com.cinetime.entity.business;
 
 import com.cinetime.entity.enums.PaymentStatus;
 import jakarta.persistence.*;
