@@ -1,4 +1,4 @@
-package com.cinetime.entity.bussines;
+package com.cinetime.entity.business;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

@@ -1,6 +1,6 @@
 package com.cinetime.entity.user;
 
-import com.cinetime.entity.bussines.Role;
+import com.cinetime.entity.business.Role;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;

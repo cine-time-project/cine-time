@@ -1,6 +1,6 @@
 package com.cinetime.entity.business;
 
-import com.cinetime.entity.MovieStatus;
+import com.cinetime.entity.enums.MovieStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
