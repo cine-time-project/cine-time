@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +26,7 @@ public class Country {
   @Column(nullable = false, length = 30, unique = true)
   private String name;
 
-  //TODO: City Entity'si ile bidirectional relation kurulacak.
+  @OneToMany(mappedBy = "country")
+  private List<City> cities;
 
 }
