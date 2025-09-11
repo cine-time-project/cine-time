@@ -1,4 +1,5 @@
 package com.cinetime.entity.business;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -33,4 +34,6 @@ public class City {
 
   @OneToMany(mappedBy = "city")
   private List<District> districts;
+
+  //TODO: Cinema Entity'si ile bir relation kurulacak mı?
 }
