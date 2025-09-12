@@ -1,14 +1,18 @@
 package com.cinetime.entity.business;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,8 +36,13 @@ public class City {
   @JoinColumn(name = "country_id")
   private Country country;
 
-  @OneToMany(mappedBy = "city")
-  private List<District> districts;
+  @OneToMany(
+      mappedBy = "city",
+      cascade = CascadeType.ALL, //All operation including REMOVE will be applied to the districts.
+      orphanRemoval = true
+  )
+  private Set<District> districts;
 
-  //TODO: Cinema Entity'si ile bir relation kurulacak mı?
+  @ManyToMany(mappedBy = "cities", fetch = FetchType.LAZY)
+  private Set<Cinema> cinemas = new HashSet<>();
 }

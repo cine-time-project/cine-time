@@ -1,12 +1,14 @@
 package com.cinetime.entity.business;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +28,10 @@ public class Country {
   @Column(nullable = false, length = 30, unique = true)
   private String name;
 
-  @OneToMany(mappedBy = "country")
-  private List<City> cities;
+  @OneToMany(
+      mappedBy = "country",
+      cascade = CascadeType.ALL, //All operation including REMOVE will be applied to the cities.
+      orphanRemoval = true)
+  private Set<City> cities = new HashSet<>();
 
 }
