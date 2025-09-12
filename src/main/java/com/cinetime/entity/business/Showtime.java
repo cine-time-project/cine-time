@@ -1,0 +1,82 @@
+package com.cinetime.entity.business;
+
+
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Builder;
+import org.hibernate.annotations.CascadeType;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Set;
+
+@Entity
+@Table(name = "showtimes", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"hall_id", "date", "start_time"})
+})
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Showtime {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotNull
+    @Column(nullable = false)
+    private LocalDate date;
+
+    @NotNull
+    @Column(name = "start_time", nullable = false)
+    private LocalTime startTime;
+
+    @NotNull
+    @Column(name = "end_time", nullable = false)
+    private LocalTime endTime;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    // Foreign Key Relationships - Görseldeki kırmızı notlara göre eklendi
+    @NotNull
+    @Column(name = "hall_id", nullable = false)
+    private Long hallId;  // Foreign Key to HALL
+
+    @NotNull
+    @Column(name = "movie_id", nullable = false)
+    private Long movieId; // Foreign Key to MOVIE
+
+    // Entity Relationships - JPA mapping için
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hall_id", insertable = false, updatable = false)
+    private Hall hall;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "movie_id", insertable = false, updatable = false)
+    private Movie movie;
+
+    @OneToMany(mappedBy = "showtime", cascade = CascadeType.ALL)
+    private Set<Ticket> tickets;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+}
