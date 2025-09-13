@@ -12,6 +12,7 @@ import lombok.Builder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
@@ -65,8 +66,14 @@ public class Showtime {
     @JoinColumn(name = "movie_id", insertable = false, updatable = false)
     private Movie movie;
 
-    @OneToMany(mappedBy = "showtime",cascade = CascadeType.ALL)
-    private Set<Ticket> tickets;
+    @OneToMany(
+            mappedBy = "showtime",
+            fetch = FetchType.LAZY,
+            cascade = { CascadeType.PERSIST, CascadeType.MERGE },
+            orphanRemoval = true
+    )
+    private Set<Ticket> tickets = new LinkedHashSet<>();
+
 
     @PrePersist
     protected void onCreate() {

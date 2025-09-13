@@ -50,10 +50,14 @@ public class Favorite {
             foreignKey = @ForeignKey(name = "fk_favorite_movie"))
     private Movie movie;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cinema_id", updatable = false,
-            foreignKey = @ForeignKey(name = "fk_favorite_cinema"))
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "cinema_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_favorite_cinema")
+    )
     private Cinema cinema;
+
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -73,8 +73,6 @@ public class User {
   private String resetPasswordCode;
 
 
-  @OneToMany(mappedBy = "user")
-  private List<Ticket> ticketList;
 
   @ManyToMany(fetch = FetchType.EAGER)
   @JoinTable(
