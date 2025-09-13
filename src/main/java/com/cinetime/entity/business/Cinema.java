@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import lombok.*;
 
@@ -49,16 +50,36 @@ public class Cinema {
     @OneToMany(mappedBy = "cinema")
     private List<Hall> hall;
 
-    @OneToMany(mappedBy = "cinema")
-    private List<Favorite> favorites;
+  @OneToMany(
+          mappedBy = "cinema",
+          fetch = FetchType.LAZY,
+          cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE },
+          orphanRemoval = true
+  )
+  private Set<Favorite> favorites = new LinkedHashSet<>();
 
-    @ManyToMany
-    @JoinTable(name="movie_cinema",
-    joinColumns = @JoinColumn(name = "cinema_id"),
-    inverseJoinColumns = @JoinColumn(name = "movie_id"))
-    private List<Movie>movies;
 
-    @NotNull
+
+  @ManyToMany(fetch = FetchType.LAZY)
+  @JoinTable(
+          name = "movie_cinema",
+          joinColumns = @JoinColumn(
+                  name = "cinema_id",
+                  foreignKey = @ForeignKey(name = "fk_movie_cinema_cinema")
+          ),
+          inverseJoinColumns = @JoinColumn(
+                  name = "movie_id",
+                  foreignKey = @ForeignKey(name = "fk_movie_cinema_movie")
+          ),
+          uniqueConstraints = @UniqueConstraint(
+                  name = "uk_movie_cinema",
+                  columnNames = {"cinema_id", "movie_id"}
+          )
+  )
+  private Set<Movie> movies = new LinkedHashSet<>();
+
+
+  @NotNull
     @Column(name = "createdAt", nullable = false)
     private LocalDateTime createdAt;
 

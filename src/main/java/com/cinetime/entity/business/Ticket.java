@@ -63,20 +63,33 @@ public class Ticket {
     // -------------------- RELATIONS) --------------------
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "showtimeId", nullable = false,
-            foreignKey = @ForeignKey(name = "fk_ticket_showtime"))
+    @JoinColumn(
+            name = "showtime_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_ticket_showtime")
+    )
     private Showtime showtime;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId",
-            foreignKey = @ForeignKey(name = "fk_ticket_user"))
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "user_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_ticket_user")
+    )
     private User user;
 
 
-    @OneToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "payment_id", unique = true,
-            foreignKey = @ForeignKey(name = "fk_ticket_payment"))
+    @OneToOne(fetch = FetchType.LAZY, optional = true,
+            cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE },
+            orphanRemoval = true)
+    @JoinColumn(
+            name = "payment_id",
+            unique = true,
+            nullable = true,
+            foreignKey = @ForeignKey(name = "fk_ticket_payment")
+    )
     private Payment payment;
+
 
 
     // -------------------- LIFECYCLE --------------------

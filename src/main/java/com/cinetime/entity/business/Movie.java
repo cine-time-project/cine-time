@@ -10,9 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Data
@@ -91,7 +89,8 @@ public class Movie {
     //Enum type ordinal oldugu zaman enum class ina ilk yazdigimiz degeri 0 kabul ederek deger atamasi yapiyor
     //Default status coming 0 oldugu icin enum daki 0 in karsiligi coming soon u verdik.
 
-    @ManyToMany(mappedBy = "movies")
-    private List<Cinema> cinemas;
+    @ManyToMany(mappedBy = "movies", fetch = FetchType.LAZY)
+    private Set<Cinema> cinemas = new LinkedHashSet<>();
+
 
 }
