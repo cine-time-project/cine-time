@@ -1,6 +1,7 @@
 package com.cinetime.entity.business;
 
 import com.cinetime.entity.enums.TicketStatus;
+import com.cinetime.entity.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
