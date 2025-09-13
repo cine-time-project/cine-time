@@ -3,9 +3,8 @@ package com.cinetime.entity.business;
 
 import com.cinetime.entity.user.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -15,41 +14,45 @@ import java.time.LocalDateTime;
 @Table(
         name = "favorite",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"user_id", "movie_id"},  name = "uk_favorite_user_movie"),
-                @UniqueConstraint(columnNames = {"user_id", "cinema_id"}, name = "uk_favorite_user_cinema")
+                @UniqueConstraint(name = "uk_favorite_user_movie",  columnNames = {"user_id", "movie_id"}),
+                @UniqueConstraint(name = "uk_favorite_user_cinema", columnNames = {"user_id", "cinema_id"})
+        },
+        indexes = {
+                @Index(name = "ix_favorite_user_id",   columnList = "user_id"),
+                @Index(name = "ix_favorite_movie_id",  columnList = "movie_id"),
+                @Index(name = "ix_favorite_cinema_id", columnList = "cinema_id")
         }
 )
-@Data
+// DB-level XOR: exactly one of movie/cinema must be set (mirrors entity guard)
+@Check(constraints = "(movie_id IS NOT NULL AND cinema_id IS NULL) OR (movie_id IS NULL AND cinema_id IS NOT NULL)")
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"user","movie","cinema"})
 public class Favorite {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
-    // FK alanları (insert/update bunlar üzerinden)
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
-
-    // Bir kayıtta sadece biri dolu olacak (DB CHECK ile garanti)
-    @Column(name = "movie_id")
-    private Long movieId;
-
-    @Column(name = "cinema_id")
-    private Long cinemaId;
-
-    // İlişkisel erişimler (opsiyonel; sorgu/DTO için faydalı)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    // Owner (immutable after insert)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false, updatable = false,
+            foreignKey = @ForeignKey(name = "fk_favorite_user"))
     private User user;
 
+    // Exactly one of movie or cinema must be set
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "movie_id", insertable = false, updatable = false)
+    @JoinColumn(name = "movie_id", updatable = false,
+            foreignKey = @ForeignKey(name = "fk_favorite_movie"))
     private Movie movie;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cinema_id", insertable = false, updatable = false)
+    @JoinColumn(name = "cinema_id", updatable = false,
+            foreignKey = @ForeignKey(name = "fk_favorite_cinema"))
     private Cinema cinema;
 
     @CreationTimestamp
@@ -60,10 +63,13 @@ public class Favorite {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Kolay kullanım için ek ctor
-    public Favorite(Long userId, Long movieId, Long cinemaId) {
-        this.userId = userId;
-        this.movieId = movieId;
-        this.cinemaId = cinemaId;
+    // App-level XOR (fail-fast before hitting DB)
+    @PrePersist @PreUpdate
+    private void validateExactlyOneTarget() {
+        boolean hasMovie = movie != null;
+        boolean hasCinema = cinema != null;
+        if (hasMovie == hasCinema) {
+            throw new IllegalStateException("Exactly one of 'movie' or 'cinema' must be set for Favorite.");
+        }
     }
 }
