@@ -35,7 +35,7 @@ public class Payment {
     private LocalDateTime updatedAt;
 
     // -------------------- RELATIONS --------------------
-    @OneToOne(mappedBy = "payment", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "payment")
     private Ticket ticket;
 
     // -------------------- LIFECYCLE --------------------

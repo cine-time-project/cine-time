@@ -73,7 +73,9 @@ public class Ticket {
     private User user;
 
 
-    @OneToOne(mappedBy = "ticket")
+    @OneToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "payment_id", unique = true,
+            foreignKey = @ForeignKey(name = "fk_ticket_payment"))
     private Payment payment;
 
 
