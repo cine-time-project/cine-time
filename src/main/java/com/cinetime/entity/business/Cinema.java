@@ -13,10 +13,7 @@ import java.util.List;
 
 @Entity
 @Table(
-    name = "cinemas",
-    indexes = {
-        @Index(name = "idx_cinema_city", columnList = "cityId")
-    }
+    name = "cinemas"
 )
 @Getter
 @Setter

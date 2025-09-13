@@ -18,12 +18,6 @@ import java.time.LocalDateTime;
                         name = "uk_tickets_showtime_seat",
                         columnNames = {"showtimeId", "seatLetter", "seatNumber"}
                 )
-        },
-        indexes = {
-                @Index(name = "idx_tickets_showtime", columnList = "showtimeId"),
-                @Index(name = "idx_tickets_user",    columnList = "userId"),
-                @Index(name = "idx_tickets_payment", columnList = "paymentId"),
-                @Index(name = "idx_tickets_status",  columnList = "status")
         }
 )
 @Getter
