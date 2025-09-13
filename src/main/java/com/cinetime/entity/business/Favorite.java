@@ -1,6 +1,7 @@
 package com.cinetime.entity.business;
 
 
+import com.cinetime.entity.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

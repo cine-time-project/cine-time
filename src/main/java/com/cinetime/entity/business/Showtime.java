@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Builder;
-import org.hibernate.annotations.CascadeType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -66,7 +65,7 @@ public class Showtime {
     @JoinColumn(name = "movie_id", insertable = false, updatable = false)
     private Movie movie;
 
-    @OneToMany(mappedBy = "showtime", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "showtime",cascade = CascadeType.ALL)
     private Set<Ticket> tickets;
 
     @PrePersist

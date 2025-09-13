@@ -1,6 +1,7 @@
 package com.cinetime.entity.user;
 
 import com.cinetime.entity.business.Role;
+import com.cinetime.entity.business.Ticket;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -8,6 +9,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -69,7 +71,8 @@ public class User {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
-
+    @OneToMany(mappedBy = "user")
+    private List<Ticket> ticketList;
     
 }
 

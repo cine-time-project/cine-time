@@ -91,5 +91,7 @@ public class Movie {
     //Enum type ordinal oldugu zaman enum class ina ilk yazdigimiz degeri 0 kabul ederek deger atamasi yapiyor
     //Default status coming 0 oldugu icin enum daki 0 in karsiligi coming soon u verdik.
 
+    @ManyToMany(mappedBy = "movies")
+    private List<Cinema> cinemas;
 
 }

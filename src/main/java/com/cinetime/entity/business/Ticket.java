@@ -1,6 +1,7 @@
 package com.cinetime.entity.business;
 
 import com.cinetime.entity.enums.TicketStatus;
+import com.cinetime.entity.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -71,10 +72,10 @@ public class Ticket {
             foreignKey = @ForeignKey(name = "fk_ticket_user"))
     private User user;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "paymentId", unique = true,
-            foreignKey = @ForeignKey(name = "fk_ticket_payment"))
+
+    @OneToOne(mappedBy = "ticket")
     private Payment payment;
+
 
     // -------------------- LIFECYCLE --------------------
     @PrePersist

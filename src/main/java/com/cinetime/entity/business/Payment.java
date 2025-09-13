@@ -34,6 +34,12 @@ public class Payment {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ticketId", unique = true,
+            foreignKey = @ForeignKey(name = "fk_ticket_payment"))
+    private Ticket ticket;
+
+
     // Lifecycle Callbacks
     @PrePersist
     protected void onCreate() {
@@ -44,6 +50,7 @@ public class Payment {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+
 
 
     }

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(
@@ -35,6 +36,18 @@ public class Cinema {
     @JoinColumn(name = "cityId", nullable = false,
             foreignKey = @ForeignKey(name = "fk_cinema_city"))
     private City city;
+
+    @OneToMany(mappedBy = "cinema")
+    private List<Hall> hall;
+
+    @OneToMany(mappedBy = "cinema")
+    private List<Favorite> favorites;
+
+    @ManyToMany
+    @JoinTable(name="movie_cinema",
+    joinColumns = @JoinColumn(name = "cinema_id"),
+    inverseJoinColumns = @JoinColumn(name = "movie_id"))
+    private List<Movie>movies;
 
     @NotNull
     @Column(name = "createdAt", nullable = false)
