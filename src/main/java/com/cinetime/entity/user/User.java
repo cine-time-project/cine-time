@@ -13,10 +13,11 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import java.util.List;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-
 @Entity
 @Getter
 @Setter
@@ -74,6 +75,11 @@ public class User {
     private String resetPasswordCode;
 
 
+
+    @OneToMany(mappedBy = "user")
+    private List<Ticket> ticketList;
+    
+}
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "userrole",
@@ -91,6 +97,7 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Favorite> favorites = new HashSet<>();
+
 
 
     // --- Life Cycle ---

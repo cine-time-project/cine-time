@@ -8,6 +8,7 @@ import java.util.Set;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(
@@ -45,9 +46,21 @@ public class Cinema {
   )
   private Set<City> cities = new HashSet<>();
 
-  @NotNull
-  @Column(name = "createdAt", nullable = false)
-  private LocalDateTime createdAt;
+    @OneToMany(mappedBy = "cinema")
+    private List<Hall> hall;
+
+    @OneToMany(mappedBy = "cinema")
+    private List<Favorite> favorites;
+
+    @ManyToMany
+    @JoinTable(name="movie_cinema",
+    joinColumns = @JoinColumn(name = "cinema_id"),
+    inverseJoinColumns = @JoinColumn(name = "movie_id"))
+    private List<Movie>movies;
+
+    @NotNull
+    @Column(name = "createdAt", nullable = false)
+    private LocalDateTime createdAt;
 
   @NotNull
   @Column(name = "updatedAt", nullable = false)

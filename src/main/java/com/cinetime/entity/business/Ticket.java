@@ -72,10 +72,12 @@ public class Ticket {
             foreignKey = @ForeignKey(name = "fk_ticket_user"))
     private User user;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "paymentId", unique = true,
+
+    @OneToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "payment_id", unique = true,
             foreignKey = @ForeignKey(name = "fk_ticket_payment"))
     private Payment payment;
+
 
     // -------------------- LIFECYCLE --------------------
     @PrePersist
