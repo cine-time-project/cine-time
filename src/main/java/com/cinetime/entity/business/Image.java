@@ -1,10 +1,7 @@
 package com.cinetime.entity.business;
 
-
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -14,42 +11,42 @@ import java.time.LocalDateTime;
 @Table(
         name = "image",
         indexes = {
-                @Index(name = "ix_image_movie_id", columnList = "movie_id")
+                @Index(name = "ix_image_movie_id", columnList = "movie_id"),
+                @Index(name = "ix_image_poster",   columnList = "is_poster")
         }
 )
-@Data
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = "movie")
 public class Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
-    // Dosyanın saklandığı path veya URL
-    @Column(name = "file_path", nullable = false, length = 512)
-    private String filePath;
-
-    @Column(name = "name", nullable = false, length = 150)
+    // File name or path (avoid BLOB for scalability)
+    @Column(nullable = false, length = 255)
     private String name;
 
-    // MIME type: image/png, image/jpeg...
-    @Column(name = "type", length = 100)
+    // MIME type (e.g., image/png)
+    @Column(length = 100)
     private String type;
 
-    // Poster flag (aynı film için sadece 1 true olabilir)
+    // True = poster (DB enforces one poster per movie via partial UNIQUE index)
     @Column(name = "is_poster", nullable = false)
     private boolean isPoster = false;
 
-    // FK alanı
-    @Column(name = "movie_id", nullable = false)
-    private Long movieId;
-
-    // İlişkisel erişim (opsiyonel)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "movie_id", insertable = false, updatable = false)
+    // Owning movie (required)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "movie_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_image_movie"))
     private Movie movie;
 
+    // Auto-managed timestamps
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
