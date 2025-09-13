@@ -1,6 +1,7 @@
 package com.cinetime.entity.business;
 
 import com.cinetime.entity.enums.PaymentStatus;
+import com.cinetime.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -37,6 +38,10 @@ public class Payment {
     // -------------------- RELATIONS --------------------
     @OneToOne(mappedBy = "payment", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Ticket ticket;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     // -------------------- LIFECYCLE --------------------
     @PrePersist
