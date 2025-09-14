@@ -34,6 +34,7 @@ build/
 .vscode/
 
 
-# Logs
-/log/          # sadece kökteki 'log' klasörünü yok say
-*.log          # tüm .log dosyalarını yok say (opsiyonel ama önerilir)
+log/
+logs/
+*.log
+
