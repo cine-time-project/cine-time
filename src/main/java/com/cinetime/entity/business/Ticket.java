@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uk_tickets_showtime_seat",
-                        columnNames = {"showtime_id", "seatLetter", "seatNumber"}
+                        columnNames = {"showtime_id", "seatLetter", "seatNumber"} //FK
                 )
         }
 )
