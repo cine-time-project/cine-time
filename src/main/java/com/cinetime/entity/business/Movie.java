@@ -92,5 +92,10 @@ public class Movie {
     @ManyToMany(mappedBy = "movies", fetch = FetchType.LAZY)
     private Set<Cinema> cinemas = new LinkedHashSet<>();
 
-
+@OneToMany(mappedBy = "movie",
+cascade = CascadeType.ALL,
+orphanRemoval = true,
+fetch = FetchType.LAZY)
+    private Set<Image> images= new LinkedHashSet<>();
 }
+
