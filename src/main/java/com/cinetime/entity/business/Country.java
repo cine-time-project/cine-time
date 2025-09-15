@@ -1,5 +1,6 @@
 package com.cinetime.entity.business;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -32,6 +33,7 @@ public class Country {
   @Column(nullable = false, length = 30, unique = true)
   private String name;
 
+  @JsonIgnore
   @OneToMany(
       mappedBy = "country",
       cascade = CascadeType.ALL, //All operation including REMOVE will be applied to the cities.
