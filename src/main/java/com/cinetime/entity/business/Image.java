@@ -1,5 +1,6 @@
 package com.cinetime.entity.business;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -49,6 +50,7 @@ public class Image {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "movie_id", nullable = false,
             foreignKey = @ForeignKey(name = "fk_image_movie"))
+    @JsonIgnore
     private Movie movie;
 
     // Creation timestamp (auto-managed)
