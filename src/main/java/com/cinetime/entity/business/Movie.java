@@ -81,8 +81,8 @@ public class Movie {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "varchar(32) default 'COMING_SOON'")
-    private MovieStatus status = MovieStatus.COMING_SOON;
+    @Column(nullable = false)
+    private MovieStatus status;
 
     //Burayi chatGPT den yardim alarak yaptim. Eger status de default olarak deger vermek istiyorsak enum kullanmamiz lazimmis
     //MovieStatus adinda bi enum olusturup sirasiyla comingsoon, in theaters, presela degerlerini atadim
