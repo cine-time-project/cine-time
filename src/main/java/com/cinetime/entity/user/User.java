@@ -40,6 +40,7 @@ public class User {
   private String surname;
 
   @NotNull
+  @JsonIgnore
   private String password;
 
   @Email
@@ -71,8 +72,8 @@ public class User {
   private LocalDateTime updatedAt;
 
   @Column(nullable = true)
+  @JsonIgnore
   private String resetPasswordCode;
-
 
 
   @ManyToMany(fetch = FetchType.EAGER)
@@ -87,9 +88,11 @@ public class User {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Ticket> tickets = new HashSet<>();
 
+  @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Payment> payments = new HashSet<>();
 
+  @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Favorite> favorites = new HashSet<>();
 
