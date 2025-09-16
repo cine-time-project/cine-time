@@ -15,12 +15,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
-public class JwtUtils {
+@Service
+public class JwtService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(JwtUtils.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(JwtService.class);
 
   @Value("${cinetime.app.jwtExpirationMs}")
   private long jwtExpirations;
