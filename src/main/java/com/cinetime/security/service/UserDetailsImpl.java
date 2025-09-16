@@ -18,17 +18,19 @@ public class UserDetailsImpl implements UserDetails {
 
   private Long id;
 
-  private String phoneNumber;
+  //username represents any unique field that User can use to login.
+  //In this practice, username can be an email or a phoneNumber
+  private String username;
 
   @JsonIgnore
   private String password;
 
   private List<GrantedAuthority> authorities;
 
-  public UserDetailsImpl(Long id, String phoneNumber, String password,
+  public UserDetailsImpl(Long id, String username, String password,
       Set<Role> roles) {
     this.id = id;
-    this.phoneNumber = phoneNumber;
+    this.username = username;
     this.password = password;
     List<GrantedAuthority> authorities = new ArrayList<>();
     //Converting Roles with their String values and adding them into authorities
@@ -50,7 +52,7 @@ public class UserDetailsImpl implements UserDetails {
 
   @Override
   public String getUsername() {
-    return phoneNumber;
+    return username;
   }
 
   @Override

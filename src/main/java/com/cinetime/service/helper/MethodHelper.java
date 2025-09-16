@@ -13,13 +13,9 @@ public class MethodHelper {
 
   private final UserRepository userRepository;
 
-  public User loadByPhoneNumber(String phoneNumber) {
-    User user = userRepository.findByPhoneNumber(phoneNumber);
-    if (user == null) {
-      throw new ResourceNotFoundException(
-          String.format(ErrorMessages.NOT_FOUND_USER_MESSAGE_PHONE_NUMBER, phoneNumber));
-    }
-    return user;
+  public User loadByLoginProperty(String propValue) {
+    return userRepository.findByLoginProperty(propValue)
+        .orElseThrow(()-> new ResourceNotFoundException(String.format(ErrorMessages.NOT_FOUND_USER_MESSAGE_UNIQUE_FIELD, propValue)));
   }
 
 }

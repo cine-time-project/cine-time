@@ -31,16 +31,16 @@ public class JwtService {
   public String generateToken(Authentication authentication) {
     UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
     //userDetails.getUsername() returns the phoneNumber since we already override it to work with phoneNumber.
-    return buildTokenFromPhoneNumber(userDetails.getUsername());
+    return buildTokenFromLoginProp(userDetails.getUsername());
   }
 
   private Key key() {
     return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
   }
 
-  private String buildTokenFromPhoneNumber(String phoneNumber) {
+  private String buildTokenFromLoginProp(String propValue) {
     return Jwts.builder()
-        .setSubject(phoneNumber)
+        .setSubject(propValue)
         .setIssuedAt(new Date())
         .setExpiration(new Date(new Date().getTime()+jwtExpirations))
         //previous way is deprecated. This is the new approach. We create a Key by processing the JwtSecret, then we use it to sign.

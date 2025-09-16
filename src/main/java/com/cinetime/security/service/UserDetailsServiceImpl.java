@@ -17,11 +17,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
   @Override
   //Since this method is provided by UserDetailsService, we cant change its name,
   // but it works fine with other properties such as phoneNumber
-  public UserDetails loadUserByUsername(String phoneNumber) throws UsernameNotFoundException {
-    User user = methodHelper.loadByPhoneNumber(phoneNumber);
+  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    User user = methodHelper.loadByUniqueField(username);
+    String usernameToBeAssigned =
+        (user.getPhoneNumber().equals(username)) ? user.getPhoneNumber() : user.getEmail();
     return new UserDetailsImpl(
         user.getId(),
-        user.getPhoneNumber(),
+        usernameToBeAssigned,
         user.getPassword(),
         user.getRoles());
   }
