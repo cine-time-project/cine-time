@@ -11,5 +11,6 @@ public class UserUpdateRequest {
     private String phoneNumber;
     private LocalDate birthDate;
     private String gender;
+
 }
 
