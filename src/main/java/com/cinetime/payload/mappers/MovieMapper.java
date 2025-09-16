@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Data
 public class MovieMapper {
 
-    public MovieResponse mapMovieToMovieResponse(Movie movie){
+    public MovieResponse mapMovieToMovieResponse(Movie movie) {
         return MovieResponse.builder()
                 .id(movie.getId())
                 .title(movie.getTitle())
@@ -26,11 +26,10 @@ public class MovieMapper {
                 .status(movie.getStatus())
                 .createdAt(movie.getCreatedAt())
                 .updatedAt(movie.getUpdatedAt())
-                .poster(movie.getPoster())
                 .build();
     }
 
-    public Page<MovieResponse> mapToResponsePage(Page<Movie> movies){
+    public Page<MovieResponse> mapToResponsePage(Page<Movie> movies) {
         return movies.map(this::mapMovieToMovieResponse);
     }
 
