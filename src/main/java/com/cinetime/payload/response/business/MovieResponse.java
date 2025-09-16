@@ -31,7 +31,6 @@ public class MovieResponse {
     private MovieStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Image poster;
 
 
 }

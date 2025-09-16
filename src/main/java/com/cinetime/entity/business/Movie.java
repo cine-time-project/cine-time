@@ -82,19 +82,12 @@ public class Movie {
     @NotNull
     private List<String> genre;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "poster_id")
-    private Image poster;
 
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "varchar(32) default 'COMING_SOON'")
     private MovieStatus status = MovieStatus.COMING_SOON;
 
-    //Burayi chatGPT den yardim alarak yaptim. Eger status de default olarak deger vermek istiyorsak enum kullanmamiz lazimmis
-    //MovieStatus adinda bi enum olusturup sirasiyla comingsoon, in theaters, presela degerlerini atadim
-    //Enum type ordinal oldugu zaman enum class ina ilk yazdigimiz degeri 0 kabul ederek deger atamasi yapiyor
-    //Default status coming 0 oldugu icin enum daki 0 in karsiligi coming soon u verdik.
 
     @JsonIgnore
     @ManyToMany(mappedBy = "movies", fetch = FetchType.LAZY)
@@ -123,7 +116,6 @@ public class Movie {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
 
 
 }
