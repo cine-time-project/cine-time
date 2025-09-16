@@ -1,5 +1,6 @@
 package com.cinetime.entity.business;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -44,10 +45,12 @@ public class Cinema {
   )
   private Set<City> cities = new HashSet<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "cinema")
     private List<Hall> hall;
 
-  @OneToMany(
+    @JsonIgnore
+    @OneToMany(
           mappedBy = "cinema",
           fetch = FetchType.LAZY,
           cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE },

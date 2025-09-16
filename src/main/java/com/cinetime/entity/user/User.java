@@ -6,6 +6,7 @@ import com.cinetime.entity.business.Role;
 import com.cinetime.entity.business.Ticket;
 import com.cinetime.entity.enums.Gender;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -82,7 +83,7 @@ public class User {
   )
   private Set<Role> roles = new HashSet<>();
 
-
+  @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Ticket> tickets = new HashSet<>();
 

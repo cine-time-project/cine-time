@@ -2,6 +2,7 @@ package com.cinetime.entity.business;
 
 import com.cinetime.entity.enums.PaymentStatus;
 import com.cinetime.entity.user.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,6 +37,7 @@ public class Payment {
     private LocalDateTime updatedAt;
 
     // -------------------- RELATIONS --------------------
+    @JsonIgnore
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "payment")
     private Ticket ticket;
 

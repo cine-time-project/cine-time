@@ -2,6 +2,7 @@ package com.cinetime.entity.business;
 
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -66,6 +67,7 @@ public class Showtime {
     @JoinColumn(name = "movie_id", insertable = false, updatable = false)
     private Movie movie;
 
+    @JsonIgnore
     @OneToMany(
             mappedBy = "showtime",
             fetch = FetchType.LAZY,
