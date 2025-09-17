@@ -40,7 +40,7 @@ public class MovieService {
     }
 
     return ResponseMessage.<Page<MovieResponse>>builder()
-        .message("Movies have been found successfully")
+        .message(SuccessMessages.MOVIES_FOUND)
         .httpStatus(HttpStatus.OK)
         .returnBody(movieMapper.mapToResponsePage(movies))
         .build();
@@ -48,16 +48,17 @@ public class MovieService {
   }
 
   //Method to find a Movie by Id. If it doesn't exists, throws exception
-  private Movie findMovieById(Long id){
-    return movieRepository.findById(id).orElseThrow(()->new ResourceNotFoundException(String.format(
-        ErrorMessages.NOT_FOUND_MOVIE_BY_ID, id)));
+  private Movie findMovieById(Long id) {
+    return movieRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException(String.format(
+            ErrorMessages.NOT_FOUND_MOVIE_BY_ID, id)));
   }
 
   public ResponseMessage<MovieResponse> getMovieById(Long id) {
     Movie movie = findMovieById(id);
     return ResponseMessage.<MovieResponse>builder()
         .httpStatus(HttpStatus.OK)
-        .message(SuccessMessages.MOVIE_FOUND)
+        .message(String.format(SuccessMessages.MOVIE_FOUND_BY_ID, id))
         .returnBody(movieMapper.mapMovieToMovieResponse(movie))
         .build();
   }
