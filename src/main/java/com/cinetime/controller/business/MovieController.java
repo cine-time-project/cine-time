@@ -45,11 +45,23 @@ public class MovieController {
 
   }
 
+  //M02
+  @Operation(
+      summary = "Get Movie By Id {M02}",
+      description = "Returns the details of a movie by its ID. If the movie does not exist, a 404 error is returned."
+  )
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Successfully retrieved the movie"),
+      @ApiResponse(responseCode = "404", description = "Movie not found with the given ID"),
+      @ApiResponse(responseCode = "500", description = "Internal server error")
+  })
   @GetMapping("/{id}")
   @Transactional(readOnly = true)
   public ResponseMessage<MovieResponse> getMovie(
       @PathVariable Long id){
     return movieService.getMovieById(id);
   }
+
+
 
 }
