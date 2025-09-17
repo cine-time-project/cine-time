@@ -57,11 +57,14 @@ class MovieServiceTest {
     when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(pageable);
 
     Page<Movie> moviePage = new PageImpl<>(Arrays.asList(movie));
-    when(movieRepository.findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase("inc", "inc", pageable))
+    when(movieRepository.findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase("inc", "inc",
+        pageable))
         .thenReturn(moviePage);
-    when(movieMapper.mapToResponsePage(moviePage)).thenReturn(new PageImpl<>(Arrays.asList(movieResponse)));
+    when(movieMapper.mapToResponsePage(moviePage)).thenReturn(
+        new PageImpl<>(Arrays.asList(movieResponse)));
 
-    ResponseMessage<Page<MovieResponse>> response = movieService.searchMovies("inc", 0, 10, "title", "asc");
+    ResponseMessage<Page<MovieResponse>> response = movieService.searchMovies("inc", 0, 10, "title",
+        "asc");
 
     assertThat(response.getHttpStatus()).isEqualTo(HttpStatus.OK);
     assertThat(response.getReturnBody().getContent()).hasSize(1);
@@ -78,9 +81,11 @@ class MovieServiceTest {
 
     Page<Movie> moviePage = new PageImpl<>(Arrays.asList(movie));
     when(movieRepository.findAll(pageable)).thenReturn(moviePage);
-    when(movieMapper.mapToResponsePage(moviePage)).thenReturn(new PageImpl<>(Arrays.asList(movieResponse)));
+    when(movieMapper.mapToResponsePage(moviePage)).thenReturn(
+        new PageImpl<>(Arrays.asList(movieResponse)));
 
-    ResponseMessage<Page<MovieResponse>> response = movieService.searchMovies(null, 0, 10, "title", "asc");
+    ResponseMessage<Page<MovieResponse>> response = movieService.searchMovies(null, 0, 10, "title",
+        "asc");
 
     assertThat(response.getHttpStatus()).isEqualTo(HttpStatus.OK);
     assertThat(response.getReturnBody().getContent()).hasSize(1);

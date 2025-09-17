@@ -47,7 +47,7 @@ public class MovieService {
 
   }
 
-  //Method to find a Movie by Id. If it doesn't exists, throws exception
+  //Method to find a Movie by id. If it doesn't exist, throws exception
   private Movie findMovieById(Long id) {
     return movieRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException(String.format(

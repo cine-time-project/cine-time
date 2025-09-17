@@ -58,10 +58,9 @@ public class MovieController {
   @GetMapping("/{id}")
   @Transactional(readOnly = true)
   public ResponseMessage<MovieResponse> getMovie(
-      @PathVariable Long id){
+      @PathVariable Long id) {
     return movieService.getMovieById(id);
   }
-
 
 
 }
