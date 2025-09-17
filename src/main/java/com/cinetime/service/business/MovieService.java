@@ -1,0 +1,44 @@
+package com.cinetime.service.business;
+
+import com.cinetime.entity.business.Movie;
+import com.cinetime.payload.mappers.MovieMapper;
+import com.cinetime.payload.response.business.MovieResponse;
+import com.cinetime.payload.response.business.ResponseMessage;
+import com.cinetime.repository.business.MovieRepository;
+import com.cinetime.service.helper.PageableHelper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class MovieService {
+
+    private final MovieRepository movieRepository;
+    private final PageableHelper pageableHelper;
+    private final MovieMapper movieMapper;
+
+
+    //M01
+    public ResponseMessage<Page<MovieResponse>> searchMovies(String q, int page, int size, String sort, String type) {
+
+        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
+
+        Page<Movie> movies;
+        if (q != null && !q.trim().isEmpty()) {
+            String keyword = q.trim();
+            movies = movieRepository.findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(keyword, keyword, pageable);
+        } else {
+            movies = movieRepository.findAll(pageable);
+        }
+
+        return ResponseMessage.<Page<MovieResponse>>builder()
+                .message("Movies have been found successfully")
+                .httpStatus(HttpStatus.OK)
+                .returnBody(movieMapper.mapToResponsePage(movies))
+                .build();
+
+    }
+}

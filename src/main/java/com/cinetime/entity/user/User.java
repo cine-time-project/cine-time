@@ -6,6 +6,7 @@ import com.cinetime.entity.business.Role;
 import com.cinetime.entity.business.Ticket;
 import com.cinetime.entity.enums.Gender;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -40,6 +41,7 @@ public class User {
   private String surname;
 
   @NotNull
+  @JsonIgnore
   private String password;
 
   @Email
@@ -71,8 +73,8 @@ public class User {
   private LocalDateTime updatedAt;
 
   @Column(nullable = true)
+  @JsonIgnore
   private String resetPasswordCode;
-
 
 
   @ManyToMany(fetch = FetchType.EAGER)
@@ -83,13 +85,15 @@ public class User {
   )
   private Set<Role> roles = new HashSet<>();
 
-
+  @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Ticket> tickets = new HashSet<>();
 
+  @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Payment> payments = new HashSet<>();
 
+  @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Favorite> favorites = new HashSet<>();
 
