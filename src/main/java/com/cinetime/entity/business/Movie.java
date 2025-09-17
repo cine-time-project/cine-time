@@ -83,10 +83,15 @@ public class Movie {
     private List<String> genre;
 
 
-    @NotNull
+    /*@NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "varchar(32) default 'COMING_SOON'")
-    private MovieStatus status = MovieStatus.COMING_SOON;
+    private MovieStatus status;
+   // private MovieStatus status = MovieStatus.COMING_SOON;*/
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 32, nullable = false)   // ← BURADA columnDefinition KULLANMAYIN
+    private MovieStatus status;
 
 
     @JsonIgnore
