@@ -88,7 +88,9 @@ public class SecurityConfig {
       "/css/**",
       "/js/**",
       "/contactMessages/save",
-      "/auth/login"
+      "/auth/login",
+          "/api/cinemas",
+          "/api/cinemas/**"
   };
 
 }
