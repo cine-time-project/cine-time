@@ -1,5 +1,6 @@
 package com.cinetime.controller.user;
 
+
 import com.cinetime.controller.user.payload.request.user.UserUpdateRequest;
 import com.cinetime.controller.user.payload.response.user.UserResponse;
 import com.cinetime.service.user.UserService;
@@ -26,9 +27,4 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 }
-
-
-
-
-
 

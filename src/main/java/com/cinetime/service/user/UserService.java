@@ -1,5 +1,6 @@
 package com.cinetime.service.user;
 
+
 import com.cinetime.controller.user.payload.mappers.UserMapper;
 import com.cinetime.controller.user.payload.messages.ErrorMessages;
 import com.cinetime.controller.user.payload.messages.SuccessMessages;
@@ -8,6 +9,8 @@ import com.cinetime.controller.user.payload.response.user.UserResponse;
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.ConflictException;
 import com.cinetime.exception.ResourceNotFoundException;
+
+
 import com.cinetime.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
 
     private final UserRepository userRepository;
 
