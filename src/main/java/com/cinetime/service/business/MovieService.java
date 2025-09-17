@@ -2,6 +2,9 @@ package com.cinetime.service.business;
 
 import com.cinetime.entity.business.Movie;
 import com.cinetime.payload.mappers.MovieMapper;
+import com.cinetime.payload.messages.ErrorMessages;
+import com.cinetime.payload.messages.SuccessMessages;
+import com.cinetime.payload.response.business.CinemaMovieResponse;
 import com.cinetime.payload.response.business.MovieResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.repository.business.MovieRepository;
@@ -25,7 +28,6 @@ public class MovieService {
     public ResponseMessage<Page<MovieResponse>> searchMovies(String q, int page, int size, String sort, String type) {
 
         Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
-
         Page<Movie> movies;
         if (q != null && !q.trim().isEmpty()) {
             String keyword = q.trim();
@@ -33,7 +35,6 @@ public class MovieService {
         } else {
             movies = movieRepository.findAll(pageable);
         }
-
         return ResponseMessage.<Page<MovieResponse>>builder()
                 .message("Movies have been found successfully")
                 .httpStatus(HttpStatus.OK)
@@ -41,4 +42,29 @@ public class MovieService {
                 .build();
 
     }
+
+    // M02
+    public ResponseMessage<Page<CinemaMovieResponse>> findMoviesByCinemaSlug(
+            String cinemaSlug, int page, int size, String sort, String type) {
+
+        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
+
+        Page<CinemaMovieResponse> response = movieMapper
+                .mapToCinemaResponsePage(movieRepository.findAllBySlugIgnoreCase(cinemaSlug, pageable));
+
+        if (response.isEmpty()) {
+            return ResponseMessage.<Page<CinemaMovieResponse>>builder()
+                    .message(ErrorMessages.MOVIE_NOT_FOUND)
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .build();
+        }
+        return ResponseMessage.<Page<CinemaMovieResponse>>builder()
+                .returnBody(response)
+                .message(String.format(SuccessMessages.MOVIE_WITH_SLUG_FOUND,cinemaSlug))
+                .httpStatus(HttpStatus.OK)
+                .build();
+    }
+
+
+
 }
