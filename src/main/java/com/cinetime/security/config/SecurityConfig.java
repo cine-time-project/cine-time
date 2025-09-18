@@ -79,18 +79,26 @@ public class SecurityConfig {
   }
 
   private static final String[] AUTH_WHITELIST = {
+      "/v3/api-docs",
       "/v3/api-docs/**",
-      "swagger-ui.html",
+      "/api-docs",
+      "/api-docs/**",
+      "/swagger-ui.html",
       "/swagger-ui/**",
+      "/swagger-resources",
+      "/swagger-resources/**",
+      "/webjars/**",
       "/",
-      "index.html",
+      "/index.html",
       "/images/**",
       "/css/**",
       "/js/**",
-      "/contactMessages/save",
       "/auth/login",
-          "/api/cinemas",
-          "/api/cinemas/**"
+      "/api/cinemas",
+      "/api/cinemas/**",
+      "/api/movies",
+      "/api/movies/**",
+      "/error"
   };
 
 }
