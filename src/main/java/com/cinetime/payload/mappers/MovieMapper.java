@@ -13,6 +13,7 @@ public class MovieMapper {
 
     // Movie entity → MovieResponse DTO
     public MovieResponse mapMovieToMovieResponse(Movie movie) {
+        if (movie == null) return null;
         return MovieResponse.builder()
                 .id(movie.getId())
                 .title(movie.getTitle())
@@ -37,6 +38,7 @@ public class MovieMapper {
 
     // Movie entity → CinemaMovieResponse DTO
     public CinemaMovieResponse mapMovieToCinemaMovieResponse(Movie movie) {
+        if (movie == null) return null;
         return new CinemaMovieResponse(
                 movie.getId(),
                 movie.getTitle(),
