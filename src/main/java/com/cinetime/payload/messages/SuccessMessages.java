@@ -1,6 +1,17 @@
 package com.cinetime.payload.messages;
 
 public class SuccessMessages {
+
+    private SuccessMessages(){
+    }
+
     public static final String CINEMAS_LISTED = "Cinemas listed successfully.";
+
+    public static final String MOVIE_FOUND = "Movies are Found Successfully";
+    public static final String MOVIE_WITH_SLUG_FOUND = "Movies with slug: %s  found successfully";
+    public static final String MOVIE_CREATE = "Movie is saved successfully";
+    public static final String MOVIE_UPDATE = "Movie is updated successfully";
+    public static final String MOVIE_DELETE = "Movie is deleted successfully";
+
 
 }

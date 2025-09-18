@@ -32,6 +32,9 @@ public class Cinema {
   @Column(name = "name", nullable = false, length = 100)
   private String name;
 
+  @Column(nullable = false, unique = true, length = 50)
+  private String slug;
+
   // Cinema <-> City ManyToMany
   @ManyToMany(
       // When cinema is persisted or updated, city table will also be persisted or updated.
