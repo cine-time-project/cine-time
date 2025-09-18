@@ -12,60 +12,86 @@ import java.util.Optional;
 
 public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
-    // Only City filter
+    // --- Search: sadece City filtresi ---
     @EntityGraph(attributePaths = {"cities"})
     @Query(
             value = """
-                select distinct c
-                from Cinema c
-                left join c.cities ct
-                where (:cityId is null or ct.id = :cityId)
-                """,
+            select distinct c
+            from Cinema c
+            left join c.cities ct
+            where (:cityId is null or ct.id = :cityId)
+            """,
             countQuery = """
-                select count(distinct c)
-                from Cinema c
-                left join c.cities ct
-                where (:cityId is null or ct.id = :cityId)
-                """
+            select count(distinct c)
+            from Cinema c
+            left join c.cities ct
+            where (:cityId is null or ct.id = :cityId)
+            """
     )
     Page<Cinema> search(@Param("cityId") Long cityId, Pageable pageable);
 
-    // City +  Hall.isSpecial filter
+    // --- Search: City + Hall.isSpecial filtresi ---
     @EntityGraph(attributePaths = {"cities"})
     @Query(
             value = """
-                select distinct c
-                from Cinema c
-                left join c.cities ct
-                where (:cityId is null or ct.id = :cityId)
-                  and (:specialHall is null
-                       or exists (
-                           select 1
-                           from Hall h
-                           where h.cinema = c and h.isSpecial = :specialHall
-                       ))
-                """,
+            select distinct c
+            from Cinema c
+            left join c.cities ct
+            where (:cityId is null or ct.id = :cityId)
+              and (
+                    :specialHall is null
+                    or exists (
+                        select 1
+                        from Hall h
+                        where h.cinema = c and h.isSpecial = :specialHall
+                    )
+                  )
+            """,
             countQuery = """
-                select count(distinct c)
-                from Cinema c
-                left join c.cities ct
-                where (:cityId is null or ct.id = :cityId)
-                  and (:specialHall is null
-                       or exists (
-                           select 1
-                           from Hall h
-                           where h.cinema = c and h.isSpecial = :specialHall
-                       ))
-                """
+            select count(distinct c)
+            from Cinema c
+            left join c.cities ct
+            where (:cityId is null or ct.id = :cityId)
+              and (
+                    :specialHall is null
+                    or exists (
+                        select 1
+                        from Hall h
+                        where h.cinema = c and h.isSpecial = :specialHall
+                    )
+                  )
+            """
     )
     Page<Cinema> search(@Param("cityId") Long cityId,
                         @Param("specialHall") Boolean specialHall,
                         Pageable pageable);
 
+    // --- Auth kullanıcının favori sinemaları ---
+// Auth kullanıcının favori sinemaları – kök: Cinema
+    @EntityGraph(attributePaths = {"cities"})
+    @Query(
+            value = """
+        select distinct c
+        from Cinema c
+        join c.favorites f
+        where f.user.id = :userId
+        """,
+            countQuery = """
+        select count(distinct c)
+        from Cinema c
+        join c.favorites f
+        where f.user.id = :userId
+        """
+    )
+    Page<Cinema> findFavoriteCinemasByUserId(@Param("userId") Long userId, Pageable pageable);
 
 
+    // --- Detay: City'lerle birlikte getir ---
     @EntityGraph(attributePaths = {"cities"})
     Optional<Cinema> findById(Long id);
+
+    @Query("select u.id from User u where u.email = :email")
+    Optional<Long> findIdByUsername(@Param("email") String email);
 
 
 }
