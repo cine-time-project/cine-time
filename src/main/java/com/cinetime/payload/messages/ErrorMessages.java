@@ -8,8 +8,9 @@ public class ErrorMessages {
   //user
   public static final String NOT_FOUND_USER_MESSAGE_UNIQUE_FIELD = "Error: User not found with %s";
 
-
+  //movie
   public static final String MOVIE_NOT_FOUND = "Movie is not found";
+  public static final String MOVIE_NOT_FOUND_BY_ID = "Movie is not found by id: %s";
 
 
 }
