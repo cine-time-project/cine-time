@@ -80,10 +80,10 @@ public class SecurityConfig {
 
   private static final String[] AUTH_WHITELIST = {
       "/v3/api-docs/**",
-      "swagger-ui.html",
+      "/swagger-ui.html",
       "/swagger-ui/**",
       "/",
-      "index.html",
+      "/index.html",
       "/images/**",
       "/css/**",
       "/js/**",
