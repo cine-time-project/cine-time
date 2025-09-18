@@ -71,13 +71,14 @@ public class MovieService {
         .build();
   }
 
-  //Method to find a Movie by id. If it doesn't exist, throws exception
+  //a Reusable Method to find a Movie by id. If it doesn't exist, throws exception
   private Movie findMovieById(Long id) {
     return movieRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException(String.format(
             ErrorMessages.MOVIE_NOT_FOUND_BY_ID, id)));
   }
 
+  //MO9
   public ResponseMessage<MovieResponse> getMovieById(Long id) {
     Movie movie = findMovieById(id);
     return ResponseMessage.<MovieResponse>builder()
