@@ -47,8 +47,11 @@ public class MovieService {
     public ResponseMessage<Page<CinemaMovieResponse>> findMoviesByCinemaSlug(
             String cinemaSlug, int page, int size, String sort, String type) {
 
-        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
+        if (cinemaSlug == null || cinemaSlug.trim().isEmpty()) {
+            throw new IllegalArgumentException("Cinema slug cannot be null or empty");
+        }
 
+        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
         Page<CinemaMovieResponse> response = movieMapper
                 .mapToCinemaResponsePage(movieRepository.findAllBySlugIgnoreCase(cinemaSlug, pageable));
 
