@@ -74,6 +74,7 @@ public class MovieController {
   )
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Successfully retrieved the movie"),
+      @ApiResponse(responseCode = "400", description = "Required type for ID (Long) not provided"),
       @ApiResponse(responseCode = "404", description = "Movie not found with the given ID"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
