@@ -1,7 +1,6 @@
 package com.cinetime.payload.mappers;
 
 import com.cinetime.entity.business.Cinema;
-import com.cinetime.entity.business.City;
 import com.cinetime.payload.response.business.CinemaSummaryResponse;
 import com.cinetime.payload.response.business.CityMiniResponse;
 import org.springframework.stereotype.Component;

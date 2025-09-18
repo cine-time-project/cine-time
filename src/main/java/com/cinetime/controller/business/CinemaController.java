@@ -4,9 +4,11 @@ import com.cinetime.payload.response.business.*;
 import com.cinetime.service.business.CinemaService;
 import com.cinetime.service.helper.PageableHelper;
 import com.cinetime.payload.messages.SuccessMessages;
+import jakarta.persistence.PrePersist;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +21,7 @@ public class CinemaController {
     private final CinemaService cinemaService;
     private final PageableHelper pageableHelper;
 
-    // @PreAuthorize("permitAll()") // Anonymous + MEMBER + EMPLOYEE + ADMIN
+    @PreAuthorize("permitAll()")
     @GetMapping
     public ResponseEntity<ResponseMessage<PageResponse<CinemaSummaryResponse>>> listCinemas(
             @RequestParam(required = false) Long cityId,
@@ -43,4 +45,11 @@ public class CinemaController {
 
         return ResponseEntity.ok(response);
     }
+
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CinemaSummaryResponse> getCinema(@PathVariable Long id){
+        return ResponseEntity.ok(cinemaService.getCinemaById(id));
+    }
+
 }

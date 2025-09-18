@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
     // Only City filter
@@ -59,4 +61,11 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
     Page<Cinema> search(@Param("cityId") Long cityId,
                         @Param("specialHall") Boolean specialHall,
                         Pageable pageable);
+
+
+
+    @EntityGraph(attributePaths = {"cities"})
+    Optional<Cinema> findById(Long id);
+
+
 }
