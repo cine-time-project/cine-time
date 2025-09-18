@@ -11,8 +11,11 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ExtendWith(MockitoExtension.class)
 class CinemaServiceTest {
@@ -22,6 +25,7 @@ class CinemaServiceTest {
     @Mock private CinemasHelper cinemasHelper;
 
     @InjectMocks private CinemaService cinemaService;
+
 
     private Pageable pageable;
 
@@ -131,4 +135,47 @@ class CinemaServiceTest {
         verifyNoInteractions(cinemaRepository);
         verify(cinemaMapper, never()).toSummary(any());
     }
+
+
+
+    @Test
+    void getCinemaById_found_returnsSummary() {
+        // Given
+        Long id = 11L;
+
+        var entity = mock(com.cinetime.entity.business.Cinema.class);
+        var dto = CinemaSummaryResponse.builder()
+                .id(id).name("CineTime Besiktas").build();
+
+        when(cinemaRepository.findById(id)).thenReturn(Optional.of(entity));
+        when(cinemaMapper.toSummary(entity)).thenReturn(dto);
+
+        // When
+        var result = cinemaService.getCinemaById(id);
+
+        // Then
+        verify(cinemaRepository).findById(id);
+        verify(cinemaMapper).toSummary(entity);
+        assertThat(result.getId()).isEqualTo(id);
+        assertThat(result.getName()).isEqualTo("CineTime Besiktas");
+    }
+
+    @Test
+    void getCinemaById_notFound_throwsNotFound() {
+        // Given
+        Long id = 1L;
+        when(cinemaRepository.findById(id)).thenReturn(Optional.empty());
+
+        // When / Then
+        // Projede ya NotFoundException ya da ResponseStatusException kullanıyorsunuz.
+        // İkisini de kapsayacak şekilde mesajı ve tipi doğruluyoruz.
+        assertThatThrownBy(() -> cinemaService.getCinemaById(id))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Cinema not found");
+
+        verify(cinemaRepository).findById(id);
+        verifyNoInteractions(cinemaMapper);
+    }
+
+
 }
