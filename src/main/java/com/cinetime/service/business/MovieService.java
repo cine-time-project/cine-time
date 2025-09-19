@@ -71,6 +71,28 @@ public class MovieService {
         .build();
   }
 
+  //M03
+  public ResponseMessage<Page<MovieResponse>> findMoviesByHallName(String hallName, int page, int size, String sort, String type) {
+
+    Pageable pageable = pageableHelper.buildPageable(page,size,sort,type);
+    Page<Movie> movies = movieRepository.findAllByHallIgnoreCase(hallName,pageable);
+    Page<MovieResponse> response= movieMapper.mapToResponsePage(movies);
+
+    if(response.isEmpty()){
+      return ResponseMessage.<Page<MovieResponse>>builder()
+              .message(String.format(ErrorMessages.MOVIES_NOT_FOUND,hallName))
+              .httpStatus(HttpStatus.NOT_FOUND)
+              .build();
+    }
+    return ResponseMessage.<Page<MovieResponse>>builder()
+            .returnBody(response)
+            .message(String.format(SuccessMessages.MOVIE_FOUND,hallName))
+            .httpStatus(HttpStatus.OK)
+            .build();
+
+  }
+
+
   //a Reusable Method to find a Movie by id. If it doesn't exist, throws exception
   private Movie findMovieById(Long id) {
     return movieRepository.findById(id)
