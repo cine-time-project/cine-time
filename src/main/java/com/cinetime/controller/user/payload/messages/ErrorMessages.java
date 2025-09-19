@@ -2,6 +2,8 @@ package com.cinetime.controller.user.payload.messages;
 
 public class ErrorMessages {
 
+    public static String BUILT_IN_USER_DELETE_NOT_ALLOWED;
+
     private ErrorMessages() {}
 
     public static final String USER_NOT_FOUND = "User not found.";
