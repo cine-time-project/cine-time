@@ -50,7 +50,7 @@ public class Cinema {
 
     @JsonIgnore
     @OneToMany(mappedBy = "cinema")
-    private List<Hall> hall;
+    private List<Hall> halls;
 
     @JsonIgnore
     @OneToMany(
