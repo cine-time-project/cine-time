@@ -3,6 +3,9 @@ package com.cinetime.repository.user;
 import com.cinetime.entity.user.User;
 
 import java.util.Optional;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,4 +18,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByLoginProperty(@Param("login") String login);
 
 
+  boolean existsByEmail(String email);
+  boolean existsByRoles_RoleName(com.cinetime.entity.enums.RoleName roleName);
 }
