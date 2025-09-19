@@ -73,7 +73,7 @@ class FindMoviesByCinemaSlugTest {
         // given
         String slug = "test-slug";
         when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
-        when(movieRepository.findAllBySlugIgnoreCase(slug, mockPageable)).thenReturn(mockMoviePage);
+        when(movieRepository.findAllByCinemaSlugIgnoreCase(slug, mockPageable)).thenReturn(mockMoviePage);
         when(movieMapper.mapToCinemaResponsePage(mockMoviePage)).thenReturn(mockResponsePage);
 
         // when
@@ -86,7 +86,7 @@ class FindMoviesByCinemaSlugTest {
         assertThat(result.getReturnBody().getContent().get(0).getTitle()).isEqualTo("Test Movie");
         assertThat(result.getMessage()).isEqualTo(String.format(SuccessMessages.MOVIE_WITH_SLUG_FOUND, slug));
 
-        verify(movieRepository).findAllBySlugIgnoreCase(slug, mockPageable);
+        verify(movieRepository).findAllByCinemaSlugIgnoreCase(slug, mockPageable);
     }
 
     @Test
@@ -98,7 +98,7 @@ class FindMoviesByCinemaSlugTest {
         Page<CinemaMovieResponse> emptyResponsePage = new PageImpl<>(Collections.emptyList(), mockPageable, 0);
 
         when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
-        when(movieRepository.findAllBySlugIgnoreCase(slug, mockPageable)).thenReturn(emptyPage);
+        when(movieRepository.findAllByCinemaSlugIgnoreCase(slug, mockPageable)).thenReturn(emptyPage);
         when(movieMapper.mapToCinemaResponsePage(emptyPage)).thenReturn(emptyResponsePage);
 
         // when
@@ -107,11 +107,12 @@ class FindMoviesByCinemaSlugTest {
 
         // then
         assertThat(result.getHttpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(result.getMessage()).isEqualTo(ErrorMessages.MOVIE_NOT_FOUND);
+        assertThat(result.getMessage()).isEqualTo(ErrorMessages.MOVIES_NOT_FOUND); // ✅ düzeltildi
         assertThat(result.getReturnBody()).isNull();
 
-        verify(movieRepository).findAllBySlugIgnoreCase(slug, mockPageable);
+        verify(movieRepository).findAllByCinemaSlugIgnoreCase(slug, mockPageable);
     }
+
 
     @Test
     @DisplayName("Should propagate exception when repository throws error")
@@ -119,7 +120,7 @@ class FindMoviesByCinemaSlugTest {
         // given
         String slug = "fail-slug";
         when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
-        when(movieRepository.findAllBySlugIgnoreCase(slug, mockPageable))
+        when(movieRepository.findAllByCinemaSlugIgnoreCase(slug, mockPageable))
                 .thenThrow(new RuntimeException("Database error"));
 
         // when & then
@@ -128,7 +129,7 @@ class FindMoviesByCinemaSlugTest {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Database error");
 
-        verify(movieRepository).findAllBySlugIgnoreCase(slug, mockPageable);
+        verify(movieRepository).findAllByCinemaSlugIgnoreCase(slug, mockPageable);
     }
 
     @Test
@@ -137,7 +138,7 @@ class FindMoviesByCinemaSlugTest {
         // given
         String slug = "TesT-sLuG";
         when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
-        when(movieRepository.findAllBySlugIgnoreCase(slug, mockPageable)).thenReturn(mockMoviePage);
+        when(movieRepository.findAllByCinemaSlugIgnoreCase(slug, mockPageable)).thenReturn(mockMoviePage);
         when(movieMapper.mapToCinemaResponsePage(mockMoviePage)).thenReturn(mockResponsePage);
 
         // when
@@ -148,7 +149,7 @@ class FindMoviesByCinemaSlugTest {
         assertThat(result.getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(result.getReturnBody().getContent()).hasSize(1);
 
-        verify(movieRepository).findAllBySlugIgnoreCase(slug, mockPageable);
+        verify(movieRepository).findAllByCinemaSlugIgnoreCase(slug, mockPageable);
     }
 
     @Test
@@ -159,7 +160,7 @@ class FindMoviesByCinemaSlugTest {
         Pageable customPageable = PageRequest.of(2, 20, Sort.by("releaseDate").descending());
 
         when(pageableHelper.buildPageable(2, 20, "releaseDate", "desc")).thenReturn(customPageable);
-        when(movieRepository.findAllBySlugIgnoreCase(slug, customPageable)).thenReturn(mockMoviePage);
+        when(movieRepository.findAllByCinemaSlugIgnoreCase(slug, customPageable)).thenReturn(mockMoviePage);
         when(movieMapper.mapToCinemaResponsePage(mockMoviePage)).thenReturn(mockResponsePage);
 
         // when
@@ -167,7 +168,7 @@ class FindMoviesByCinemaSlugTest {
 
         // then
         verify(pageableHelper).buildPageable(2, 20, "releaseDate", "desc");
-        verify(movieRepository).findAllBySlugIgnoreCase(slug, customPageable);
+        verify(movieRepository).findAllByCinemaSlugIgnoreCase(slug, customPageable);
     }
 
     @Test
@@ -194,6 +195,4 @@ class FindMoviesByCinemaSlugTest {
         verifyNoInteractions(movieRepository);
         verifyNoInteractions(movieMapper);
     }
-
-
 }
