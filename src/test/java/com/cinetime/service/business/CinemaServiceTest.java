@@ -5,7 +5,10 @@ import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.response.business.CinemaSummaryResponse;
+import com.cinetime.payload.response.business.HallWithShowtimesResponse;
 import com.cinetime.repository.business.CinemaRepository;
+import com.cinetime.repository.business.HallMovieTimeRow;
+import com.cinetime.repository.business.ShowtimeRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.CinemasHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +19,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,8 +36,10 @@ class CinemaServiceTest {
     @Mock private CinemaMapper cinemaMapper;
     @Mock private CinemasHelper cinemasHelper;
     @Mock private UserRepository userRepository; // <-- yeni
+    @Mock private ShowtimeRepository showtimeRepository;
 
     @InjectMocks private CinemaService cinemaService;
+    @InjectMocks private CinemaService service;
 
     private Pageable pageable;
 
@@ -185,4 +194,122 @@ class CinemaServiceTest {
         verifyNoInteractions(cinemaRepository);
         verifyNoInteractions(cinemaMapper);
     }
+
+
+
+    // Yardımcı: interface-based projection için küçük bir satır implementasyonu
+    private static class Row implements HallMovieTimeRow {
+        private final Long hallId;
+        private final String hallName;
+        private final Integer seatCapacity;
+        private final Boolean isSpecial;
+        private final Long movieId;
+        private final String movieTitle;
+        private final LocalDate date;
+        private final LocalTime startTime;
+
+        Row(Long hallId, String hallName, Integer seatCapacity, Boolean isSpecial,
+            Long movieId, String movieTitle, LocalDate date, LocalTime startTime) {
+            this.hallId = hallId;
+            this.hallName = hallName;
+            this.seatCapacity = seatCapacity;
+            this.isSpecial = isSpecial;
+            this.movieId = movieId;
+            this.movieTitle = movieTitle;
+            this.date = date;
+            this.startTime = startTime;
+        }
+
+        @Override public Long getHallId() { return hallId; }
+        @Override public String getHallName() { return hallName; }
+        @Override public Integer getSeatCapacity() { return seatCapacity; }
+        @Override public Boolean getIsSpecial() { return isSpecial; }
+        @Override public Long getMovieId() { return movieId; }
+        @Override public String getMovieTitle() { return movieTitle; }
+        @Override public LocalDate getDate() { return date; }
+        @Override public LocalTime getStartTime() { return startTime; }
+    }
+
+    @Test
+    void getCinemaHallsWithShowtimes_whenCinemaNotExists_throwsNotFound() {
+        Long cinemaId = 999L;
+        when(cinemaRepository.existsById(cinemaId)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.getCinemaHallsWithShowtimes(cinemaId))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(cinemaRepository).existsById(cinemaId);
+        verifyNoInteractions(showtimeRepository);
+    }
+
+    @Test
+    void getCinemaHallsWithShowtimes_whenNoRows_returnsEmptyList() {
+        Long cinemaId = 10L;
+        when(cinemaRepository.existsById(cinemaId)).thenReturn(true);
+        when(showtimeRepository.findShowtimesByCinemaId(cinemaId)).thenReturn(List.of());
+
+        var result = service.getCinemaHallsWithShowtimes(cinemaId);
+        assertThat(result).isEmpty();
+
+        verify(cinemaRepository).existsById(cinemaId);
+        verify(showtimeRepository).findShowtimesByCinemaId(cinemaId);
+    }
+
+    @Test
+    void getCinemaHallsWithShowtimes_groupsByHallAndMovie_andSortsTimes() {
+        Long cinemaId = 10L;
+        when(cinemaRepository.existsById(cinemaId)).thenReturn(true);
+
+        LocalDate today = LocalDate.now();
+        HallMovieTimeRow r1 = new Row(100L, "Salon 1", 120, true, 4L, "Inception", today, LocalTime.of(20,30));
+        HallMovieTimeRow r2 = new Row(100L, "Salon 1", 120, true, 4L, "Inception", today, LocalTime.of(18, 0));
+        HallMovieTimeRow r3 = new Row(100L, "Salon 1", 120, true, 5L, "Dune",      today, LocalTime.of(21, 0));
+        HallMovieTimeRow r4 = new Row(101L, "Salon 2",  90, false,4L, "Inception", today, LocalTime.of(19,15));
+
+        List<HallMovieTimeRow> rows = List.of(r1, r2, r3, r4);
+
+        when(showtimeRepository.findShowtimesByCinemaId(cinemaId)).thenReturn(rows);
+
+        var result = service.getCinemaHallsWithShowtimes(cinemaId);
+
+        // 2 hall bekliyoruz
+        assertThat(result).hasSize(2);
+
+        // Hall 100 kontrol
+        HallWithShowtimesResponse h100 = result.stream()
+                .filter(h -> h.getId().equals(100L)).findFirst().orElseThrow();
+        assertThat(h100.getName()).isEqualTo("Salon 1");
+        assertThat(h100.getSeatCapacity()).isEqualTo(120);
+        assertThat(h100.getIsSpecial()).isTrue();
+        assertThat(h100.getMovies()).hasSize(2);
+
+        var inceptionGroup = h100.getMovies().stream()
+                .filter(g -> g.getMovie().getId().equals(4L)).findFirst().orElseThrow();
+        assertThat(inceptionGroup.getMovie().getTitle()).isEqualTo("Inception");
+        assertThat(inceptionGroup.getTimes())
+                .containsExactly( // sıralı (18:00, 20:30)
+                        LocalDateTime.of(today, LocalTime.of(18, 0)),
+                        LocalDateTime.of(today, LocalTime.of(20, 30))
+                );
+
+        var duneGroup = h100.getMovies().stream()
+                .filter(g -> g.getMovie().getId().equals(5L)).findFirst().orElseThrow();
+        assertThat(duneGroup.getTimes())
+                .containsExactly(LocalDateTime.of(today, LocalTime.of(21, 0)));
+
+        // Hall 101 kontrol
+        var h101 = result.stream().filter(h -> h.getId().equals(101L)).findFirst().orElseThrow();
+        assertThat(h101.getName()).isEqualTo("Salon 2");
+        assertThat(h101.getMovies()).hasSize(1);
+        assertThat(h101.getMovies().get(0).getTimes())
+                .containsExactly(LocalDateTime.of(today, LocalTime.of(19, 15)));
+
+        verify(cinemaRepository).existsById(cinemaId);
+        verify(showtimeRepository).findShowtimesByCinemaId(cinemaId);
+    }
 }
+
+
+
+
+
