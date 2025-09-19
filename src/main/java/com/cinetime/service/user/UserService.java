@@ -1,10 +1,10 @@
 package com.cinetime.service.user;
 
-import com.cinetime.controller.user.payload.mappers.UserMapper;
-import com.cinetime.controller.user.payload.messages.ErrorMessages;
-import com.cinetime.controller.user.payload.messages.SuccessMessages;
-import com.cinetime.controller.user.payload.request.user.UserUpdateRequest;
-import com.cinetime.controller.user.payload.response.user.UserResponse;
+import com.cinetime.payload.mappers.UserMapper;
+import com.cinetime.payload.messages.ErrorMessages;
+import com.cinetime.payload.messages.SuccessMessages;
+import com.cinetime.payload.request.user.UserUpdateRequest;
+import com.cinetime.payload.response.user.UserResponse;
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.ConflictException;
 import com.cinetime.exception.ResourceNotFoundException;
