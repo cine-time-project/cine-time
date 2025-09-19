@@ -48,7 +48,7 @@ public class MovieService {
 
   // M02
   public ResponseMessage<Page<CinemaMovieResponse>> findMoviesByCinemaSlug(
-      String cinemaSlug, int page, int size, String sort, String type) {
+          String cinemaSlug, int page, int size, String sort, String type) {
 
     if (cinemaSlug == null || cinemaSlug.trim().isEmpty()) {
       throw new IllegalArgumentException("Cinema slug cannot be null or empty");
@@ -56,20 +56,48 @@ public class MovieService {
 
     Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
     Page<CinemaMovieResponse> response = movieMapper
-        .mapToCinemaResponsePage(movieRepository.findAllBySlugIgnoreCase(cinemaSlug, pageable));
+            .mapToCinemaResponsePage(movieRepository.findAllByCinemaSlugIgnoreCase(cinemaSlug, pageable));
 
     if (response.isEmpty()) {
       return ResponseMessage.<Page<CinemaMovieResponse>>builder()
-          .message(ErrorMessages.MOVIE_NOT_FOUND)
-          .httpStatus(HttpStatus.NOT_FOUND)
-          .build();
+              .message(ErrorMessages.MOVIES_NOT_FOUND)
+              .httpStatus(HttpStatus.NOT_FOUND)
+              .build();
     }
     return ResponseMessage.<Page<CinemaMovieResponse>>builder()
-        .returnBody(response)
-        .message(String.format(SuccessMessages.MOVIE_WITH_SLUG_FOUND, cinemaSlug))
-        .httpStatus(HttpStatus.OK)
-        .build();
+            .returnBody(response)
+            .message(String.format(SuccessMessages.MOVIE_WITH_SLUG_FOUND, cinemaSlug))
+            .httpStatus(HttpStatus.OK)
+            .build();
   }
+
+  //M03
+  public ResponseMessage<Page<MovieResponse>> findMoviesByHallName(
+          String hallName, int page, int size, String sort, String type) {
+
+    if (hallName == null || hallName.trim().isEmpty()) {
+      throw new IllegalArgumentException("Hall name cannot be null or empty");
+    }
+
+    Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
+    Page<Movie> movies = movieRepository.findAllByHallIgnoreCase(hallName, pageable);
+    Page<MovieResponse> response = movieMapper.mapToResponsePage(movies);
+
+    if (response == null || response.isEmpty()) {
+      return ResponseMessage.<Page<MovieResponse>>builder()
+              .httpStatus(HttpStatus.NOT_FOUND)
+              .message(ErrorMessages.MOVIES_NOT_FOUND)
+              .build();
+    }
+
+    return ResponseMessage.<Page<MovieResponse>>builder()
+            .httpStatus(HttpStatus.OK)
+            .message(SuccessMessages.MOVIE_FOUND)
+            .returnBody(response)
+            .build();
+  }
+
+
 
   //a Reusable Method to find a Movie by id. If it doesn't exist, throws exception
   private Movie findMovieById(Long id) {

@@ -15,5 +15,13 @@ public class SuccessMessages {
     public static final String MOVIE_UPDATE = "Movie is updated successfully";
     public static final String MOVIE_DELETE = "Movie is deleted successfully";
 
+    //image
+    public static final String IMAGE_FETCHED  = "Image fetched successfully";
+    public static final String IMAGE_UPLOADED = "Image uploaded successfully";
+    public static final String IMAGE_UPDATED  = "Image updated successfully";
+    public static final String IMAGE_DELETED  = "Image deleted successfully";
 
-}
+    //user
+        public static final String USER_UPDATED = "User updated successfully.";
+        public static final String USER_DELETED = "User deleted successfully.";
+    }

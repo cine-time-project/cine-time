@@ -9,20 +9,11 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-        name = "image",
-        indexes = {
-                @Index(name = "ix_image_movie_id", columnList = "movie_id"),
-                @Index(name = "ix_image_poster", columnList = "is_poster")
-        }
-)
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Table(name = "image")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = "movie")
+@ToString(exclude = {"data", "movie"})
 public class Image {
 
     @Id
@@ -30,33 +21,36 @@ public class Image {
     @EqualsAndHashCode.Include
     private Long id;
 
-    // Raw image bytes (PostgreSQL: BYTEA)
+    /** Raw bytes of the image (BYTEA in PostgreSQL). */
     @Lob
-    @Column(nullable = false, columnDefinition = "BYTEA")
+    @Basic(fetch = FetchType.LAZY)
+    @Column(nullable = false)
     private byte[] data;
 
-    // Original file name
-    @Column(nullable = false)
+    /** Original filename (e.g., poster.jpg). */
+    @Column(nullable = false, length = 255)
     private String name;
 
-    // MIME type (e.g., image/jpeg)
-    @Column
+    /** MIME type (nullable by schema): image/jpeg, image/png, image/webp... */
+    @Column(length = 100)
     private String type;
 
-    // Owning Movie (many images per movie)
+    /** Owning Movie (required). */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "movie_id", nullable = false)
-    @JsonIgnore // prevent recursion when serializing Image
+    @JoinColumn(name = "movie_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnore
     private Movie movie;
 
-    // Mark as poster (only one poster per movie enforced via DB partial unique index)
+    /** Poster flag (default false). DB should ensure only one true per movie. */
     @Column(name = "is_poster", nullable = false)
     private boolean isPoster = false;
 
+    /** Creation timestamp (set by Hibernate). */
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    /** Update timestamp (set by Hibernate). */
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
