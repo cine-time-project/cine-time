@@ -1,0 +1,10 @@
+package com.cinetime.repository.user;
+
+
+import com.cinetime.entity.business.Role;
+import com.cinetime.entity.enums.RoleName;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface RoleRepository extends JpaRepository<Role, Long> {
+    boolean existsByRoleName(RoleName roleName);
+}
