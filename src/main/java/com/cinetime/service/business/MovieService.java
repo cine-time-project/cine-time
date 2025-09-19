@@ -56,7 +56,7 @@ public class MovieService {
 
     Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
     Page<CinemaMovieResponse> response = movieMapper
-        .mapToCinemaResponsePage(movieRepository.findAllBySlugIgnoreCase(cinemaSlug, pageable));
+        .mapToCinemaResponsePage(movieRepository.findAllByCinemaSlugIgnoreCase(cinemaSlug, pageable));
 
     if (response.isEmpty()) {
       return ResponseMessage.<Page<CinemaMovieResponse>>builder()

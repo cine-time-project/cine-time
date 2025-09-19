@@ -41,10 +41,12 @@ public class Hall {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Foreign Key Field - Görseldeki kırmızı nota göre eklendi
-    @NotNull
-    @Column(name = "cinema_id", nullable = false)
-    private Long cinemaId; // Foreign Key to CINEMA
+    //    // Foreign Key Field - Görseldeki kırmızı nota göre eklendi
+//    @NotNull
+//    @Column(name = "cinema_id", nullable = false)
+//    private Long cinemaId; // Foreign Key to CINEMA
+    //Buna gerek yokmuş.Şimdilik yoruma aldım.
+    //Çünkü JPA’da foreign key alanını manuel tanımlamaya gerek yok, mapping üzerinden hallediliyor.
 
     // Entity Relationship - JPA mapping için
     @NotNull

@@ -110,6 +110,7 @@ class FindMoviesByHallNameTest {
         assertThat(res.getReturnBody()).isNotNull();
         assertThat(res.getReturnBody().getContent()).hasSize(1);
         assertThat(res.getReturnBody().getContent().get(0).getTitle()).isEqualTo("Dune: Part Two");
+        assertThat(res.getMessage()).contains("IMAX"); // ✅ message assertion
 
         InOrder inOrder = inOrder(pageableHelper, movieRepository, movieMapper);
         inOrder.verify(pageableHelper).buildPageable(0, 10, "releaseDate", "asc");
@@ -137,6 +138,7 @@ class FindMoviesByHallNameTest {
         // then
         assertThat(res.getHttpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(res.getReturnBody()).isNull();
+        assertThat(res.getMessage()).contains("VIP"); // ✅ message assertion
         verify(movieRepository).findAllByHallIgnoreCase(hallName, defaultPageable);
     }
 
@@ -161,6 +163,7 @@ class FindMoviesByHallNameTest {
         assertThat(res.getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(res.getReturnBody().getContent()).hasSize(1);
         assertThat(res.getReturnBody().getContent().get(0).getTitle()).isEqualTo("Dune: Part Two");
+        assertThat(res.getMessage()).contains("4DX"); // ✅ message assertion
     }
 
     @Test
@@ -181,6 +184,7 @@ class FindMoviesByHallNameTest {
         // then
         assertThat(res.getHttpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(res.getReturnBody()).isNull();
+        assertThat(res.getMessage()).contains("null"); // ✅ message assertion
         verify(movieRepository).findAllByHallIgnoreCase(null, defaultPageable);
     }
 
@@ -203,6 +207,7 @@ class FindMoviesByHallNameTest {
         // then
         assertThat(res.getHttpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(res.getReturnBody()).isNull();
+        assertThat(res.getMessage()).contains(""); // ✅ message assertion
         verify(movieRepository).findAllByHallIgnoreCase("", defaultPageable);
     }
 
