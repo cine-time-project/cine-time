@@ -1,0 +1,66 @@
+package com.cinetime.payload.request.business;
+
+import com.cinetime.entity.business.Cinema;
+import com.cinetime.entity.business.Image;
+import com.cinetime.entity.enums.MovieStatus;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@Builder
+public class MovieRequest {
+
+    @NotNull(message = "Movie title cannot be empty")
+    @Size(min = 3, max = 100)
+    private String title;
+
+    @NotNull(message = "Movie slug cannot be empty")
+    @Size(min = 5, max = 20)
+    private String slug;
+
+    @NotNull(message = "Summary cannot be empty")
+    @Size(min = 3, max = 300)
+    private String summary;
+
+    @NotNull(message = "Release date cannot be empty")
+    private LocalDate releaseDate;
+
+    @NotNull(message = "Duration cannot be empty")
+    private Integer duration;
+
+    private Double rating;
+
+    private String specialHalls;
+
+    @Size(min = 5, max = 20)
+    private String director;
+
+    @NotNull(message = "Cast cannot be empty")
+    private List<String> cast;
+
+    @NotNull(message = "Formats cannot be empty")
+    private List<String> formats;
+
+    @NotNull(message = "Genre cannot be empty")
+    private List<String> genre;
+
+    @NotNull(message = "Movie Status cannot be empty")
+    private MovieStatus status;
+
+    private Set<Cinema> cinemaIds;
+
+    private Set<Image> imageIds;
+
+}
+

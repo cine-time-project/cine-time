@@ -1,5 +1,6 @@
 package com.cinetime.controller.business;
 
+import com.cinetime.payload.request.business.MovieRequest;
 import com.cinetime.payload.response.business.CinemaMovieResponse;
 import com.cinetime.payload.response.business.MovieResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -107,5 +109,25 @@ public class MovieController {
       @PathVariable Long id) {
     return movieService.getMovieById(id);
   }
+
+    //M11
+    @Operation(
+            summary = "Save Movie {M11}",
+            description = "Creates and saves a new movie with the provided details"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Successfully created a new movie"),
+            @ApiResponse(responseCode = "400", description = "Invalid request body"),
+            @ApiResponse(responseCode = "403", description = "Forbidden access"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PostMapping
+    public ResponseMessage<MovieResponse> saveMovie(
+            @RequestBody @Valid MovieRequest movieRequest
+    ) {
+        return movieService.saveMovie(movieRequest);
+    }
+
 
 }

@@ -5,6 +5,7 @@ import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.MovieMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
+import com.cinetime.payload.request.business.MovieRequest;
 import com.cinetime.payload.response.business.CinemaMovieResponse;
 import com.cinetime.payload.response.business.MovieResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
@@ -115,6 +116,18 @@ public class MovieService {
         .returnBody(movieMapper.mapMovieToMovieResponse(movie))
         .build();
   }
+
+    //M11
+    public ResponseMessage<MovieResponse> saveMovie(MovieRequest movieRequest) {
+        Movie movie = movieMapper.mapMovieRequestToMovie(movieRequest);
+        Movie savedMovie = movieRepository.save(movie);
+        return ResponseMessage.<MovieResponse>builder()
+                .httpStatus(HttpStatus.CREATED)
+                .message(SuccessMessages.MOVIE_CREATE)
+                .returnBody(movieMapper.mapMovieToMovieResponse(savedMovie))
+                .build();
+    }
+
 
 
 }
