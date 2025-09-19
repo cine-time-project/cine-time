@@ -67,6 +67,28 @@ public class MovieController {
     return movieService.findMoviesByCinemaSlug(cinemaSlug, page, size, sort, type);
   }
 
+  //M03
+  @Operation(
+          summary = "Get Movies by Hall {M03}",
+          description = "Returns a paginated list of movies showing in a specific hall (e.g., imax, vip, goldclass)"
+  )
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Successfully retrieved movies list"),
+          @ApiResponse(responseCode = "404", description = "No movies found for the given hall"),
+          @ApiResponse(responseCode = "500", description = "Internal server error")
+  })
+  @PreAuthorize("permitAll()")
+  @GetMapping("/{hallName}")
+  public ResponseMessage<Page<MovieResponse>> findMoviesByHallName(
+          @PathVariable String hallName,
+          @RequestParam(value ="page", defaultValue = "0") int page,
+          @RequestParam(value = "size", defaultValue = "10") int size,
+          @RequestParam(value = "sort", defaultValue = "releaseDate") String sort,
+          @RequestParam(value = "type", defaultValue = "asc") String type
+  ){
+    return movieService.findMoviesByHallName(hallName,page,size,sort,type);
+  }
+
   //M09
   @Operation(
       summary = "Get Movie By Id {M09}",
