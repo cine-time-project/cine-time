@@ -78,4 +78,9 @@ public class CinemaController {
         return ResponseEntity.ok(cinemaService.getAuthFavoritesByLogin(login, pageable));
     }
 
+    @GetMapping("/cinemas/{id}/halls")
+    public ResponseEntity<List<HallWithShowtimesResponse>> getCinemaHalls(@PathVariable Long id) {
+        return ResponseEntity.ok(cinemaService.getCinemaHallsWithShowtimes(id));
+    }
+
 }
