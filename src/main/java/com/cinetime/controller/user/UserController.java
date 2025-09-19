@@ -1,6 +1,5 @@
 package com.cinetime.controller.user;
 
-
 import com.cinetime.controller.user.payload.request.user.UserUpdateRequest;
 import com.cinetime.controller.user.payload.response.user.UserResponse;
 import com.cinetime.service.user.UserService;
@@ -17,14 +16,17 @@ public class UserController {
         this.userService = userService;
     }
 
-    // TODO: Once security is implemented, remove userId from path and get it from authenticated user context
-    @PutMapping("/{userId}")
-    public ResponseEntity<UserResponse> updateUser(
-            @PathVariable Long userId,
+    // U06 - Update authenticated user
+    @PutMapping("/auth")
+    public ResponseEntity<UserResponse> updateAuthenticatedUser(
             @RequestBody UserUpdateRequest request) {
+        return ResponseEntity.ok(userService.updateAuthenticatedUser(request));
+    }
 
-        UserResponse response = userService.updateUser(userId, request);
-        return ResponseEntity.ok(response);
+    // U07 - Delete authenticated user
+    @DeleteMapping("/auth")
+    public ResponseEntity<String> deleteAuthenticatedUser() {
+        return ResponseEntity.ok(userService.deleteAuthenticatedUser());
     }
 }
 

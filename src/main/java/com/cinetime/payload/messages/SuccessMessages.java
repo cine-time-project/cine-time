@@ -21,4 +21,7 @@ public class SuccessMessages {
     public static final String IMAGE_UPDATED  = "Image updated successfully";
     public static final String IMAGE_DELETED  = "Image deleted successfully";
 
-}
+    //user
+        public static final String USER_UPDATED = "User updated successfully.";
+        public static final String USER_DELETED = "User deleted successfully.";
+    }
