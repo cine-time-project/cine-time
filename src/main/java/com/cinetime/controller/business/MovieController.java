@@ -51,10 +51,9 @@ public class MovieController {
       description = "Returns a paginated list of movies showing at a specific cinema identified by its slug"
   )
   @ApiResponses(value = {
-          @ApiResponse(responseCode = "200", description = "Successfully retrieved movies list"),
-          @ApiResponse(responseCode = "404", description = "No movies found for given cinema slug"),
-          @ApiResponse(responseCode = "400", description = "Invalid cinema slug"), // optional
-          @ApiResponse(responseCode = "500", description = "Internal server error")
+      @ApiResponse(responseCode = "200", description = "Successfully retrieved movies list"),
+      @ApiResponse(responseCode = "404", description = "Cinema not found"),
+      @ApiResponse(responseCode = "500", description = "Internal server error")
   })
   @PreAuthorize("permitAll()")
   @GetMapping("/slug/{cinemaSlug}")
