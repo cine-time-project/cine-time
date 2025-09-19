@@ -11,6 +11,7 @@ public class ErrorMessages {
   //movie
   public static final String MOVIE_NOT_FOUND = "Movie is not found";
   public static final String MOVIE_NOT_FOUND_BY_ID = "Movie is not found by id: %s";
+  public static final String MOVIES_NOT_FOUND = "Movies are not found";
 
   //image
   // 404 - Not Found
