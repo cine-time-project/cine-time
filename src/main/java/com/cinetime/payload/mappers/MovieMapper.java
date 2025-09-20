@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 @Data
 public class MovieMapper {
 
-    // Movie entity → MovieResponse DTO
     public MovieResponse mapMovieToMovieResponse(Movie movie) {
         if (movie == null) return null;
         return MovieResponse.builder()
@@ -32,12 +31,11 @@ public class MovieMapper {
                 .updatedAt(movie.getUpdatedAt())
                 .build();
     }
-
     public Page<MovieResponse> mapToResponsePage(Page<Movie> movies) {
         return movies.map(this::mapMovieToMovieResponse);
     }
 
-    // Movie entity → CinemaMovieResponse DTO
+
     public CinemaMovieResponse mapMovieToCinemaMovieResponse(Movie movie) {
         if (movie == null) return null;
         return new CinemaMovieResponse(
@@ -55,7 +53,6 @@ public class MovieMapper {
                 movie.getStatus()
         );
     }
-
     public Page<CinemaMovieResponse> mapToCinemaResponsePage(Page<Movie> movies) {
         return movies.map(this::mapMovieToCinemaMovieResponse);
     }

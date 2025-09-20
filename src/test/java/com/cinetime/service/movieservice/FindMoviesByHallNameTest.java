@@ -92,7 +92,7 @@ class FindMoviesByHallNameTest {
     }
 
     @Test
-    @DisplayName("✅ Should return OK with movies when hall has movies")
+    @DisplayName("Should return OK with movies when hall has movies")
     void shouldReturnOkWithMovies_whenHallHasMovies() {
         String hallName = "IMAX";
         Page<Movie> moviesPage = new PageImpl<>(Collections.singletonList(testMovie), defaultPageable, 1);
@@ -118,7 +118,7 @@ class FindMoviesByHallNameTest {
     }
 
     @Test
-    @DisplayName("⚠️ Should return NOT_FOUND when hall has no movies")
+    @DisplayName("Should return NOT_FOUND when hall has no movies")
     void shouldReturnNotFound_whenHallHasNoMovies() {
         String hallName = "VIP";
         Page<Movie> moviesPage = new PageImpl<>(Collections.emptyList(), defaultPageable, 0);
@@ -133,11 +133,11 @@ class FindMoviesByHallNameTest {
 
         assertThat(res.getHttpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(res.getReturnBody()).isNull();
-        assertThat(res.getMessage()).isEqualTo(ErrorMessages.MOVIES_NOT_FOUND); // 🔥 düzeltildi
+        assertThat(res.getMessage()).isEqualTo(ErrorMessages.MOVIES_NOT_FOUND);
     }
 
     @Test
-    @DisplayName("🔄 Should handle different pagination and sort parameters correctly")
+    @DisplayName("Should handle different pagination and sort parameters correctly")
     void shouldHandleDifferentPaginationAndSort() {
         String hallName = "4DX";
         Pageable custom = PageRequest.of(2, 5, Sort.by("releaseDate").descending());
@@ -156,7 +156,7 @@ class FindMoviesByHallNameTest {
     }
 
     @Test
-    @DisplayName("🚫 Should throw exception when hallName is null")
+    @DisplayName("Should throw exception when hallName is null")
     void shouldHandleNullHallName() {
         assertThatThrownBy(() ->
                 movieService.findMoviesByHallName(null, 0, 10, "releaseDate", "asc"))
@@ -168,7 +168,7 @@ class FindMoviesByHallNameTest {
     }
 
     @Test
-    @DisplayName("⬜ Should throw exception when hallName is empty")
+    @DisplayName("Should throw exception when hallName is empty")
     void shouldHandleEmptyHallName() {
         assertThatThrownBy(() ->
                 movieService.findMoviesByHallName("   ", 0, 10, "releaseDate", "asc"))
@@ -180,7 +180,7 @@ class FindMoviesByHallNameTest {
     }
 
     @Test
-    @DisplayName("🔡 Should pass hallName to repository exactly as provided (case handled in query)")
+    @DisplayName("Should pass hallName to repository exactly as provided (case handled in query)")
     void shouldPassCaseMixedHallNameToRepository() {
         String hallName = "iMAX";
         Page<Movie> moviesPage = Page.empty(defaultPageable);
@@ -196,7 +196,7 @@ class FindMoviesByHallNameTest {
     }
 
     @Test
-    @DisplayName("💥 Should propagate exception when repository throws")
+    @DisplayName("Should propagate exception when repository throws")
     void shouldPropagateWhenRepositoryThrows() {
         when(pageableHelper.buildPageable(0, 10, "releaseDate", "asc")).thenReturn(defaultPageable);
         when(movieRepository.findAllByHallIgnoreCase(any(), any())).thenThrow(new RuntimeException("DB error"));
