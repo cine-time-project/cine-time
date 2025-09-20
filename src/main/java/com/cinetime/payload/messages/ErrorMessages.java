@@ -1,6 +1,8 @@
 package com.cinetime.payload.messages;
 
 public class ErrorMessages {
+    private ErrorMessages() {
+    }
 
     public static final String CINEMA_NOT_FOUND = "Cinema not found";
     public static final String CITY_NOT_FOUND = "City not found";
@@ -17,6 +19,8 @@ public class ErrorMessages {
     public static final String MOVIE_NOT_FOUND = "Movie is not found";
     public static final String MOVIE_NOT_FOUND_BY_ID = "Movie is not found by id: %s";
     public static final String MOVIES_NOT_FOUND = "Movies are not found";
+    public static final String MOVIES_NOT_IN_THEATRES = "No movies currently in theatres";
+    public static final String MOVIES_NOT_FOUND_ON_DATE = "No movies found on date";
 
     //image
     // 404 - Not Found

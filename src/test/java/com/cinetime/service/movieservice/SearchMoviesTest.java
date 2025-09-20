@@ -87,7 +87,7 @@ class SearchMoviesTest {
     @Test
     @DisplayName("Should return movies when valid query is provided")
     void searchMovies_WithValidQuery_ShouldReturnMovies() {
-        // Given
+
         String query = "test";
 
         when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
@@ -95,11 +95,9 @@ class SearchMoviesTest {
                 .thenReturn(mockMoviePage);
         when(movieMapper.mapToResponsePage(mockMoviePage)).thenReturn(mockMovieResponsePage);
 
-        // When
         ResponseMessage<Page<MovieResponse>> result =
                 movieService.searchMovies(query, 0, 10, "title", "asc");
 
-        // Then
         assertThat(result).isNotNull();
         assertThat(result.getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(result.getReturnBody().getContent()).hasSize(1);
@@ -113,7 +111,7 @@ class SearchMoviesTest {
     @Test
     @DisplayName("Should return empty page when no movies match the query")
     void searchMovies_WithNoMatches_ShouldReturnEmptyPage() {
-        // Given
+
         String query = "nonexistent";
         Page<Movie> emptyMoviePage = new PageImpl<>(Collections.emptyList(), mockPageable, 0);
         Page<MovieResponse> emptyResponsePage = new PageImpl<>(Collections.emptyList(), mockPageable, 0);
@@ -123,11 +121,9 @@ class SearchMoviesTest {
                 .thenReturn(emptyMoviePage);
         when(movieMapper.mapToResponsePage(emptyMoviePage)).thenReturn(emptyResponsePage);
 
-        // When
         ResponseMessage<Page<MovieResponse>> result =
                 movieService.searchMovies(query, 0, 10, "title", "asc");
 
-        // Then
         assertThat(result.getReturnBody().getContent()).isEmpty();
         assertThat(result.getReturnBody().getTotalElements()).isEqualTo(0);
 
@@ -138,18 +134,16 @@ class SearchMoviesTest {
     @Test
     @DisplayName("Should return all movies when query is empty")
     void searchMovies_WithEmptyQuery_ShouldReturnAllMovies() {
-        // Given
+
         String query = "";
 
         when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
         when(movieRepository.findAll(mockPageable)).thenReturn(mockMoviePage);
         when(movieMapper.mapToResponsePage(mockMoviePage)).thenReturn(mockMovieResponsePage);
 
-        // When
         ResponseMessage<Page<MovieResponse>> result =
                 movieService.searchMovies(query, 0, 10, "title", "asc");
 
-        // Then
         assertThat(result.getReturnBody().getContent()).hasSize(1);
 
         verify(movieRepository).findAll(mockPageable);
@@ -159,18 +153,16 @@ class SearchMoviesTest {
     @Test
     @DisplayName("Should return all movies when query is null")
     void searchMovies_WithNullQuery_ShouldReturnAllMovies() {
-        // Given
+
         String query = null;
 
         when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
         when(movieRepository.findAll(mockPageable)).thenReturn(mockMoviePage);
         when(movieMapper.mapToResponsePage(mockMoviePage)).thenReturn(mockMovieResponsePage);
 
-        // When
         ResponseMessage<Page<MovieResponse>> result =
                 movieService.searchMovies(query, 0, 10, "title", "asc");
 
-        // Then
         assertThat(result.getReturnBody().getContent()).hasSize(1);
 
         verify(movieRepository).findAll(mockPageable);
@@ -180,14 +172,13 @@ class SearchMoviesTest {
     @Test
     @DisplayName("Should handle repository exception")
     void searchMovies_WhenRepositoryThrowsException_ShouldPropagate() {
-        // Given
+
         String query = "test";
 
         when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
         when(movieRepository.findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(query, query, mockPageable))
                 .thenThrow(new RuntimeException("Database error"));
 
-        // When & Then
         assertThatThrownBy(() -> movieService.searchMovies(query, 0, 10, "title", "asc"))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Database error");
@@ -199,7 +190,7 @@ class SearchMoviesTest {
     @Test
     @DisplayName("Should handle case-insensitive search")
     void searchMovies_WithMixedCaseQuery_ShouldReturnMovies() {
-        // Given
+
         String query = "TeSt";
 
         when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
@@ -207,11 +198,9 @@ class SearchMoviesTest {
                 .thenReturn(mockMoviePage);
         when(movieMapper.mapToResponsePage(mockMoviePage)).thenReturn(mockMovieResponsePage);
 
-        // When
         ResponseMessage<Page<MovieResponse>> result =
                 movieService.searchMovies(query, 0, 10, "title", "asc");
 
-        // Then
         assertThat(result.getReturnBody().getContent()).hasSize(1);
         verify(movieRepository).findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(query, query, mockPageable);
     }
@@ -219,7 +208,7 @@ class SearchMoviesTest {
     @Test
     @DisplayName("Should use correct pagination parameters")
     void searchMovies_WithCustomPagination_ShouldApplyCorrectParameters() {
-        // Given
+
         String query = "test";
         Pageable customPageable = PageRequest.of(2, 20, Sort.by("releaseDate").descending());
 
@@ -228,10 +217,8 @@ class SearchMoviesTest {
                 .thenReturn(mockMoviePage);
         when(movieMapper.mapToResponsePage(mockMoviePage)).thenReturn(mockMovieResponsePage);
 
-        // When
         movieService.searchMovies(query, 2, 20, "releaseDate", "desc");
 
-        // Then
         verify(pageableHelper).buildPageable(2, 20, "releaseDate", "desc");
         verify(movieRepository).findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(query, query, customPageable);
     }
@@ -239,7 +226,7 @@ class SearchMoviesTest {
     @Test
     @DisplayName("Should fallback to default sort when type is invalid")
     void searchMovies_WithInvalidSortType_ShouldDefaultToAsc() {
-        // Given
+
         String query = "test";
         Pageable defaultPageable = PageRequest.of(0, 10, Sort.by("title").ascending());
 
@@ -248,11 +235,9 @@ class SearchMoviesTest {
                 .thenReturn(mockMoviePage);
         when(movieMapper.mapToResponsePage(mockMoviePage)).thenReturn(mockMovieResponsePage);
 
-        // When
         ResponseMessage<Page<MovieResponse>> result =
                 movieService.searchMovies(query, 0, 10, "title", "invalid");
 
-        // Then
         assertThat(result.getReturnBody().getContent()).hasSize(1);
         verify(movieRepository).findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(query, query, defaultPageable);
     }
@@ -260,7 +245,7 @@ class SearchMoviesTest {
     @Test
     @DisplayName("Should return empty page when page number is too large")
     void searchMovies_WithLargePageNumber_ShouldReturnEmpty() {
-        // Given
+
         String query = "test";
         Pageable largePageable = PageRequest.of(9999, 10, Sort.by("title").ascending());
         Page<Movie> emptyMoviePage = new PageImpl<>(Collections.emptyList(), largePageable, 0);
@@ -271,11 +256,9 @@ class SearchMoviesTest {
                 .thenReturn(emptyMoviePage);
         when(movieMapper.mapToResponsePage(emptyMoviePage)).thenReturn(emptyResponsePage);
 
-        // When
         ResponseMessage<Page<MovieResponse>> result =
                 movieService.searchMovies(query, 9999, 10, "title", "asc");
 
-        // Then
         assertThat(result.getReturnBody().getContent()).isEmpty();
         verify(movieRepository).findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(query, query, largePageable);
     }
