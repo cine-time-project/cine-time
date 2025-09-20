@@ -4,7 +4,6 @@ import com.cinetime.entity.business.Movie;
 import com.cinetime.payload.request.business.MovieRequest;
 import com.cinetime.payload.response.business.CinemaMovieResponse;
 import com.cinetime.payload.response.business.MovieResponse;
-import jakarta.validation.Valid;
 import lombok.Data;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;

@@ -9,7 +9,6 @@ import com.cinetime.payload.response.business.HallMovieShowtimesResponse;
 import com.cinetime.payload.response.business.HallWithShowtimesResponse;
 import com.cinetime.payload.response.business.MovieMiniResponse;
 import com.cinetime.repository.business.CinemaRepository;
-import com.cinetime.repository.business.HallMovieTimeRow;
 import com.cinetime.repository.business.ShowtimeRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.CinemasHelper;

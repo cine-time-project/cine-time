@@ -1,7 +1,5 @@
 package com.cinetime.payload.request.business;
 
-import com.cinetime.entity.business.Cinema;
-import com.cinetime.entity.business.Image;
 import com.cinetime.entity.enums.MovieStatus;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
