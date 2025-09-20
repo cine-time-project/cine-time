@@ -16,11 +16,10 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
 
     Page<Ticket> findByUserIdAndStatusIn(Long userId, List<TicketStatus> statuses, Pageable pageable);
 
-    boolean existsByShowtimeIdAndSeatLetterAndSeatNumber(Long showtimeId, String seatLetter, int seatNumber);
-
-
-    // Seat taken?
     boolean existsByShowtime_IdAndSeatLetterAndSeatNumber(Long showtimeId, String seatLetter, int seatNumber);
+
+
+
 
     // Current (future) tickets for a user
     @Query("""

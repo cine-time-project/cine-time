@@ -1,7 +1,6 @@
 package com.cinetime.payload.response.business;
 
 import com.cinetime.entity.enums.TicketStatus;
-import com.cinetime.payload.request.BuyTicketRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

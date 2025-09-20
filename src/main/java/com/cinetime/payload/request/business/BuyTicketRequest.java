@@ -1,4 +1,4 @@
-package com.cinetime.payload.request;
+package com.cinetime.payload.request.business;
 
 import com.cinetime.entity.enums.TicketStatus;
 import lombok.AllArgsConstructor;
@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Data
@@ -15,10 +16,10 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class BuyTicketRequest {
-    String movieName;
+    Long movieId;
     String cinema;
     String hall;
-    LocalDateTime showtime;
+    LocalTime showtime;
     Integer count;
     List<SeatInfo> seatInformation;
 
