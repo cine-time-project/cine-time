@@ -1,7 +1,7 @@
 package com.cinetime.controller.user;
 
-import com.cinetime.controller.user.payload.request.user.UserUpdateRequest;
-import com.cinetime.controller.user.payload.response.user.UserResponse;
+import com.cinetime.payload.request.user.UserUpdateRequest;
+import com.cinetime.payload.response.user.UserResponse;
 import com.cinetime.service.user.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

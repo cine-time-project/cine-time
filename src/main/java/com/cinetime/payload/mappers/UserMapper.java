@@ -1,8 +1,8 @@
-package com.cinetime.controller.user.payload.mappers;
+package com.cinetime.payload.mappers;
 
-import com.cinetime.controller.user.payload.messages.ErrorMessages;
-import com.cinetime.controller.user.payload.request.user.UserUpdateRequest;
-import com.cinetime.controller.user.payload.response.user.UserResponse;
+import com.cinetime.payload.messages.ErrorMessages;
+import com.cinetime.payload.request.user.UserUpdateRequest;
+import com.cinetime.payload.response.user.UserResponse;
 import com.cinetime.entity.enums.Gender;
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.BadRequestException;
