@@ -3,12 +3,11 @@ package com.cinetime.service.business;
 import com.cinetime.entity.business.Cinema;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaMapper;
+import com.cinetime.payload.mappers.HallMapper;
 import com.cinetime.payload.messages.ErrorMessages;
-import com.cinetime.payload.response.business.CinemaSummaryResponse;
-import com.cinetime.payload.response.business.HallMovieShowtimesResponse;
-import com.cinetime.payload.response.business.HallWithShowtimesResponse;
-import com.cinetime.payload.response.business.MovieMiniResponse;
+import com.cinetime.payload.response.business.*;
 import com.cinetime.repository.business.CinemaRepository;
+import com.cinetime.repository.business.HallRepository;
 import com.cinetime.repository.business.ShowtimeRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.CinemasHelper;
@@ -35,6 +34,8 @@ public class CinemaService {
     private final CinemasHelper cinemasHelper;
     private final UserRepository userRepository;
     private final ShowtimeRepository showtimeRepository;
+    private final HallRepository hallRepository;
+    private final HallMapper hallMapper;
 
 
     @Transactional(Transactional.TxType.SUPPORTS)
@@ -129,6 +130,11 @@ public class CinemaService {
     }
 
 
+    public List<SpecialHallResponse> getAllSpecialHalls() {
+    return hallRepository.findByIsSpecialTrueOrderByNameAsc()
+            .stream()
+            .map(hallMapper::toSpecial)
+            .toList();
 
-
+    }
 }
