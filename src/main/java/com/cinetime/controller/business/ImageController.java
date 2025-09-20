@@ -1,6 +1,5 @@
 package com.cinetime.controller.business;
 
-
 import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.response.business.ImageResponse;
 import com.cinetime.service.business.ImageService;
@@ -11,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,7 +26,9 @@ public class ImageController {
 
     /**
      * I01 — Stream image bytes by id (sets content type and long cache).
+     * Publicly accessible.
      */
+    @PreAuthorize("permitAll()")
     @Operation(summary = "Get image bytes by id",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Image bytes",
@@ -48,7 +50,9 @@ public class ImageController {
 
     /**
      * I02 — Upload image for a movie; use poster=true to mark as poster.
+     * Requires ADMIN authority.
      */
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Upload an image for a movie",
             responses = {@ApiResponse(responseCode = "201", description = "Created")})
     @PostMapping(path = "/images/{movieId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -64,7 +68,9 @@ public class ImageController {
 
     /**
      * I03 — Delete image by id.
+     * Requires ADMIN authority.
      */
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Delete an image",
             responses = {@ApiResponse(responseCode = "204", description = "No Content")})
     @DeleteMapping("/images/{imageId}")
@@ -77,7 +83,9 @@ public class ImageController {
 
     /**
      * I04 — Replace image bytes and optionally toggle poster flag.
+     * Requires ADMIN authority.
      */
+    @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Update an image",
             description = "Replaces image bytes and optionally toggles poster flag.",
             responses = {@ApiResponse(responseCode = "200", description = "OK")})
