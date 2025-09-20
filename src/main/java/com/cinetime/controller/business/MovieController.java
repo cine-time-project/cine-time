@@ -105,6 +105,7 @@ public class MovieController {
             @ApiResponse(responseCode = "400", description = "Invalid request parameter"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
+    @PreAuthorize("permitAll()")
     @GetMapping("/in-theatres")
     public ResponseMessage<Page<MovieResponse>> getMoviesInTheatres(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
