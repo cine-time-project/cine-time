@@ -1,13 +1,18 @@
 package com.cinetime.service.business;
 
+import com.cinetime.entity.business.Cinema;
+import com.cinetime.entity.business.Hall;
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaMapper;
+import com.cinetime.payload.mappers.HallMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.response.business.CinemaSummaryResponse;
 import com.cinetime.payload.response.business.HallWithShowtimesResponse;
+import com.cinetime.payload.response.business.SpecialHallResponse;
 import com.cinetime.repository.business.CinemaRepository;
 import com.cinetime.repository.business.HallMovieTimeRow;
+import com.cinetime.repository.business.HallRepository;
 import com.cinetime.repository.business.ShowtimeRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.CinemasHelper;
@@ -37,6 +42,9 @@ class CinemaServiceTest {
     @Mock private CinemasHelper cinemasHelper;
     @Mock private UserRepository userRepository; // <-- yeni
     @Mock private ShowtimeRepository showtimeRepository;
+
+    @Mock private HallRepository hallRepository;   // <-- özel salonlar için
+    @Mock private HallMapper hallMapper;           // <-- entity->dto
 
     @InjectMocks private CinemaService cinemaService;
     @InjectMocks private CinemaService service;
@@ -307,6 +315,42 @@ class CinemaServiceTest {
         verify(cinemaRepository).existsById(cinemaId);
         verify(showtimeRepository).findShowtimesByCinemaId(cinemaId);
     }
+
+    @Test
+    void getAllSpecialHalls_whenExists_mapsAndReturnsList() {
+        // arrange: entity(ler)
+        var cinema = new Cinema();
+        cinema.setId(11L); cinema.setName("CineTime Beşiktaş");
+
+        var h1 = Hall.builder().id(100L).name("IMAX").seatCapacity(200).isSpecial(true).cinema(cinema).build();
+        var h2 = Hall.builder().id(101L).name("4DX").seatCapacity(160).isSpecial(true).cinema(cinema).build();
+        when(hallRepository.findByIsSpecialTrueOrderByNameAsc()).thenReturn(List.of(h1, h2));
+
+        // arrange: mapper çıktıları
+        var dto1 = SpecialHallResponse.builder()
+                .id(100L).name("IMAX").seatCapacity(200)
+                .cinemaId(11L).cinemaName("CineTime Beşiktaş").build();
+        var dto2 = SpecialHallResponse.builder()
+                .id(101L).name("4DX").seatCapacity(160)
+                .cinemaId(11L).cinemaName("CineTime Beşiktaş").build();
+
+        when(hallMapper.toSpecial(h1)).thenReturn(dto1);
+        when(hallMapper.toSpecial(h2)).thenReturn(dto2);
+
+        // act
+        var result = service.getAllSpecialHalls();
+
+        // assert
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(SpecialHallResponse::getName)
+                .containsExactly("IMAX", "4DX");
+
+        verify(hallRepository).findByIsSpecialTrueOrderByNameAsc();
+        verify(hallMapper).toSpecial(h1);
+        verify(hallMapper).toSpecial(h2);
+        verifyNoMoreInteractions(hallMapper);
+    }
+
 }
 
 

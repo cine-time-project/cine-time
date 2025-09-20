@@ -1,15 +1,14 @@
 package com.cinetime.controller.business;
 
+import com.cinetime.payload.response.business.SpecialHallResponse;
 import com.cinetime.payload.response.business.*;
 import com.cinetime.service.business.CinemaService;
 import com.cinetime.service.helper.PageableHelper;
 import com.cinetime.payload.messages.SuccessMessages;
-import jakarta.persistence.PrePersist;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -81,6 +80,11 @@ public class CinemaController {
     @GetMapping("/cinemas/{id}/halls")
     public ResponseEntity<List<HallWithShowtimesResponse>> getCinemaHalls(@PathVariable Long id) {
         return ResponseEntity.ok(cinemaService.getCinemaHallsWithShowtimes(id));
+    }
+
+    @GetMapping("/special-halls")
+    public ResponseEntity<List<SpecialHallResponse>> getSpecialHalls(){
+        return ResponseEntity.ok(cinemaService.getAllSpecialHalls());
     }
 
 }
