@@ -128,11 +128,11 @@ public class MovieController {
             @ApiResponse(responseCode = "404", description = "Movie not found with the given ID"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @GetMapping("/id/{id}")
+    @GetMapping("/id/{movieId}")
     @Transactional(readOnly = true)
     public ResponseMessage<MovieResponse> getMovie(
-            @PathVariable Long id) {
-        return movieService.getMovieById(id);
+            @PathVariable Long movieId) {
+        return movieService.getMovieById(movieId);
     }
 
     //M11
@@ -153,6 +153,31 @@ public class MovieController {
     ) {
         return movieService.saveMovie(movieRequest);
     }
+
+    // M12 - Update Movie
+    @Operation(
+            summary = "Update Movie {M12}",
+            description = "Updates an existing movie. Handles primitive fields, ElementCollection (cast, formats, genre), " +
+                    "ManyToMany (cinemas), and OneToMany (images). Null-safe updates."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Movie successfully updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request body or validation failed"),
+            @ApiResponse(responseCode = "404", description = "Movie not found with the provided ID"),
+            @ApiResponse(responseCode = "403", description = "Forbidden access"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PutMapping("/update/{movieId}")
+    public ResponseMessage<MovieResponse> updateMovie(
+            @Parameter(description = "DTO containing updated movie information", required = true)
+            @RequestBody @Valid MovieRequest movieRequest,
+            @Parameter(description = "ID of the movie to be updated", required = true)
+            @PathVariable Long movieId
+    ) {
+        return movieService.updateMovie(movieRequest, movieId);
+    }
+
 
 
 }
