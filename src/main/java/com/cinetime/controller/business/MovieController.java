@@ -128,6 +128,7 @@ public class MovieController {
             @ApiResponse(responseCode = "404", description = "Movie not found with the given ID"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
+    @PreAuthorize("permitAll()")
     @GetMapping("/id/{movieId}")
     @Transactional(readOnly = true)
     public ResponseMessage<MovieResponse> getMovie(
