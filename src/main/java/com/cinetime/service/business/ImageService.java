@@ -1,6 +1,5 @@
 package com.cinetime.service.business;
 
-import com.cinetime.entity.business.Cinema;
 import com.cinetime.entity.business.Image;
 import com.cinetime.entity.business.Movie;
 import com.cinetime.exception.BadRequestException;

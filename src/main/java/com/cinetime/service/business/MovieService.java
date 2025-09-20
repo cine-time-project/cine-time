@@ -14,7 +14,6 @@ import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.repository.business.MovieRepository;
 import com.cinetime.repository.business.ShowtimeRepository;
 import com.cinetime.service.helper.PageableHelper;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -184,14 +183,12 @@ public class MovieService {
     //M12
     /**
      * M12 - Update Movie
-     *
      * This service method updates an existing movie entity.
      * It handles:
      *  - Primitive fields (title, slug, summary, releaseDate, duration, rating, specialHalls, director)
      *  - ElementCollection fields (cast, formats, genre)
      *  - ManyToMany relationship (cinemas)
      *  - OneToMany relationship (images)
-     *
      * Null-safe behavior:
      *  - If movieRequest.getCinemaIds() or movieRequest.getImageIds() is null, the existing relationships are preserved.
      *  - If an empty Set is provided, the relationships are completely removed.
