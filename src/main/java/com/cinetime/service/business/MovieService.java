@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -168,22 +167,10 @@ public class MovieService {
     public ResponseMessage<MovieResponse> saveMovie(MovieRequest movieRequest) {
         Movie movie = movieMapper.mapMovieRequestToMovie(movieRequest);
         if (movieRequest.getCinemaIds() != null && !movieRequest.getCinemaIds().isEmpty()){
-            movie.setCinemas(
-                    movieRequest
-                            .getCinemaIds()
-                            .stream()
-                            .map(cinemaService::getById)
-                            .collect(Collectors.toSet())
-            );
+            movie.setCinemas(cinemaService.getAllByIdIn(movieRequest.getCinemaIds()));
         }
         if (movieRequest.getImageIds() != null && !movieRequest.getImageIds().isEmpty()){
-            movie.setImages(
-                    movieRequest
-                            .getImageIds()
-                            .stream()
-                            .map(imageService::getImageEntity)
-                            .collect(Collectors.toSet())
-            );
+            movie.setImages(imageService.getAllByIdIn(movieRequest.getCinemaIds()));
         }
         Movie savedMovie = movieRepository.save(movie);
         return ResponseMessage.<MovieResponse>builder()

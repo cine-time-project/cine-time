@@ -8,7 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
@@ -92,6 +94,8 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
     @Query("select u.id from User u where u.email = :email")
     Optional<Long> findIdByUsername(@Param("email") String email);
+
+    Set<Cinema> findAllByIdIn(Set<Long> ids);
 
 
 }

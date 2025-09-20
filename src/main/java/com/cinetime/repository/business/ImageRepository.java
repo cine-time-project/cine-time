@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Set;
 
 public interface ImageRepository extends JpaRepository<Image, Long> {
 
@@ -22,4 +23,6 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
 
     /** Optional listing helper for admin screens. */
     List<Image> findByMovie_IdOrderByCreatedAtDesc(Long movieId);
+
+    Set<Image> findAllByIdIn(Set<Long> ids);
 }

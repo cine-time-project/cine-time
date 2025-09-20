@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Set;
+
 public interface MovieRepository extends JpaRepository<Movie,Long> {
 
     Page<Movie> findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(String title, String summary, Pageable pageable);
@@ -22,6 +24,8 @@ public interface MovieRepository extends JpaRepository<Movie,Long> {
     Page<Movie> findByStatus(MovieStatus status, Pageable pageable);
 
     Page<Movie> findAllByGenreContainingIgnoreCase(String genre, Pageable pageable);
+
+    Set<Movie> findAllByIdIn(Set<Long> ids);
 
 
 }
