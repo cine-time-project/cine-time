@@ -1,6 +1,7 @@
 package com.cinetime.payload.mappers;
 
 import com.cinetime.entity.business.Movie;
+import com.cinetime.payload.request.business.MovieRequest;
 import com.cinetime.payload.response.business.CinemaMovieResponse;
 import com.cinetime.payload.response.business.MovieResponse;
 import lombok.Data;
@@ -60,4 +61,22 @@ public class MovieMapper {
     }
 
 
+    public Movie mapMovieRequestToMovie(MovieRequest movieRequest) {
+
+        return Movie.builder()
+                .title(movieRequest.getTitle())
+                .slug(movieRequest.getSlug())
+                .summary(movieRequest.getSummary())
+                .releaseDate(movieRequest.getReleaseDate())
+                .duration(movieRequest.getDuration())
+                .rating(movieRequest.getRating())
+                .specialHalls(movieRequest.getSpecialHalls())
+                .director(movieRequest.getDirector())
+                .cast(movieRequest.getCast())
+                .formats(movieRequest.getFormats())
+                .genre(movieRequest.getGenre())
+                .status(movieRequest.getStatus())
+                //cinemas and images will be assigned in MovieService by retrieving them from DB.
+                .build();
+    }
 }

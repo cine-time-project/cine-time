@@ -18,4 +18,7 @@ public interface MovieRepository extends JpaRepository<Movie,Long> {
     @Query("SELECT DISTINCT m FROM Movie m JOIN m.cinemas c JOIN c.halls h WHERE LOWER(h.name) = LOWER(:hallName)")
     Page<Movie> findAllByHallIgnoreCase(@Param("hallName") String hallName, Pageable pageable);
 
+    Page<Movie> findAllByGenreContainingIgnoreCase(String genre, Pageable pageable);
+
+
 }

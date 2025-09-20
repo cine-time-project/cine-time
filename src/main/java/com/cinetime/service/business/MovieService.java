@@ -5,6 +5,7 @@ import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.MovieMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
+import com.cinetime.payload.request.business.MovieRequest;
 import com.cinetime.payload.response.business.CinemaMovieResponse;
 import com.cinetime.payload.response.business.MovieResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
@@ -15,6 +16,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +27,8 @@ public class MovieService {
   private final MovieRepository movieRepository;
   private final PageableHelper pageableHelper;
   private final MovieMapper movieMapper;
+  private final CinemaService cinemaService;
+  private final ImageService imageService;
 
 
   //M01
@@ -99,7 +105,7 @@ public class MovieService {
 
 
 
-  //a Reusable Method to find a Movie by id. If it doesn't exist, throws exception
+  //Reusable Method to find a Movie by id. If it doesn't exist, throws exception
   private Movie findMovieById(Long id) {
     return movieRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException(String.format(
@@ -107,6 +113,7 @@ public class MovieService {
   }
 
   //MO9
+  @Transactional(readOnly = true)
   public ResponseMessage<MovieResponse> getMovieById(Long id) {
     Movie movie = findMovieById(id);
     return ResponseMessage.<MovieResponse>builder()
@@ -115,6 +122,36 @@ public class MovieService {
         .returnBody(movieMapper.mapMovieToMovieResponse(movie))
         .build();
   }
+
+    //M11
+    public ResponseMessage<MovieResponse> saveMovie(MovieRequest movieRequest) {
+        Movie movie = movieMapper.mapMovieRequestToMovie(movieRequest);
+        if (movieRequest.getCinemaIds() != null && !movieRequest.getCinemaIds().isEmpty()){
+            movie.setCinemas(
+                    movieRequest
+                            .getCinemaIds()
+                            .stream()
+                            .map(cinemaService::getById)
+                            .collect(Collectors.toSet())
+            );
+        }
+        if (movieRequest.getImageIds() != null && !movieRequest.getImageIds().isEmpty()){
+            movie.setImages(
+                    movieRequest
+                            .getImageIds()
+                            .stream()
+                            .map(imageService::getImageEntity)
+                            .collect(Collectors.toSet())
+            );
+        }
+        Movie savedMovie = movieRepository.save(movie);
+        return ResponseMessage.<MovieResponse>builder()
+                .httpStatus(HttpStatus.CREATED)
+                .message(SuccessMessages.MOVIE_CREATE)
+                .returnBody(movieMapper.mapMovieToMovieResponse(savedMovie))
+                .build();
+    }
+
 
 
 }
