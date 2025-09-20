@@ -58,9 +58,9 @@ public class MovieRequest {
     @NotNull(message = "Movie Status cannot be empty")
     private MovieStatus status;
 
-    private Set<Cinema> cinemaIds;
+    private Set<Long> cinemaIds;
 
-    private Set<Image> imageIds;
+    private Set<Long> imageIds;
 
 }
 

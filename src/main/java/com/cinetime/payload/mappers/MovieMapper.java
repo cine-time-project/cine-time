@@ -77,7 +77,7 @@ public class MovieMapper {
                 .formats(movieRequest.getFormats())
                 .genre(movieRequest.getGenre())
                 .status(movieRequest.getStatus())
-                //cinemas and images will be added in MovieService by retrieving them from DB.
+                //cinemas and images will be assigned in MovieService by retrieving them from DB.
                 .build();
     }
 }

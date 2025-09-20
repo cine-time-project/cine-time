@@ -62,7 +62,7 @@ public class Movie {
     private String director;
 
     @NotNull
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "movie_cast",
             joinColumns = @JoinColumn(name = "movie_id")
@@ -71,7 +71,7 @@ public class Movie {
     private List<String> cast = new ArrayList<>();
 
     @NotNull
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = "movie_format",
             joinColumns = @JoinColumn(name = "movie_id")
@@ -80,6 +80,12 @@ public class Movie {
     private List<String> formats = new ArrayList<>();
 
     @NotNull
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "movie_genre",
+            joinColumns = @JoinColumn(name = "movie_id")
+    )
+    @Column(name = "genre", nullable = false)
     private List<String> genre;
 
 

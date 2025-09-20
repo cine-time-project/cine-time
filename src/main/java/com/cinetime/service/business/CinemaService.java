@@ -1,5 +1,6 @@
 package com.cinetime.service.business;
 
+import com.cinetime.entity.business.Cinema;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaMapper;
 import com.cinetime.payload.messages.ErrorMessages;
@@ -53,9 +54,14 @@ public class CinemaService {
     }
 
     @Transactional(Transactional.TxType.SUPPORTS)
-    public CinemaSummaryResponse getCinemaById(Long id) {
-        var cinema = cinemaRepository.findById(id)
+    public Cinema getById(Long id) {
+        return cinemaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.CINEMA_NOT_FOUND));
+    }
+
+    @Transactional(Transactional.TxType.SUPPORTS)
+    public CinemaSummaryResponse getCinemaById(Long id) {
+        var cinema = getById(id);
         return cinemaMapper.toSummary(cinema);
     }
 

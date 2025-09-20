@@ -34,7 +34,7 @@ public class MovieController {
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
   @PreAuthorize("permitAll()")
-  @GetMapping
+  @GetMapping("/search")
   @Transactional(readOnly = true)
   public ResponseMessage<Page<MovieResponse>> searchMovies(
       @RequestParam(required = false) String q,
@@ -81,7 +81,7 @@ public class MovieController {
           @ApiResponse(responseCode = "500", description = "Internal server error")
   })
   @PreAuthorize("permitAll()")
-  @GetMapping("/{hallName}")
+  @GetMapping("/hall/{hallName}")
   public ResponseMessage<Page<MovieResponse>> findMoviesByHallName(
           @PathVariable String hallName,
           @RequestParam(value ="page", defaultValue = "0") int page,
@@ -103,7 +103,7 @@ public class MovieController {
       @ApiResponse(responseCode = "404", description = "Movie not found with the given ID"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
-  @GetMapping("/{id}")
+  @GetMapping("/id/{id}")
   @Transactional(readOnly = true)
   public ResponseMessage<MovieResponse> getMovie(
       @PathVariable Long id) {
@@ -122,7 +122,7 @@ public class MovieController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PreAuthorize("hasAnyAuthority('ADMIN')")
-    @PostMapping
+    @PostMapping("/save")
     public ResponseMessage<MovieResponse> saveMovie(
             @RequestBody @Valid MovieRequest movieRequest
     ) {
