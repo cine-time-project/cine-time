@@ -59,4 +59,15 @@ public class HallService {
                 .returnBody(hallMapper.mapToResponsePage(halls))
                 .build();
     }
+
+    public ResponseMessage<HallResponse> deleteHallById(Long hallId) {
+        Hall hall = findHallById(hallId);
+        HallResponse hallResponse = hallMapper.mapHallToResponse(hall);
+        hallRepository.delete(hall);
+        return ResponseMessage.<HallResponse>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.HALL_DELETED)
+                .returnBody(hallResponse)
+                .build();
+    }
 }

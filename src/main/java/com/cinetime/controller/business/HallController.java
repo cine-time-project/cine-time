@@ -45,5 +45,11 @@ public class HallController {
         return hallService.getAllHalls(pageable);
     }
 
+    @DeleteMapping("/del/{hallId}")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    public ResponseMessage<HallResponse> deleteHallById(@PathVariable Long hallId){
+        return hallService.deleteHallById(hallId);
+    }
+
 
 }
