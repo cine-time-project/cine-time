@@ -20,23 +20,21 @@ import java.util.Optional;
 public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
 
 
-
     @Query("""
-    select s
-      from Showtime s
-     where s.movie.id = :movieId
-       and (
-             s.date > :today
-          or (s.date = :today and s.startTime > :showTime)
-       )
-     order by s.date asc, s.startTime asc
-""")
+                select s
+                  from Showtime s
+                 where s.movie.id = :movieId
+                   and (
+                         s.date > :today
+                      or (s.date = :today and s.startTime > :showTime)
+                   )
+                 order by s.date asc, s.startTime asc
+            """)
     Optional<Showtime> findNextFutureShowtime(
             @Param("movieId") Long movieId,
             @Param("today") LocalDate today,
             @Param("showTime") LocalTime showTime
     );
-
 
 
     //Ileriki tarihte baslayacak filmler icin ya ShowTimeEntity si icine startAt gibi field koyup asagidaki gibi bi yontem
@@ -49,15 +47,15 @@ public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
 
     // All *future* showtimes for a movie, paginated (date > today OR same-day with startTime > now)
     @Query("""
-select s
-  from Showtime s
- where s.movie.id = :movieId
-   and (
-         s.date > :today
-      or (s.date = :today and s.startTime > :showTime)
-   )
- order by s.date asc, s.startTime asc
-""")
+            select s
+              from Showtime s
+             where s.movie.id = :movieId
+               and (
+                     s.date > :today
+                  or (s.date = :today and s.startTime > :showTime)
+               )
+             order by s.date asc, s.startTime asc
+            """)
     Page<Showtime> findAllFutureShowtimesByMovieId(
             @Param("movieId") Long movieId,
             @Param("today") LocalDate today,
@@ -80,25 +78,27 @@ select s
             LocalDate date,
             LocalTime startTime
     );
+
     @Query("""
-        select
-            h.id           as hallId,
-            h.name         as hallName,
-            h.seatCapacity as seatCapacity,
-            h.isSpecial    as isSpecial,
-            m.id           as movieId,
-            m.title        as movieTitle,
-            s.date         as date,
-            s.startTime    as startTime
-        from Showtime s
-        join s.hall  h
-        join s.movie m
-        where h.cinema.id = :cinemaId
-        order by h.name asc, m.title asc, s.date asc, s.startTime asc
-    """)
+                select
+                    h.id           as hallId,
+                    h.name         as hallName,
+                    h.seatCapacity as seatCapacity,
+                    h.isSpecial    as isSpecial,
+                    m.id           as movieId,
+                    m.title        as movieTitle,
+                    s.date         as date,
+                    s.startTime    as startTime
+                from Showtime s
+                join s.hall  h
+                join s.movie m
+                where h.cinema.id = :cinemaId
+                order by h.name asc, m.title asc, s.date asc, s.startTime asc
+            """)
     List<HallMovieTimeRow> findShowtimesByCinemaId(@Param("cinemaId") Long cinemaId);
+
     Page<Showtime> findByDate(LocalDate date, Pageable pageable);
 
     Page<Showtime> findByDateAndStartTimeAfter(LocalDate date, LocalTime time, Pageable pageable);
-
+}
 
