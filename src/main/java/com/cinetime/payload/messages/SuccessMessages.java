@@ -21,4 +21,16 @@ public class SuccessMessages {
     //user
     public static final String USER_UPDATED = "User updated successfully.";
     public static final String USER_DELETED = "User deleted successfully.";
+
+    //Ticket
+    public static final String CURRENT_TICKETS_LISTED = "Current tickets listed successfully.";
+    public static final String PASSED_TICKETS_LISTED = "Passed tickets listed successfully.";
+    public static final String TICKET_RESERVED = "Ticket reserved successfully.";
+    public static final String TICKET_BOUGHT = "Ticket bought successfully.";
+
+
+
+
+
+
 }

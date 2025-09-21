@@ -122,7 +122,7 @@ public class TicketService {
                        ticketRequest.getMovieId(),
                         ticketRequest.getHall(),
                         ticketRequest.getCinema(),
-                        LocalDate.now(),
+                        ticketRequest.getDate(),
                         ticketRequest.getShowtime()
                 )
                 .orElseThrow(() -> new IllegalArgumentException("Showtime not found"));
