@@ -1,5 +1,6 @@
 package com.cinetime.payload.request.business;
 
+import com.cinetime.service.validator.showtime.ValidShowtime;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +14,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ValidShowtime
 public class ShowtimeRequest {
 
     @NotNull(message = "Date cannot be null")
