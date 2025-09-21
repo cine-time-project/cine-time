@@ -37,4 +37,13 @@ public class ShowtimeController {
         return showTimeService.getShowtimeById(id);
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @Transactional
+    public ResponseMessage<ShowtimeResponse> updateShowtimeById(
+            @PathVariable Long id,
+            @RequestBody @Valid ShowtimeRequest showtimeRequest){
+        return showTimeService.updateShowtimeById(id, showtimeRequest);
+    }
+
 }
