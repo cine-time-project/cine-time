@@ -150,7 +150,7 @@ public class MovieService {
 
 
     //Reusable Method to find a Movie by id. If it doesn't exist, throws exception
-    private Movie findMovieById(Long id) {
+    public Movie findMovieById(Long id) {
         return movieRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(
                         ErrorMessages.MOVIE_NOT_FOUND_BY_ID, id)));

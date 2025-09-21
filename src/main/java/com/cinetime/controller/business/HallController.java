@@ -21,7 +21,7 @@ public class HallController {
 
     private final HallService hallService;
 
-    @PostMapping("/save")
+    @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @Transactional
     public ResponseMessage<HallResponse> saveHall(
@@ -31,27 +31,25 @@ public class HallController {
 
     @GetMapping("/{hallId}")
     @PreAuthorize("permitAll()")
-    @Transactional(readOnly = true)
     public ResponseMessage<HallResponse> getHallById(@PathVariable Long hallId){
         return hallService.getHallById(hallId);
     }
 
     @GetMapping
     @PreAuthorize("permitAll()")
-    @Transactional(readOnly = true)
     public ResponseMessage<Page<HallResponse>> getAllHalls(
             @PageableDefault(page = 0, size = 10, sort = "name", direction = Sort.Direction.ASC) Pageable pageable
     ){
         return hallService.getAllHalls(pageable);
     }
 
-    @DeleteMapping("/del/{hallId}")
+    @DeleteMapping("/{hallId}")
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     public ResponseMessage<HallResponse> deleteHallById(@PathVariable Long hallId){
         return hallService.deleteHallById(hallId);
     }
 
-    @PutMapping("/update/{hallId}")
+    @PutMapping("/{hallId}")
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @Transactional
     public ResponseMessage<HallResponse> updateHallById(
