@@ -8,10 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/hall") // <-- tek base path
@@ -26,5 +23,12 @@ public class HallController {
     public ResponseMessage<HallResponse> saveHall(
             @RequestBody @Valid HallRequest hallRequest) {
         return hallService.saveHall(hallRequest);
+    }
+
+    @GetMapping("/{hallId}")
+    @PreAuthorize("permitAll()")
+    @Transactional(readOnly = true)
+    public ResponseMessage<HallResponse> getHallById(@PathVariable Long hallId){
+        return hallService.getHallById(hallId);
     }
 }

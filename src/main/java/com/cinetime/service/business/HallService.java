@@ -2,7 +2,9 @@ package com.cinetime.service.business;
 
 import com.cinetime.entity.business.Cinema;
 import com.cinetime.entity.business.Hall;
+import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.HallMapper;
+import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.business.HallRequest;
 import com.cinetime.payload.response.business.HallResponse;
@@ -29,6 +31,20 @@ public class HallService {
                 .httpStatus(HttpStatus.CREATED)
                 .message(SuccessMessages.HALL_CREATED)
                 .returnBody(hallMapper.mapHallToResponse(savedHall))
+                .build();
+    }
+
+    private Hall findHallById(Long id) {
+        return hallRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessages.HALL_NOT_FOUND_ID, id)));
+    }
+
+    public ResponseMessage<HallResponse> getHallById(Long hallId) {
+        Hall hall = findHallById(hallId);
+        return ResponseMessage.<HallResponse>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.HALL_FOUND)
+                .returnBody(hallMapper.mapHallToResponse(hall))
                 .build();
     }
 }
