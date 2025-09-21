@@ -37,6 +37,10 @@ public class ErrorMessages {
     public static final String MOVIE_ALREADY_HAS_DIFFERENT_POSTER = "This movie already has a different poster.";
 
 
+    //Ticket
+    //409 - Conflict
+    public static final String SHOWTIME_HAS_PASSED= "Movie time can not be in the past.";
+
 }
 
 

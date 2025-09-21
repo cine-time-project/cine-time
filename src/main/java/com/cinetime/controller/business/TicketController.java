@@ -10,6 +10,7 @@ import com.cinetime.service.helper.PageableHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -97,7 +98,7 @@ import java.util.List;
         @PostMapping("/buy-ticket")
         public ResponseEntity<ResponseMessage<TicketResponse>> buy(
                 @AuthenticationPrincipal com.cinetime.security.service.UserDetailsImpl principal,
-                @RequestBody BuyTicketRequest request) {
+                @RequestBody @Valid BuyTicketRequest request) {
             Long userId = principal != null ? principal.getId() : null;
             TicketResponse body = ticketService.buy(request, userId);
 
