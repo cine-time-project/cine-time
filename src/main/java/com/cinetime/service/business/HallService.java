@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +26,7 @@ public class HallService {
     private final CinemaService cinemaService;
     private final HallMapper hallMapper;
 
+    @Transactional
     public ResponseMessage<HallResponse> saveHall(@Valid HallRequest hallRequest) {
         Cinema cinema = cinemaService.getById(hallRequest.getCinemaId());
         Hall hall = hallMapper.mapRequestToHall(hallRequest, cinema);
@@ -70,4 +72,34 @@ public class HallService {
                 .returnBody(hallResponse)
                 .build();
     }
+
+    @Transactional
+    public ResponseMessage<HallResponse> updateHall(@Valid HallRequest hallRequest, Long id) {
+
+        Hall hall = findHallById(id);
+
+        // 2️⃣ Update primitive fields if present in request
+        if (hallRequest.getName() != null) {
+            hall.setName(hallRequest.getName());
+        }
+        if (hallRequest.getSeatCapacity() != null) {
+            hall.setSeatCapacity(hallRequest.getSeatCapacity());
+        }
+        if (hallRequest.getIsSpecial() != null) {
+            hall.setIsSpecial(hallRequest.getIsSpecial());
+        }
+        if (hallRequest.getCinemaId() != null) {
+            hall.setCinema(cinemaService.getById(hallRequest.getCinemaId()));
+        }
+
+        // 3️⃣ Save updated hall
+        Hall updatedHall = hallRepository.save(hall);
+
+        return ResponseMessage.<HallResponse>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.HALL_UPDATED)
+                .returnBody(hallMapper.mapHallToResponse(updatedHall))
+                .build();
+    }
+
 }
