@@ -77,7 +77,7 @@ public class MovieController {
     }
 
 
-    //M09
+    //M09 - Get Movie By ID
     @PreAuthorize("permitAll()")
     @GetMapping("/id/{movieId}")
     @Transactional(readOnly = true)
@@ -86,7 +86,7 @@ public class MovieController {
         return movieService.getMovieById(movieId);
     }
 
-    //M11
+    //M11 - Save Movie
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping("/save")
     public ResponseMessage<MovieResponse> saveMovie(
@@ -107,7 +107,7 @@ public class MovieController {
         return movieService.updateMovie(movieRequest, movieId);
     }
 
-    //M09
+    //M13 - Delete Movie
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @DeleteMapping("/del/{movieId}")
     public ResponseMessage<MovieResponse> deleteMovie(
