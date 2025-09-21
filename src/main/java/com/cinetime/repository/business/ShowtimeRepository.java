@@ -2,10 +2,12 @@ package com.cinetime.repository.business;
 
 import com.cinetime.entity.business.Showtime;
 
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -95,7 +97,8 @@ select s
         order by h.name asc, m.title asc, s.date asc, s.startTime asc
     """)
     List<HallMovieTimeRow> findShowtimesByCinemaId(@Param("cinemaId") Long cinemaId);
+    Page<Showtime> findByDate(LocalDate date, Pageable pageable);
 
-}
+    Page<Showtime> findByDateAndStartTimeAfter(LocalDate date, LocalTime time, Pageable pageable);
 
 

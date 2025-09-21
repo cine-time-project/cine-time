@@ -1,6 +1,7 @@
 package com.cinetime.repository.business;
 
 import com.cinetime.entity.business.Movie;
+import com.cinetime.entity.enums.MovieStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,5 +18,10 @@ public interface MovieRepository extends JpaRepository<Movie,Long> {
 
     @Query("SELECT DISTINCT m FROM Movie m JOIN m.cinemas c JOIN c.halls h WHERE LOWER(h.name) = LOWER(:hallName)")
     Page<Movie> findAllByHallIgnoreCase(@Param("hallName") String hallName, Pageable pageable);
+
+    Page<Movie> findByStatus(MovieStatus status, Pageable pageable);
+
+    Page<Movie> findAllByGenreContainingIgnoreCase(String genre, Pageable pageable);
+
 
 }
