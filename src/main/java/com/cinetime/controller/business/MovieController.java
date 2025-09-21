@@ -107,6 +107,13 @@ public class MovieController {
         return movieService.updateMovie(movieRequest, movieId);
     }
 
+    //M09
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @DeleteMapping("/del/{movieId}")
+    public ResponseMessage<MovieResponse> deleteMovie(
+            @PathVariable Long movieId) {
+        return movieService.deleteMovieById(movieId);
+    }
 
 
 }
