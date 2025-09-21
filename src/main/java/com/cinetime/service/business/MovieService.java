@@ -264,4 +264,28 @@ public class MovieService {
                 .build();
     }
 
+    /**
+     * Fetches movies filtered by genre with pagination and sorting.
+     * - If genre is provided, performs a case-insensitive contains search.
+     * - If genre is null/blank, returns all movies.
+     * - Throws ResourceNotFoundException if no movies are found.
+     *
+     * @param genre    optional genre filter
+     * @param pageable pagination and sorting info
+     * @return paginated list of MovieResponse wrapped in ResponseMessage
+     */
+    public ResponseMessage<Page<MovieResponse>> getMovieByGenre(String genre, Pageable pageable) {
+        Page<Movie> movies;
+        if (genre != null && !genre.trim().isEmpty()) {
+            movies = movieRepository.findAllByGenreIgnoreCaseContaining(genre.trim(), pageable);
+        } else {
+            movies = movieRepository.findAll(pageable);
+        }
+        if (movies.isEmpty()) throw new ResourceNotFoundException(ErrorMessages.MOVIES_NOT_FOUND);
+        return ResponseMessage.<Page<MovieResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.MOVIES_FOUND)
+                .returnBody(movieMapper.mapToResponsePage(movies))
+                .build();
+    }
 }

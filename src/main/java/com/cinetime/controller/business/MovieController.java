@@ -9,6 +9,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -156,6 +159,17 @@ public class MovieController {
     public ResponseMessage<MovieResponse> deleteMovie(
             @PathVariable Long movieId) {
         return movieService.deleteMovieById(movieId);
+    }
+
+    //M15
+    @PreAuthorize("permitAll()")
+    @GetMapping("/genre")
+    @Transactional(readOnly = true)
+    public ResponseMessage<Page<MovieResponse>> getMoviesByGenre(
+            @RequestParam(required = false) String genre,
+            @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC) Pageable pageable) {
+
+        return movieService.getMovieByGenre(genre, pageable);
     }
 
 
