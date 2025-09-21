@@ -5,10 +5,7 @@ import com.cinetime.payload.response.business.CinemaMovieResponse;
 import com.cinetime.payload.response.business.MovieResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.service.business.MovieService;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,14 +25,6 @@ public class MovieController {
     private final MovieService movieService;
 
     //M01
-    @Operation(
-            summary = "Search Movies {M01}",
-            description = "Returns a paginated list of movies matching the search query"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved movies list"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
     @PreAuthorize("permitAll()")
     @GetMapping("/search")
     @Transactional(readOnly = true)
@@ -47,20 +36,9 @@ public class MovieController {
             @RequestParam(value = "type", defaultValue = "asc") String type) {
 
         return movieService.searchMovies(q, page, size, sort, type);
-
     }
 
     //M02
-    @Operation(
-            summary = "Get Movies by Cinema Slug",
-            description = "Returns a paginated list of movies showing at a specific cinema identified by its slug"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved movies list"),
-            @ApiResponse(responseCode = "404", description = "No movies found for given cinema slug"),
-            @ApiResponse(responseCode = "400", description = "Invalid cinema slug"), // optional
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
     @PreAuthorize("permitAll()")
     @GetMapping("/slug/{cinemaSlug}")
     public ResponseMessage<Page<CinemaMovieResponse>> findMoviesByCinemaSlug(
@@ -74,15 +52,6 @@ public class MovieController {
     }
 
     //M03
-    @Operation(
-            summary = "Get Movies by Hall {M03}",
-            description = "Returns a paginated list of movies showing in a specific hall (e.g., imax, vip, goldclass)"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved movies list"),
-            @ApiResponse(responseCode = "404", description = "No movies found for the given hall"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
     @PreAuthorize("permitAll()")
     @GetMapping("/hall/{hallName}")
     public ResponseMessage<Page<MovieResponse>> findMoviesByHallName(
@@ -96,15 +65,6 @@ public class MovieController {
     }
 
     //M04
-    @Operation(
-            summary = "Get Movies In Theatres",
-            description = "Returns a paginated list of movies currently in theatres or for a specific date if provided"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved movies"),
-            @ApiResponse(responseCode = "400", description = "Invalid request parameter"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
     @PreAuthorize("permitAll()")
     @GetMapping("/in-theatres")
     public ResponseMessage<Page<MovieResponse>> getMoviesInTheatres(
@@ -118,16 +78,6 @@ public class MovieController {
 
 
     //M09
-    @Operation(
-            summary = "Get Movie By Id {M09}",
-            description = "Returns the details of a movie by its ID. If the movie does not exist, a 404 error is returned."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved the movie"),
-            @ApiResponse(responseCode = "400", description = "Required type for ID (Long) not provided"),
-            @ApiResponse(responseCode = "404", description = "Movie not found with the given ID"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
     @PreAuthorize("permitAll()")
     @GetMapping("/id/{movieId}")
     @Transactional(readOnly = true)
@@ -137,16 +87,6 @@ public class MovieController {
     }
 
     //M11
-    @Operation(
-            summary = "Save Movie {M11}",
-            description = "Creates and saves a new movie with the provided details"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Successfully created a new movie"),
-            @ApiResponse(responseCode = "400", description = "Invalid request body"),
-            @ApiResponse(responseCode = "403", description = "Forbidden access"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping("/save")
     public ResponseMessage<MovieResponse> saveMovie(
@@ -156,18 +96,6 @@ public class MovieController {
     }
 
     // M12 - Update Movie
-    @Operation(
-            summary = "Update Movie {M12}",
-            description = "Updates an existing movie. Handles primitive fields, ElementCollection (cast, formats, genre), " +
-                    "ManyToMany (cinemas), and OneToMany (images). Null-safe updates."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Movie successfully updated"),
-            @ApiResponse(responseCode = "400", description = "Invalid request body or validation failed"),
-            @ApiResponse(responseCode = "404", description = "Movie not found with the provided ID"),
-            @ApiResponse(responseCode = "403", description = "Forbidden access"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PutMapping("/update/{movieId}")
     public ResponseMessage<MovieResponse> updateMovie(
