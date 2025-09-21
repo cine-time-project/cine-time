@@ -38,7 +38,7 @@ public class HallService {
                 .build();
     }
 
-    private Hall findHallById(Long id) {
+    public Hall findHallById(Long id) {
         return hallRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessages.HALL_NOT_FOUND_ID, id)));
     }
