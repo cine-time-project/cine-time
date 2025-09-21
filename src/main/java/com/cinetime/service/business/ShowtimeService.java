@@ -64,4 +64,22 @@ public class ShowtimeService {
                 .returnBody(showtimeMapper.mapShowtimeToResponse(showtime))
                 .build();
     }
+
+    @Transactional
+    public ResponseMessage<ShowtimeResponse> updateShowtimeById(Long id, ShowtimeRequest showtimeRequest) {
+        Showtime showtime = findShowtimeById(id);
+
+        Hall hall = (showtimeRequest.getHallId() != null) ? hallService.findHallById(showtimeRequest.getHallId()) : null;
+        Movie movie = (showtimeRequest.getMovieId() != null) ? movieService.findMovieById(showtimeRequest.getMovieId()) : null;
+
+        showtimeMapper.updateShowtimeFromRequest(showtime, showtimeRequest, hall, movie);
+
+        Showtime updatedShowtime = showtimeRepository.save(showtime);
+
+        return ResponseMessage.<ShowtimeResponse>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.SHOWTIME_UPDATED)
+                .returnBody(showtimeMapper.mapShowtimeToResponse(updatedShowtime))
+                .build();
+    }
 }

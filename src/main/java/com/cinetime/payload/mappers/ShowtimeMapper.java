@@ -46,4 +46,22 @@ public class ShowtimeMapper {
     public Page<ShowtimeResponse> mapToResponsePage(Page<Showtime> showtimes) {
         return showtimes.map(this::mapShowtimeToResponse);
     }
+
+    public void updateShowtimeFromRequest(Showtime showtime, ShowtimeRequest request, Hall hall, Movie movie) {
+        if (request.getDate() != null) {
+            showtime.setDate(request.getDate());
+        }
+        if (request.getStartTime() != null) {
+            showtime.setStartTime(request.getStartTime());
+        }
+        if (request.getEndTime() != null) {
+            showtime.setEndTime(request.getEndTime());
+        }
+        if (hall != null) {
+            showtime.setHall(hall);
+        }
+        if (movie != null) {
+            showtime.setMovie(movie);
+        }
+    }
 }
