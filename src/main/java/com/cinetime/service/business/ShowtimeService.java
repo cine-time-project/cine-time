@@ -3,7 +3,9 @@ package com.cinetime.service.business;
 import com.cinetime.entity.business.Hall;
 import com.cinetime.entity.business.Movie;
 import com.cinetime.entity.business.Showtime;
+import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.ShowtimeMapper;
+import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.business.ShowtimeRequest;
 import com.cinetime.payload.response.business.ResponseMessage;
@@ -34,6 +36,22 @@ public class ShowtimeService {
                 .httpStatus(HttpStatus.CREATED)
                 .message(SuccessMessages.SHOWTIME_CREATED)
                 .returnBody(showtimeMapper.mapShowtimeToResponse(savedShowtime))
+                .build();
+    }
+
+    public Showtime findShowtimeById(Long id) {
+        return showtimeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessages.SHOWTIME_NOT_FOUND_ID, id)));
+    }
+
+    public ResponseMessage<ShowtimeResponse> deleteShowtimeById(Long id) {
+        Showtime showtime = findShowtimeById(id);
+        ShowtimeResponse response = showtimeMapper.mapShowtimeToResponse(showtime);
+        showtimeRepository.delete(showtime);
+        return ResponseMessage.<ShowtimeResponse>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.SHOWTIME_DELETED)
+                .returnBody(response)
                 .build();
     }
 }

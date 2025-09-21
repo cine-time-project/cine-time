@@ -8,10 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/show-time") // <-- tek base path
@@ -26,6 +23,12 @@ public class ShowtimeController {
     public ResponseMessage<ShowtimeResponse> saveShowtime(
             @RequestBody @Valid ShowtimeRequest showtimeRequest) {
         return showTimeService.saveShowtime(showtimeRequest);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    public ResponseMessage<ShowtimeResponse> deleteShowtimeById(@PathVariable Long id){
+        return showTimeService.deleteShowtimeById(id);
     }
 
 }
