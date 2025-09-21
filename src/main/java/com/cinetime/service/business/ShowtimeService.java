@@ -54,4 +54,14 @@ public class ShowtimeService {
                 .returnBody(response)
                 .build();
     }
+
+
+    public ResponseMessage<ShowtimeResponse> getShowtimeById(Long id) {
+        Showtime showtime = findShowtimeById(id);
+        return ResponseMessage.<ShowtimeResponse>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.SHOWTIME_FOUND)
+                .returnBody(showtimeMapper.mapShowtimeToResponse(showtime))
+                .build();
+    }
 }
