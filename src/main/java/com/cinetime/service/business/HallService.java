@@ -12,6 +12,8 @@ import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.repository.business.HallRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -45,6 +47,16 @@ public class HallService {
                 .httpStatus(HttpStatus.OK)
                 .message(SuccessMessages.HALL_FOUND)
                 .returnBody(hallMapper.mapHallToResponse(hall))
+                .build();
+    }
+
+    public ResponseMessage<Page<HallResponse>> getAllHalls(Pageable pageable) {
+        Page<Hall> halls = hallRepository.findAll(pageable);
+        if (halls.isEmpty()) throw new ResourceNotFoundException(ErrorMessages.HALLS_NOT_FOUND);
+        return ResponseMessage.<Page<HallResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.HALLS_FOUND)
+                .returnBody(hallMapper.mapToResponsePage(halls))
                 .build();
     }
 }

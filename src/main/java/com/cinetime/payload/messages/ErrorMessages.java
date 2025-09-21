@@ -43,6 +43,7 @@ public class ErrorMessages {
 
     //Hall
     public static final String HALL_NOT_FOUND_ID = "Hall not found with id: %d";
+    public static final String HALLS_NOT_FOUND = "Halls not found";
 
 }
 
