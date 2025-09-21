@@ -10,6 +10,7 @@ import com.cinetime.repository.user.UserRepository;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +24,8 @@ public class SeedConfig {
     @Transactional
     ApplicationRunner seed(RoleRepository roleRepo,
                            UserRepository userRepo,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           JdbcTemplate jdbc) {
         return args -> {
 
             // 1) Rolls added
@@ -35,6 +37,8 @@ public class SeedConfig {
             if (userRepo.count() == 0) {
                 createAdmin(userRepo, roleRepo, passwordEncoder);
             }
+
+            seedCineTimeData(jdbc);
 
         };
     }
@@ -62,5 +66,111 @@ public class SeedConfig {
         if (!userRepo.existsByEmail(admin.getEmail())) {
             userRepo.save(admin);
         }
+    }
+    private void seedCineTimeData(JdbcTemplate jdbc) {
+        // -- 1) Country
+        jdbc.update("""
+            INSERT INTO country (name)
+            VALUES ('USA')
+            ON CONFLICT (name) DO NOTHING
+        """);
+
+        // -- 2) City (Miami) under USA
+        jdbc.update("""
+            INSERT INTO city (name, country_id)
+            SELECT 'Miami', c.id
+            FROM country c
+            WHERE c.name = 'USA'
+            ON CONFLICT (name) DO NOTHING
+        """);
+
+        // -- 3) Cinema (note: quoted mixed-case columns if your schema really has them)
+        jdbc.update("""
+            INSERT INTO cinemas (name, slug, "created_at", "updated_at")
+            SELECT 'CineTime Downtown', 'cinetime-downtown', NOW(), NOW()
+            WHERE NOT EXISTS (
+              SELECT 1 FROM cinemas WHERE name = 'CineTime Downtown'
+            )
+        """);
+
+        // -- 4) Hall 1 @ CineTime Downtown
+        jdbc.update("""
+            INSERT INTO halls (name, seat_capacity, is_special, cinema_id, created_at, updated_at)
+            SELECT 'Hall 1', 100, FALSE, ci.id, NOW(), NOW()
+            FROM cinemas ci
+            WHERE ci.name = 'CineTime Downtown'
+              AND NOT EXISTS (
+                SELECT 1 FROM halls h WHERE h.name = 'Hall 1' AND h.cinema_id = ci.id
+              )
+        """);
+
+        // -- 5) Movie: Fight Club
+        jdbc.update("""
+            INSERT INTO movies (
+              created_at,
+              title,
+              director,
+              duration,
+              rating,
+              release_date,
+              slug,
+              special_halls,
+              status,
+              summary,
+              updated_at
+            )
+            SELECT
+              NOW(),
+              'Fight Club',
+              'David Fincher',
+              139,
+              8.8,
+              DATE '1999-10-15',
+              'fight-club',
+              'Standard',
+              'COMING_SOON',
+              'An insomniac office worker and a soap maker form an underground fight club that evolves into something much more.',
+              NOW()
+            WHERE NOT EXISTS (
+              SELECT 1 FROM movies WHERE slug = 'fight-club'
+            )
+        """);
+
+        // -- 6) Showtime for Fight Club @ Hall 1 (CTE insert; safe if already present)
+        jdbc.update("""
+            WITH movie_cte AS (
+              SELECT id AS movie_id, duration
+              FROM movies
+              WHERE slug = 'fight-club' OR title = 'Fight Club'
+              LIMIT 1
+            ),
+            hall_cte AS (
+              SELECT h.id AS hall_id
+              FROM halls h
+              JOIN cinemas c ON c.id = h.cinema_id
+              WHERE c.name = 'CineTime Downtown' AND h.name = 'Hall 1'
+              LIMIT 1
+            ),
+            times AS (
+              SELECT
+                DATE '2025-09-25' AS show_date,
+                TIME '19:30:00'   AS start_time,
+                (TIME '19:30:00' + make_interval(mins => COALESCE(m.duration, 120))) AS end_time,
+                m.movie_id,
+                h.hall_id
+              FROM movie_cte m
+              CROSS JOIN hall_cte h
+            )
+            INSERT INTO showtimes (created_at, date, end_time, hall_id, movie_id, start_time, updated_at)
+            SELECT NOW(), t.show_date, t.end_time, t.hall_id, t.movie_id, t.start_time, NOW()
+            FROM times t
+            WHERE NOT EXISTS (
+              SELECT 1 FROM showtimes s
+              WHERE s.movie_id   = t.movie_id
+                AND s.hall_id    = t.hall_id
+                AND s.date       = t.show_date
+                AND s.start_time = t.start_time
+            )
+        """);
     }
 }
