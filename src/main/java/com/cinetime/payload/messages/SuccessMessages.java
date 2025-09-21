@@ -31,6 +31,7 @@ public class SuccessMessages {
     public static final String USER_DELETED = "User deleted successfully.";
 
     //Hall
+    public static final String HALL_FOUND = "Hall is found successfully";
     public static final String HALL_CREATED = "Hall is saved successfully";
     public static final String HALL_UPDATED = "Hall is updated successfully";
     public static final String HALL_DELETED = "Hall is deleted successfully";
