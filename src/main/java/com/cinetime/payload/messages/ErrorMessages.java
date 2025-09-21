@@ -25,6 +25,7 @@ public class ErrorMessages {
     //image
     // 404 - Not Found
     public static final String IMAGE_NOT_FOUND_ID = "Image not found with id: %d";
+    public static final String IMAGE_NOT_FOUND = "Image not found";
     public static final String MOVIE_NOT_FOUND_ID = "Movie not found with id: %d";
 
     // 400 - Bad Request
