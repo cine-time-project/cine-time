@@ -19,10 +19,7 @@ import org.springframework.stereotype.Service;
 import com.cinetime.entity.user.User;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,6 +48,13 @@ public class CinemaService {
         Boolean isSpecial = cinemasHelper.parseSpecialHall(specialHall); // <-- statik değil, instance
         return cinemaRepository.search(cityId, isSpecial, pageable)
                 .map(cinemaMapper::toSummary);
+    }
+
+    @Transactional(Transactional.TxType.SUPPORTS)
+    public Set<Cinema> getAllByIdIn(Set<Long> ids) {
+        Set<Cinema> cinemas = cinemaRepository.findAllByIdIn(ids);
+        if (cinemas.isEmpty()) throw new ResourceNotFoundException(ErrorMessages.CINEMA_NOT_FOUND);
+        return cinemas;
     }
 
     @Transactional(Transactional.TxType.SUPPORTS)

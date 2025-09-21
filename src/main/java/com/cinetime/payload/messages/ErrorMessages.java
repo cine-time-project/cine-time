@@ -19,12 +19,15 @@ public class ErrorMessages {
     public static final String MOVIE_NOT_FOUND = "Movie is not found";
     public static final String MOVIE_NOT_FOUND_BY_ID = "Movie is not found by id: %s";
     public static final String MOVIES_NOT_FOUND = "Movies are not found";
+    public static final String MOVIES_NOT_FOUND_IN_HALL = "No movies found in hall: %s";
     public static final String MOVIES_NOT_IN_THEATRES = "No movies currently in theatres";
     public static final String MOVIES_NOT_FOUND_ON_DATE = "No movies found on date";
+    public static final String MOVIES_COMING_SOON_NOT_FOUND = "No coming soon movies found";
 
     //image
     // 404 - Not Found
     public static final String IMAGE_NOT_FOUND_ID = "Image not found with id: %d";
+    public static final String IMAGE_NOT_FOUND = "Image not found";
     public static final String MOVIE_NOT_FOUND_ID = "Movie not found with id: %d";
 
     // 400 - Bad Request

@@ -76,4 +76,20 @@ public class MovieMapper {
                 //cinemas and images will be assigned in MovieService by retrieving them from DB.
                 .build();
     }
+
+    public void updateMovieFromRequest(MovieRequest request, Movie movie) {
+        movie.setTitle(request.getTitle());
+        movie.setSlug(request.getSlug());
+        movie.setSummary(request.getSummary());
+        movie.setReleaseDate(request.getReleaseDate());
+        movie.setDuration(request.getDuration());
+        movie.setRating(request.getRating());
+        movie.setSpecialHalls(request.getSpecialHalls());
+        movie.setDirector(request.getDirector());
+        movie.setCast(request.getCast());
+        movie.setFormats(request.getFormats());
+        movie.setGenre(request.getGenre());
+        movie.setStatus(request.getStatus());
+        // cinemas ve images servis tarafında set edilecek
+    }
 }

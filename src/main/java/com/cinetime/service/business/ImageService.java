@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Set;
+
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +35,13 @@ public class ImageService {
         return imageRepository.findById(imageId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         String.format(ErrorMessages.IMAGE_NOT_FOUND_ID, imageId)));
+    }
+
+    @Transactional(readOnly = true)
+    public Set<Image> getAllByIdIn(Set<Long> ids) {
+        Set<Image> images = imageRepository.findAllByIdIn(ids);
+        if (images.isEmpty()) throw new ResourceNotFoundException(ErrorMessages.IMAGE_NOT_FOUND);
+        return images;
     }
 
     /**
