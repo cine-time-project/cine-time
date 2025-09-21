@@ -31,4 +31,10 @@ public class ShowtimeController {
         return showTimeService.deleteShowtimeById(id);
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("permitAll()")
+    public ResponseMessage<ShowtimeResponse> getShowtimeById(@PathVariable Long id){
+        return showTimeService.getShowtimeById(id);
+    }
+
 }
