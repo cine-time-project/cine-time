@@ -32,6 +32,7 @@ public class SuccessMessages {
 
     //Hall
     public static final String HALL_FOUND = "Hall is found successfully";
+    public static final String HALLS_FOUND = "Halls found successfully";
     public static final String HALL_CREATED = "Hall is saved successfully";
     public static final String HALL_UPDATED = "Hall is updated successfully";
     public static final String HALL_DELETED = "Hall is deleted successfully";

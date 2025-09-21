@@ -2,9 +2,12 @@ package com.cinetime.payload.mappers;
 
 import com.cinetime.entity.business.Cinema;
 import com.cinetime.entity.business.Hall;
+import com.cinetime.entity.business.Movie;
 import com.cinetime.payload.request.business.HallRequest;
+import com.cinetime.payload.response.business.CinemaMovieResponse;
 import com.cinetime.payload.response.business.HallResponse;
 import com.cinetime.payload.response.business.SpecialHallResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -41,5 +44,9 @@ public class HallMapper {
                 .cinemaId(hall.getCinema() != null ? hall.getCinema().getId() : null)
                 .cinemaName(hall.getCinema() != null ? hall.getCinema().getName() : null)
                 .build();
+    }
+
+    public Page<HallResponse> mapToResponsePage(Page<Hall> halls) {
+        return halls.map(this::mapHallToResponse);
     }
 }
