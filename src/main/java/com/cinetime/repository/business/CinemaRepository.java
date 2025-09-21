@@ -97,4 +97,5 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
     Set<Cinema> findAllByIdIn(Set<Long> ids);
 
 
+    boolean existsBySlugIgnoreCase(String candidate);
 }
