@@ -13,6 +13,7 @@ import com.cinetime.payload.response.business.MovieResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.repository.business.MovieRepository;
 import com.cinetime.repository.business.ShowtimeRepository;
+import com.cinetime.service.helper.MovieServiceHelper;
 import com.cinetime.service.helper.PageableHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,23 +35,28 @@ public class MovieService {
     private final CinemaService cinemaService;
     private final ImageService imageService;
     private final ShowtimeRepository showtimeRepository;
+    private final MovieServiceHelper movieServiceHelper;
 
 
     //M01
-    public ResponseMessage<Page<MovieResponse>> searchMovies(String q, int page, int size,
-                                                             String sort, String type) {
+    public ResponseMessage<Page<MovieResponse>> searchMovies(
+            String q, int page, int size, String sort, String type) {
         Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
         Page<Movie> movies;
         if (q != null && !q.trim().isEmpty()) {
             String keyword = q.trim();
-            movies = movieRepository.findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(keyword,
-                    keyword, pageable);
+            movies = movieRepository.findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(
+                    keyword, keyword, pageable);
         } else {
             movies = movieRepository.findAll(pageable);
         }
+        if (movies.isEmpty()) {
+            return movieServiceHelper.buildEmptyPageResponse(
+                    pageable, ErrorMessages.MOVIES_NOT_FOUND, HttpStatus.OK);
+        }
         return ResponseMessage.<Page<MovieResponse>>builder()
-                .message("Movies have been found successfully")
                 .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.MOVIES_LISTED)
                 .returnBody(movieMapper.mapToResponsePage(movies))
                 .build();
     }
@@ -58,21 +64,18 @@ public class MovieService {
     // M02
     public ResponseMessage<Page<CinemaMovieResponse>> findMoviesByCinemaSlug(
             String cinemaSlug, int page, int size, String sort, String type) {
-
         if (cinemaSlug == null || cinemaSlug.trim().isEmpty()) {
             throw new IllegalArgumentException("Cinema slug cannot be null or empty");
         }
         Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
-        Page<CinemaMovieResponse> response = movieMapper
-                .mapToCinemaResponsePage(movieRepository.findAllByCinemaSlugIgnoreCase(cinemaSlug, pageable));
-        if (response.isEmpty()) {
-            return ResponseMessage.<Page<CinemaMovieResponse>>builder()
-                    .message(ErrorMessages.MOVIES_NOT_FOUND)
-                    .httpStatus(HttpStatus.NOT_FOUND)
-                    .build();
+        Page<Movie> movies = movieRepository.findAllByCinemaSlugIgnoreCase(cinemaSlug, pageable);
+        if (movies.isEmpty()) {
+            return movieServiceHelper.buildEmptyPageResponse(
+                    pageable, ErrorMessages.MOVIES_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
+        Page<CinemaMovieResponse> responsePage = movies.map(movieMapper::mapMovieToCinemaMovieResponse);
         return ResponseMessage.<Page<CinemaMovieResponse>>builder()
-                .returnBody(response)
+                .returnBody(responsePage)
                 .message(String.format(SuccessMessages.MOVIE_WITH_SLUG_FOUND, cinemaSlug))
                 .httpStatus(HttpStatus.OK)
                 .build();
@@ -81,23 +84,22 @@ public class MovieService {
     //M03
     public ResponseMessage<Page<MovieResponse>> findMoviesByHallName(
             String hallName, int page, int size, String sort, String type) {
-
         if (hallName == null || hallName.trim().isEmpty()) {
             throw new IllegalArgumentException("Hall name cannot be null or empty");
         }
         Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
         Page<Movie> movies = movieRepository.findAllByHallIgnoreCase(hallName, pageable);
-        Page<MovieResponse> response = movieMapper.mapToResponsePage(movies);
-        if (response == null || response.isEmpty()) {
-            return ResponseMessage.<Page<MovieResponse>>builder()
-                    .httpStatus(HttpStatus.NOT_FOUND)
-                    .message(ErrorMessages.MOVIES_NOT_FOUND)
-                    .build();
+        if (movies.isEmpty()) {
+            return movieServiceHelper.buildEmptyPageResponse(
+                    pageable, ErrorMessages.MOVIES_NOT_FOUND_IN_HALL, HttpStatus.NOT_FOUND);
+
+
         }
+        Page<MovieResponse> responsePage = movies.map(movieMapper::mapMovieToMovieResponse);
         return ResponseMessage.<Page<MovieResponse>>builder()
                 .httpStatus(HttpStatus.OK)
-                .message(SuccessMessages.MOVIE_FOUND)
-                .returnBody(response)
+                .message(String.format(SuccessMessages.MOVIES_FOUND_IN_HALL, hallName))
+                .returnBody(responsePage)
                 .build();
     }
 
@@ -106,39 +108,42 @@ public class MovieService {
             LocalDate date, int page, int size, String sort, String type) {
         Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
         if (date != null) {
-            Page<Showtime> moveisInShow;
-            if (date.isBefore(LocalDate.now())) {
-                // Past date → fallback to today and only upcoming showtimes
-                moveisInShow = showtimeRepository.findByDateAndStartTimeAfter(LocalDate.now(), LocalTime.now(), pageable);
-            } else {
-                // Today or future date → just use the provided date
-                moveisInShow = showtimeRepository.findByDate(date, pageable);
-            }
-            if (moveisInShow.isEmpty()) {
-                return ResponseMessage.<Page<MovieResponse>>builder()
-                        .message(ErrorMessages.MOVIES_NOT_FOUND_ON_DATE + " " + date)
-                        .httpStatus(HttpStatus.OK)
-                        .returnBody(Page.empty(pageable))
-                        .build();
-            }
-            Page<MovieResponse> movies = moveisInShow.map(s -> movieMapper.mapMovieToMovieResponse(s.getMovie()));
-            return ResponseMessage.<Page<MovieResponse>>builder()
-                    .message(SuccessMessages.MOVIES_FOUND_ON_DATE + " " + date)
-                    .httpStatus(HttpStatus.OK)
-                    .returnBody(movies)
-                    .build();
+            return movieServiceHelper.getMoviesByDate(date, pageable);
         }
-        Page<Movie> movies = movieRepository.findByStatus(MovieStatus.IN_THEATERS, pageable);
+        return movieServiceHelper.getCurrentlyInTheatres(pageable);
+    }
+
+
+
+    //M05
+    public ResponseMessage<Page<MovieResponse>> getComingSoonMovies(
+            LocalDate date, int page, int size, String sort, String type) {
+        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
+        if (date != null) {
+            return movieServiceHelper.getComingSoonByDate(date, pageable);
+        }
+        return movieServiceHelper.getAllComingSoon(pageable);
+    }
+
+    //M08
+    public ResponseMessage<Page<MovieResponse>> searchAuthorizedMovies(
+            String q, int page, int size, String sort, String type) {
+        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
+        Page<Movie> movies;
+        if (q != null && !q.trim().isEmpty()) {
+            String keyword = q.trim();
+            movies = movieRepository.findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(
+                    keyword, keyword, pageable);
+        } else {
+            movies = movieRepository.findAll(pageable);
+        }
         if (movies.isEmpty()) {
-            return ResponseMessage.<Page<MovieResponse>>builder()
-                    .message(ErrorMessages.MOVIES_NOT_IN_THEATRES)
-                    .httpStatus(HttpStatus.OK)
-                    .returnBody(Page.empty(pageable))
-                    .build();
+            return movieServiceHelper.buildEmptyPageResponse(
+                    pageable, ErrorMessages.MOVIES_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
         return ResponseMessage.<Page<MovieResponse>>builder()
-                .message(SuccessMessages.MOVIES_FOUND_IN_THEATRES)
                 .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.MOVIES_LISTED)
                 .returnBody(movieMapper.mapToResponsePage(movies))
                 .build();
     }
