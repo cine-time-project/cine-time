@@ -51,5 +51,14 @@ public class HallController {
         return hallService.deleteHallById(hallId);
     }
 
+    @PutMapping("/update/{hallId}")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @Transactional
+    public ResponseMessage<HallResponse> updateHallById(
+            @RequestBody @Valid HallRequest hallRequest,
+            @PathVariable Long hallId
+    ){
+        return hallService.updateHall(hallRequest, hallId);
+    }
 
 }

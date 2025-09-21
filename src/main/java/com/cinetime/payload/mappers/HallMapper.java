@@ -49,4 +49,5 @@ public class HallMapper {
     public Page<HallResponse> mapToResponsePage(Page<Hall> halls) {
         return halls.map(this::mapHallToResponse);
     }
+
 }
