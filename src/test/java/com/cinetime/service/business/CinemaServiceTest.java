@@ -12,14 +12,14 @@ import com.cinetime.payload.request.business.CinemaCreateRequest;
 import com.cinetime.payload.response.business.CinemaSummaryResponse;
 import com.cinetime.payload.response.business.HallWithShowtimesResponse;
 import com.cinetime.payload.response.business.SpecialHallResponse;
-import com.cinetime.repository.business.*;
 import com.cinetime.repository.business.CinemaRepository;
 import com.cinetime.repository.business.CityRepository;
 import com.cinetime.repository.business.HallRepository;
 import com.cinetime.repository.business.ShowtimeRepository;
-
+import com.cinetime.repository.business.ShowtimeRepository.HallMovieTimeRow;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.CinemasHelper;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,19 +32,12 @@ import org.springframework.data.domain.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-
-// ShowtimeRepository içindeki inner projection interface
-import com.cinetime.repository.business.ShowtimeRepository.HallMovieTimeRow;
 
 @ExtendWith(MockitoExtension.class)
 class CinemaServiceTest {
@@ -55,9 +48,8 @@ class CinemaServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private ShowtimeRepository showtimeRepository;
     @Mock private CityRepository cityRepository;
-    @Mock private HallRepository hallRepository;   // <-- özel salonlar için
-    @Mock private HallMapper hallMapper;           // <-- entity->dto
-
+    @Mock private HallRepository hallRepository;
+    @Mock private HallMapper hallMapper;
 
     @InjectMocks private CinemaService cinemaService;
 
@@ -67,6 +59,8 @@ class CinemaServiceTest {
     void setUp() {
         pageable = PageRequest.of(0, 5);
     }
+
+    // -------- SEARCH TESTS --------
 
     @Test
     void searchCinemas_cityOnly_callsRepoOverloadWithoutSpecialHall() {
@@ -112,15 +106,14 @@ class CinemaServiceTest {
     @Test
     void searchCinemas_cityAndSpecialHall_null_flowsWithNullToRepo() {
         Long cityId = 7L;
-        String specialHall = null;
-        when(cinemasHelper.parseSpecialHall(specialHall)).thenReturn(null);
+        when(cinemasHelper.parseSpecialHall(null)).thenReturn(null);
 
         var e = mock(Cinema.class);
         var pageEntities = new PageImpl<>(List.of(e), pageable, 1);
         when(cinemaRepository.search(eq(cityId), isNull(Boolean.class), eq(pageable))).thenReturn(pageEntities);
         when(cinemaMapper.toSummary(e)).thenReturn(CinemaSummaryResponse.builder().id(70L).name("NullFlow").build());
 
-        Page<CinemaSummaryResponse> result = cinemaService.searchCinemas(cityId, specialHall, pageable);
+        Page<CinemaSummaryResponse> result = cinemaService.searchCinemas(cityId, (String) null, pageable);
 
         verify(cinemasHelper).validateCityIfProvided(cityId);
         verify(cinemasHelper).parseSpecialHall(null);
@@ -140,6 +133,8 @@ class CinemaServiceTest {
         verifyNoInteractions(cinemaRepository);
         verify(cinemaMapper, never()).toSummary(any());
     }
+
+    // -------- GET BY ID --------
 
     @Test
     void getCinemaById_found_returnsSummary() {
@@ -171,7 +166,7 @@ class CinemaServiceTest {
         verifyNoInteractions(cinemaMapper);
     }
 
-    // -------- Favorites by login --------
+    // -------- FAVORITES BY LOGIN --------
 
     @Test
     void getAuthFavoritesByLogin_userFound_returnsList() {
@@ -211,7 +206,8 @@ class CinemaServiceTest {
         verifyNoInteractions(cinemaMapper);
     }
 
-    // -------- Showtime projection satır sınıfı --------
+    // -------- SHOWTIMES GROUPING --------
+
     private static class Row implements HallMovieTimeRow {
         private final Long hallId;
         private final String hallName;
@@ -221,27 +217,20 @@ class CinemaServiceTest {
         private final String movieTitle;
         private final LocalDate date;
         private final LocalTime startTime;
-
         Row(Long hallId, String hallName, Integer seatCapacity, Boolean isSpecial,
             Long movieId, String movieTitle, LocalDate date, LocalTime startTime) {
-            this.hallId = hallId;
-            this.hallName = hallName;
-            this.seatCapacity = seatCapacity;
-            this.isSpecial = isSpecial;
-            this.movieId = movieId;
-            this.movieTitle = movieTitle;
-            this.date = date;
-            this.startTime = startTime;
+            this.hallId = hallId; this.hallName = hallName; this.seatCapacity = seatCapacity;
+            this.isSpecial = isSpecial; this.movieId = movieId; this.movieTitle = movieTitle;
+            this.date = date; this.startTime = startTime;
         }
-
-        @Override public Long getHallId() { return hallId; }
-        @Override public String getHallName() { return hallName; }
-        @Override public Integer getSeatCapacity() { return seatCapacity; }
-        @Override public Boolean getIsSpecial() { return isSpecial; }
-        @Override public Long getMovieId() { return movieId; }
-        @Override public String getMovieTitle() { return movieTitle; }
-        @Override public LocalDate getDate() { return date; }
-        @Override public LocalTime getStartTime() { return startTime; }
+        public Long getHallId() { return hallId; }
+        public String getHallName() { return hallName; }
+        public Integer getSeatCapacity() { return seatCapacity; }
+        public Boolean getIsSpecial() { return isSpecial; }
+        public Long getMovieId() { return movieId; }
+        public String getMovieTitle() { return movieTitle; }
+        public LocalDate getDate() { return date; }
+        public LocalTime getStartTime() { return startTime; }
     }
 
     @Test
@@ -278,34 +267,26 @@ class CinemaServiceTest {
         HallMovieTimeRow r1 = new Row(100L, "Salon 1", 120, true, 4L, "Inception", today, LocalTime.of(20,30));
         HallMovieTimeRow r2 = new Row(100L, "Salon 1", 120, true, 4L, "Inception", today, LocalTime.of(18, 0));
         HallMovieTimeRow r3 = new Row(100L, "Salon 1", 120, true, 5L, "Dune",      today, LocalTime.of(21, 0));
-        HallMovieTimeRow r4 = new Row(101L, "Salon 2",  90, false,4L, "Inception", today, LocalTime.of(19,15));
+        HallMovieTimeRow r4 = new Row(101L, "Salon 2",  90, false, 4L, "Inception", today, LocalTime.of(19,15));
 
         when(showtimeRepository.findShowtimesByCinemaId(cinemaId)).thenReturn(List.of(r1, r2, r3, r4));
 
         var result = cinemaService.getCinemaHallsWithShowtimes(cinemaId);
 
         assertThat(result).hasSize(2);
-
-        HallWithShowtimesResponse h100 = result.stream()
-                .filter(h -> h.getId().equals(100L)).findFirst().orElseThrow();
+        var h100 = result.stream().filter(h -> h.getId().equals(100L)).findFirst().orElseThrow();
         assertThat(h100.getName()).isEqualTo("Salon 1");
         assertThat(h100.getSeatCapacity()).isEqualTo(120);
         assertThat(h100.getIsSpecial()).isTrue();
         assertThat(h100.getMovies()).hasSize(2);
 
-        var inceptionGroup = h100.getMovies().stream()
-                .filter(g -> g.getMovie().getId().equals(4L)).findFirst().orElseThrow();
-        assertThat(inceptionGroup.getMovie().getTitle()).isEqualTo("Inception");
-        assertThat(inceptionGroup.getTimes())
-                .containsExactly(
-                        LocalDateTime.of(today, LocalTime.of(18, 0)),
-                        LocalDateTime.of(today, LocalTime.of(20, 30))
-                );
+        var inception = h100.getMovies().stream().filter(g -> g.getMovie().getId().equals(4L)).findFirst().orElseThrow();
+        assertThat(inception.getTimes())
+                .containsExactly(LocalDateTime.of(today, LocalTime.of(18, 0)),
+                        LocalDateTime.of(today, LocalTime.of(20, 30)));
 
-        var duneGroup = h100.getMovies().stream()
-                .filter(g -> g.getMovie().getId().equals(5L)).findFirst().orElseThrow();
-        assertThat(duneGroup.getTimes())
-                .containsExactly(LocalDateTime.of(today, LocalTime.of(21, 0)));
+        var dune = h100.getMovies().stream().filter(g -> g.getMovie().getId().equals(5L)).findFirst().orElseThrow();
+        assertThat(dune.getTimes()).containsExactly(LocalDateTime.of(today, LocalTime.of(21, 0)));
 
         var h101 = result.stream().filter(h -> h.getId().equals(101L)).findFirst().orElseThrow();
         assertThat(h101.getName()).isEqualTo("Salon 2");
@@ -317,21 +298,18 @@ class CinemaServiceTest {
         verify(showtimeRepository).findShowtimesByCinemaId(cinemaId);
     }
 
+    // -------- SPECIAL HALLS --------
+
     @Test
     void getAllSpecialHalls_whenExists_mapsAndReturnsList() {
-        var cinema = new Cinema();
-        cinema.setId(11L); cinema.setName("CineTime Beşiktaş");
+        var cinema = new Cinema(); cinema.setId(11L); cinema.setName("CineTime Beşiktaş");
 
         var h1 = Hall.builder().id(100L).name("IMAX").seatCapacity(200).isSpecial(true).cinema(cinema).build();
         var h2 = Hall.builder().id(101L).name("4DX").seatCapacity(160).isSpecial(true).cinema(cinema).build();
         when(hallRepository.findByIsSpecialTrueOrderByNameAsc()).thenReturn(List.of(h1, h2));
 
-        var dto1 = SpecialHallResponse.builder()
-                .id(100L).name("IMAX").seatCapacity(200)
-                .cinemaId(11L).cinemaName("CineTime Beşiktaş").build();
-        var dto2 = SpecialHallResponse.builder()
-                .id(101L).name("4DX").seatCapacity(160)
-                .cinemaId(11L).cinemaName("CineTime Beşiktaş").build();
+        var dto1 = SpecialHallResponse.builder().id(100L).name("IMAX").seatCapacity(200).cinemaId(11L).cinemaName("CineTime Beşiktaş").build();
+        var dto2 = SpecialHallResponse.builder().id(101L).name("4DX").seatCapacity(160).cinemaId(11L).cinemaName("CineTime Beşiktaş").build();
 
         when(hallMapper.toSpecial(h1)).thenReturn(dto1);
         when(hallMapper.toSpecial(h2)).thenReturn(dto2);
@@ -339,8 +317,7 @@ class CinemaServiceTest {
         var result = cinemaService.getAllSpecialHalls();
 
         assertThat(result).hasSize(2);
-        assertThat(result).extracting(SpecialHallResponse::getName)
-                .containsExactly("IMAX", "4DX");
+        assertThat(result).extracting(SpecialHallResponse::getName).containsExactly("IMAX", "4DX");
 
         verify(hallRepository).findByIsSpecialTrueOrderByNameAsc();
         verify(hallMapper).toSpecial(h1);
@@ -348,7 +325,7 @@ class CinemaServiceTest {
         verifyNoMoreInteractions(hallMapper);
     }
 
-    // === UPDATE TESTS
+    // -------- UPDATE TESTS --------
 
     @Test
     void update_whenCinemaNotFound_throwsNotFound() {
@@ -364,39 +341,28 @@ class CinemaServiceTest {
 
     @Test
     void update_whenNameChanges_slugRegeneratedAndUniqByExcludingSelf() {
-        // given: var olan sinema
         Long id = 10L;
         Cinema existing = Cinema.builder()
-                .id(id)
-                .name("Old Name")
-                .slug("old-name")
-                .cities(new java.util.LinkedHashSet<>()) // boş set ama PERSISTENT gibi davranması için non-null
+                .id(id).name("Old Name").slug("old-name")
+                .cities(new LinkedHashSet<>())
                 .build();
         when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
 
-        // istek: yeni name, slug alanı boş -> name'den üretilecek
-        var req = CinemaCreateRequest.builder()
-                .name("New Name")
-                .build();
+        var req = CinemaCreateRequest.builder().name("New Name").build();
 
-        // helper + uniq kontrol
         when(cinemasHelper.slugify("New Name")).thenReturn("new-name");
-        // "new-name" dolu (ama kendimiz değilmişiz gibi), "new-name-2" boş
         when(cinemaRepository.existsBySlugIgnoreCaseAndIdNot("new-name", id)).thenReturn(true);
         when(cinemaRepository.existsBySlugIgnoreCaseAndIdNot("new-name-2", id)).thenReturn(false);
 
-        // save capture
         ArgumentCaptor<Cinema> cap = ArgumentCaptor.forClass(Cinema.class);
         when(cinemaRepository.save(cap.capture())).thenAnswer(inv -> cap.getValue());
         when(cinemaMapper.toSummary(any(Cinema.class))).thenReturn(new CinemaSummaryResponse());
 
-        // when
         cinemaService.update(id, req);
 
-        // then
         Cinema saved = cap.getValue();
         assertEquals("New Name", saved.getName());
-        assertEquals("new-name-2", saved.getSlug()); // uniqleşti
+        assertEquals("new-name-2", saved.getSlug());
         verify(cinemaRepository).existsBySlugIgnoreCaseAndIdNot("new-name", id);
         verify(cinemaRepository).existsBySlugIgnoreCaseAndIdNot("new-name-2", id);
     }
@@ -405,13 +371,11 @@ class CinemaServiceTest {
     void update_whenSlugProvided_usedAsBaseAndUniqChecked() {
         Long id = 11L;
         Cinema existing = Cinema.builder()
-                .id(id).name("Any").slug("any").cities(new java.util.LinkedHashSet<>())
+                .id(id).name("Any").slug("any").cities(new LinkedHashSet<>())
                 .build();
         when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
 
-        var req = CinemaCreateRequest.builder()
-                .slug(" CineStar  ") // helper slugify tetiklenecek
-                .build();
+        var req = CinemaCreateRequest.builder().slug(" CineStar  ").build();
 
         when(cinemasHelper.slugify(" CineStar  ")).thenReturn("cinestar");
         when(cinemaRepository.existsBySlugIgnoreCaseAndIdNot("cinestar", id)).thenReturn(false);
@@ -423,8 +387,7 @@ class CinemaServiceTest {
         cinemaService.update(id, req);
 
         assertEquals("cinestar", cap.getValue().getSlug());
-        // name dokunulmadı
-        assertEquals("Any", cap.getValue().getName());
+        assertEquals("Any", cap.getValue().getName()); // name değişmedi
     }
 
     @Test
@@ -434,14 +397,11 @@ class CinemaServiceTest {
         City c2 = City.builder().id(2L).name("Ankara").build();
         Cinema existing = Cinema.builder()
                 .id(id).name("X").slug("x")
-                .cities(new java.util.LinkedHashSet<>(java.util.List.of(c1, c2)))
+                .cities(new LinkedHashSet<>(List.of(c1, c2)))
                 .build();
         when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
 
-        var req = CinemaCreateRequest.builder()
-                .name("X2")       // sadece isim değişimi
-                .cityIds(null)    // şehirleri ELLEME
-                .build();
+        var req = CinemaCreateRequest.builder().name("X2").cityIds(null).build();
 
         when(cinemasHelper.slugify("X2")).thenReturn("x2");
         when(cinemaRepository.existsBySlugIgnoreCaseAndIdNot("x2", id)).thenReturn(false);
@@ -452,10 +412,7 @@ class CinemaServiceTest {
 
         cinemaService.update(id, req);
 
-        // cities aynı kaldı mı?
-        assertThat(cap.getValue().getCities())
-                .extracting(City::getId)
-                .containsExactlyInAnyOrder(1L, 2L);
+        assertThat(cap.getValue().getCities()).extracting(City::getId).containsExactlyInAnyOrder(1L, 2L);
         verify(cityRepository, never()).findAllById(any());
     }
 
@@ -466,13 +423,11 @@ class CinemaServiceTest {
         City c2 = City.builder().id(2L).name("Ankara").build();
         Cinema existing = Cinema.builder()
                 .id(id).name("Y").slug("y")
-                .cities(new java.util.LinkedHashSet<>(java.util.List.of(c1, c2)))
+                .cities(new LinkedHashSet<>(List.of(c1, c2)))
                 .build();
         when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
 
-        var req = CinemaCreateRequest.builder()
-                .cityIds(java.util.Set.of()) // hepsini sil
-                .build();
+        var req = CinemaCreateRequest.builder().cityIds(Set.of()).build();
 
         ArgumentCaptor<Cinema> cap = ArgumentCaptor.forClass(Cinema.class);
         when(cinemaRepository.save(cap.capture())).thenAnswer(inv -> cap.getValue());
@@ -490,57 +445,40 @@ class CinemaServiceTest {
         City old = City.builder().id(1L).name("Old").build();
         Cinema existing = Cinema.builder()
                 .id(id).name("Z").slug("z")
-                .cities(new java.util.LinkedHashSet<>(java.util.List.of(old)))
+                .cities(new LinkedHashSet<>(List.of(old)))
                 .build();
         when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
 
-        var req = CinemaCreateRequest.builder()
-                .cityIds(java.util.Set.of(2L, 3L))
-                .build();
+        var req = CinemaCreateRequest.builder().cityIds(Set.of(2L, 3L)).build();
 
         City c2 = City.builder().id(2L).name("A").build();
         City c3 = City.builder().id(3L).name("B").build();
+        when(cityRepository.findAllById(any())).thenReturn(List.of(c2, c3));
 
-        // findAllById doğru sonucu dönsün
-        when(cityRepository.findAllById(any())).thenReturn(java.util.List.of(c2, c3));
-
-        // save'e giden entity'yi yakala
-        var cap = ArgumentCaptor.forClass(Cinema.class);
+        ArgumentCaptor<Cinema> cap = ArgumentCaptor.forClass(Cinema.class);
         when(cinemaRepository.save(cap.capture())).thenAnswer(inv -> cap.getValue());
-
         when(cinemaMapper.toSummary(any(Cinema.class))).thenReturn(new CinemaSummaryResponse());
 
-        // when
         cinemaService.update(id, req);
 
-        // then: kaydedilen entity’nin şehirleri {2,3}
-        assertThat(cap.getValue().getCities())
-                .extracting(City::getId)
-                .containsExactlyInAnyOrder(2L, 3L);
-
-        // eski 1 yok
-        assertThat(cap.getValue().getCities())
-                .extracting(City::getId)
-                .doesNotContain(1L);
+        assertThat(cap.getValue().getCities()).extracting(City::getId).containsExactlyInAnyOrder(2L, 3L);
+        assertThat(cap.getValue().getCities()).extracting(City::getId).doesNotContain(1L);
     }
-
 
     @Test
     void update_whenAnyRequestedCityMissing_throws404_andDoesNotSave() {
         Long id = 15L;
         Cinema existing = Cinema.builder()
                 .id(id).name("K").slug("k")
-                .cities(new java.util.LinkedHashSet<>())
+                .cities(new LinkedHashSet<>())
                 .build();
         when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
 
-        var req = CinemaCreateRequest.builder()
-                .cityIds(java.util.Set.of(5L, 6L)) // 6 yok diyelim
-                .build();
+        var req = CinemaCreateRequest.builder().cityIds(Set.of(5L, 6L)).build();
 
         City only5 = City.builder().id(5L).name("Only5").build();
-        when(cityRepository.findAllById(new java.util.LinkedHashSet<>(java.util.Set.of(5L, 6L))))
-                .thenReturn(java.util.List.of(only5));
+        when(cityRepository.findAllById(new LinkedHashSet<>(Set.of(5L, 6L))))
+                .thenReturn(List.of(only5));
 
         assertThatThrownBy(() -> cinemaService.update(id, req))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -548,9 +486,14 @@ class CinemaServiceTest {
         verify(cinemaRepository, never()).save(any());
     }
 
+    // -------- CREATE TESTS (taşan kodlar toparlandı) --------
 
-}
-
+    @Test
+    void create_shouldGenerateSlugFromName_andPersist_withCities() {
+        var req = CinemaCreateRequest.builder()
+                .name("CineStar Adanaaa")
+                .cityIds(Set.of(1L))
+                .build();
 
         when(cinemasHelper.slugify("CineStar Adanaaa")).thenReturn("cinestar-adanaaa");
         when(cinemasHelper.ensureUniqueSlug("cinestar-adanaaa")).thenReturn("cinestar-adanaaa");
@@ -571,7 +514,6 @@ class CinemaServiceTest {
         assertEquals("cinestar-adanaaa", saved.getSlug());
         assertEquals(1, saved.getCities().size());
 
-        // Argümanı bire bir set ile doğrulama -> kaldırıldı
         verify(cityRepository).findAllById(anySet());
         verify(cinemaRepository).save(any(Cinema.class));
         verify(cinemaMapper).toSummary(any(Cinema.class));
@@ -587,8 +529,8 @@ class CinemaServiceTest {
 
         when(cityRepository.findAllById(Set.of(5L))).thenReturn(List.of());
 
-        var ex = assertThrows(ResourceNotFoundException.class, () -> cinemaService.create(req));
-        assertTrue(ex.getMessage().toLowerCase().contains("5"));
+        var ex = org.junit.jupiter.api.Assertions.assertThrows(ResourceNotFoundException.class, () -> cinemaService.create(req));
+        assertThat(ex.getMessage()).contains("5");
 
         verify(cityRepository).findAllById(Set.of(5L));
         verify(cinemaRepository, never()).save(any());
@@ -601,7 +543,6 @@ class CinemaServiceTest {
                 .slug("cinestar")
                 .build();
 
-
         ArgumentCaptor<Cinema> savedCap = ArgumentCaptor.forClass(Cinema.class);
         when(cinemaRepository.save(savedCap.capture())).thenAnswer(inv -> {
             Cinema c = savedCap.getValue(); c.setId(200L); return c;
@@ -610,8 +551,6 @@ class CinemaServiceTest {
 
         cinemaService.create(req);
 
-        // slug assert'ini KALDIR – servis şu an set etmiyor olabilir
-
         verify(cinemaRepository).save(any(Cinema.class));
     }
 
@@ -619,7 +558,6 @@ class CinemaServiceTest {
     void create_shouldNotTouchCities_whenCityIdsNullOrEmpty() {
         var req1 = CinemaCreateRequest.builder().name("C1").build();
         var req2 = CinemaCreateRequest.builder().name("C2").cityIds(Set.of()).build();
-
 
         when(cinemaRepository.save(any(Cinema.class))).thenAnswer(inv -> inv.getArgument(0));
         when(cinemaMapper.toSummary(any(Cinema.class))).thenReturn(new CinemaSummaryResponse());
@@ -630,5 +568,4 @@ class CinemaServiceTest {
         verify(cityRepository, never()).findAllById(anySet());
         verify(cinemaRepository, times(2)).save(any(Cinema.class));
     }
-
 }
