@@ -18,13 +18,13 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class BuyTicketRequest {
-    @NotNull(message = "MovieId can not be null")
-    Long movieId;
+    @NotNull(message = "Movie name can not be null")
+    String movieName;
     @NotNull(message = "Cinema can not be null")
     String cinema;
     @NotNull(message = "Moviehall can not be null")
     String hall;
-    @NotNull(message = "Showstart time can not be null")
+    @NotNull(message = "Show start time can not be null")
     LocalTime showtime;
     Integer count;
     @NotNull(message = "Seat has to be selected")

@@ -15,8 +15,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,46 +32,56 @@ public class TicketService {
     private final UserRepository userRepository;
 
     //T01
+    @Transactional(readOnly = true)
+    public Page<TicketResponse> getCurrentTickets(Long userId, Integer page, Integer size, String sort, String type) {
+        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
 
-    public List<TicketResponse> getCurrentTickets(Long userId, Integer page, Integer size, String sort, String type) {
-       Pageable pageable = pageableHelper.buildPageable(page,size,sort,type);
+        var statuses = List.of(TicketStatus.PAID, TicketStatus.RESERVED);
 
-       //We want to return the current tickets, which means ticket status can only be PAID and RESERVED,
-        //USED and CANCELLED tickets are not current, therefore we are creating the list below to filter against statuses.
-       var statuses = List.of(TicketStatus.PAID, TicketStatus.RESERVED);
-       //Calling the ticketRepository below to return the current tickets
-        Page<Ticket> result= ticketRepository.findCurrentForUser(userId,statuses,pageable);
-        List<TicketResponse> currentTickets= result.getContent().stream()
-                .map(ticketMapper::mapTicketToTicketResponse).toList();
-        return currentTickets;
+        var today = java.time.LocalDate.now();
+        var now   = java.time.LocalTime.now();
 
+        Page<Ticket> result = ticketRepository.findCurrentForUser(userId, statuses, today, now, pageable);
 
+        return result.map(ticketMapper::mapTicketToTicketResponse);
     }
 
-    public List<TicketResponse> getPassedTickets(Long userId, Integer page, Integer size, String sort, String type) {
-      Pageable pageable = pageableHelper.buildPageable(page,size,sort,type);
-      Page<Ticket> passedTickets= ticketRepository.findPassedForUser(
-              userId,
-              TicketStatus.USED,
-              TicketStatus.CANCELLED,
-              pageable
-      );
-      return passedTickets.getContent().stream().map(ticketMapper::mapTicketToTicketResponse).toList();
 
+    @Transactional(readOnly = true)
+    public Page<TicketResponse> getPassedTickets(Long userId, Integer page, Integer size, String sort, String type) {
+        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
 
+        var today = java.time.LocalDate.now();
+        var now   = java.time.LocalTime.now();
+
+        Page<Ticket> passed = ticketRepository.findPassedForUserAt(
+                userId,
+                TicketStatus.USED,
+                TicketStatus.PAID,
+                today,
+                now,
+                pageable
+        );
+
+        return passed.map(ticketMapper::mapTicketToTicketResponse);
     }
 
+    // RESERVE — also uses movieName + hall + cinema + date + showtime (LocalTime)
+// returns one TicketResponse per seat reserved
+    @Transactional
     public List<TicketResponse> reserve(ReserveTicketRequest req, Long maybeUserId) {
+        // 1) Resolve showtime by MOVIE TITLE (not ID)
         var showtime = showtimeRepository
-                .findByMovie_IdAndHall_NameIgnoreCaseAndHall_Cinema_NameIgnoreCaseAndDateAndStartTime(
-                        req.getMovieId(),
+                .findByMovie_TitleIgnoreCaseAndHall_NameIgnoreCaseAndHall_Cinema_NameIgnoreCaseAndDateAndStartTime(
+                        req.getMovieName(),
                         req.getHall(),
                         req.getCinema(),
                         req.getDate(),
-                        req.getStartTime()
+                        req.getShowtime()
                 )
                 .orElseThrow(() -> new IllegalArgumentException("Showtime not found"));
-        // 1) Make sure the showtime is in the future (date > today OR same-day with startTime > now)
+
+        // 2) Ensure the showtime is in the future (local machine clock)
         var today = java.time.LocalDate.now();
         var now   = java.time.LocalTime.now();
         boolean isFuture =
@@ -79,13 +91,16 @@ public class TicketService {
             throw new IllegalArgumentException("Showtime is not in the future");
         }
 
-// 2) Build tickets (one per requested seat) after checking availability
+        // 3) Load user
+        var user = userRepository.findById(maybeUserId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // 4) Build tickets (one per requested seat) after availability check
         var ticketsToCreate = new java.util.ArrayList<Ticket>();
-        for (var seat : req.getSeats()) {
+        for (var seat : req.getSeatInformation()) { // <<< was getSeats()
             String seatLetter = seat.getSeatLetter();
             int seatNumber    = seat.getSeatNumber();
 
-            // seat already taken?
             boolean taken = ticketRepository
                     .existsByShowtime_IdAndSeatLetterAndSeatNumber(showtime.getId(), seatLetter, seatNumber);
             if (taken) {
@@ -94,38 +109,33 @@ public class TicketService {
 
             Ticket ticket = new Ticket();
             ticket.setShowtime(showtime);
+            ticket.setUser(user);
             ticket.setSeatLetter(seatLetter);
             ticket.setSeatNumber(seatNumber);
             ticket.setStatus(TicketStatus.RESERVED);
-
-            // TODO: set the real price (entity likely has @NotNull Double price)
-            ticket.setPrice(0.0);
-
-            // TODO: if Ticket.user is non-nullable, load and set the user using maybeUserId
-            var user = userRepository.findById(maybeUserId)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
-            ticket.setUser(user);
+            ticket.setPrice(0.0); // TODO set real price
 
             ticketsToCreate.add(ticket);
         }
 
-// 3) Persist and map
+        // 5) Persist and map
         var saved = ticketRepository.saveAll(ticketsToCreate);
-        return saved.stream()
-                .map(ticketMapper::mapTicketToTicketResponse)
-                .toList();
+        return saved.stream().map(ticketMapper::mapTicketToTicketResponse).toList();
     }
-
-    public TicketResponse buy(BuyTicketRequest ticketRequest, Long maybeUserId) {
+    @Transactional
+    public List<TicketResponse> buy(BuyTicketRequest ticketRequest, Long maybeUserId) {
         Showtime showtime = showtimeRepository
-                .findByMovie_IdAndHall_NameIgnoreCaseAndHall_Cinema_NameIgnoreCaseAndDateAndStartTime(
-                       ticketRequest.getMovieId(),
+                .findByMovie_TitleIgnoreCaseAndHall_NameIgnoreCaseAndHall_Cinema_NameIgnoreCaseAndDateAndStartTime(
+                        ticketRequest.getMovieName(),
                         ticketRequest.getHall(),
                         ticketRequest.getCinema(),
                         ticketRequest.getDate(),
                         ticketRequest.getShowtime()
                 )
                 .orElseThrow(() -> new IllegalArgumentException("Showtime not found"));
+
+        var today = java.time.LocalDate.now();
+        var now   = java.time.LocalTime.now();
 
         // 3) Load user (if your Ticket.user is non-nullable, this must be set)
         var user = userRepository.findById(maybeUserId)
@@ -158,13 +168,11 @@ public class TicketService {
             toCreate.add(ticket);
         }
 
-        // 5) Persist and map
+        // 5) Persist and map (return all created tickets)
         var saved = ticketRepository.saveAll(toCreate);
-
-        // Your method returns a single TicketResponse. If multiple seats were purchased,
-        // return the first one for now (or change the method to return List<TicketResponse>).
-        Ticket first = saved.get(0);
-        return ticketMapper.mapTicketToTicketResponse(first);
+        return saved.stream()
+                .map(ticketMapper::mapTicketToTicketResponse)
+                .toList();
     }
     }
 

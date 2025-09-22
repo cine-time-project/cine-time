@@ -100,5 +100,8 @@ public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
     Page<Showtime> findByDate(LocalDate date, Pageable pageable);
 
     Page<Showtime> findByDateAndStartTimeAfter(LocalDate date, LocalTime time, Pageable pageable);
+
+    Optional<Showtime> findByMovie_TitleIgnoreCaseAndHall_NameIgnoreCaseAndHall_Cinema_NameIgnoreCaseAndDateAndStartTime(
+            String movieTitle, String hallName, String cinemaName, LocalDate date, LocalTime startTime);
 }
 

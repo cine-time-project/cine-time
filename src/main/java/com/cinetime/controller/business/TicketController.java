@@ -5,6 +5,7 @@ import com.cinetime.payload.request.business.BuyTicketRequest;
 import com.cinetime.payload.request.business.ReserveTicketRequest;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.business.TicketResponse;
+import com.cinetime.security.service.UserDetailsImpl;
 import com.cinetime.service.business.TicketService;
 import com.cinetime.service.helper.PageableHelper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,20 +37,21 @@ import java.util.List;
                 @ApiResponse(responseCode = "500", description = "Internal server error")
         })
 
-        @GetMapping("/auth/current-tickets")
+
        // @PreAuthorize("hasRole('MEMBER')")
+        @GetMapping("/auth/current-tickets")
         @PreAuthorize("permitAll()")
-        public ResponseEntity<ResponseMessage<List<TicketResponse>>> currentTickets(
-                @AuthenticationPrincipal com.cinetime.security.service.UserDetailsImpl principal,
+        public ResponseEntity<ResponseMessage<Page<TicketResponse>>> currentTickets(
+                @AuthenticationPrincipal UserDetailsImpl principal,
                 @RequestParam(defaultValue = "0") Integer page,
                 @RequestParam(defaultValue = "0") Integer size,
                 @RequestParam(required = false) String sort,
                 @RequestParam(defaultValue = "ASC") String type) {
 
             Long userId = principal.getId();
-            List<TicketResponse> body = ticketService.getCurrentTickets(userId, page, size, sort, type);
+            Page<TicketResponse> body = ticketService.getCurrentTickets(userId, page, size, sort, type);
 
-            ResponseMessage<List<TicketResponse>> response = ResponseMessage.<List<TicketResponse>>builder()
+            ResponseMessage<Page<TicketResponse>> response = ResponseMessage.<Page<TicketResponse>>builder()
                     .returnBody(body)
                     .message(SuccessMessages.CURRENT_TICKETS_LISTED)
                     .httpStatus(HttpStatus.OK)
@@ -56,21 +59,22 @@ import java.util.List;
 
             return ResponseEntity.ok(response);
         }
+
      //   @PreAuthorize("hasRole('MEMBER')")
         @PreAuthorize("permitAll()")
         @GetMapping("/auth/passed-tickets")
 
-        public ResponseEntity<ResponseMessage<List<TicketResponse>>> passedTickets(
-                @AuthenticationPrincipal com.cinetime.security.service.UserDetailsImpl principal,
+        public ResponseEntity<ResponseMessage<Page<TicketResponse>>> passedTickets(
+                @AuthenticationPrincipal UserDetailsImpl principal,
                 @RequestParam(defaultValue = "0") Integer page,
                 @RequestParam(defaultValue = "0") Integer size,
                 @RequestParam(required = false) String sort,
                 @RequestParam(defaultValue = "ASC") String type) {
 
             Long userId = principal.getId();
-            List<TicketResponse> body = ticketService.getPassedTickets(userId, page, size, sort, type);
+            Page<TicketResponse> body = ticketService.getPassedTickets(userId, page, size, sort, type);
 
-            ResponseMessage<List<TicketResponse>> response = ResponseMessage.<List<TicketResponse>>builder()
+            ResponseMessage<Page<TicketResponse>> response = ResponseMessage.<Page<TicketResponse>>builder()
                     .returnBody(body)
                     .message(SuccessMessages.PASSED_TICKETS_LISTED)
                     .httpStatus(HttpStatus.OK)
@@ -78,6 +82,7 @@ import java.util.List;
 
             return ResponseEntity.ok(response);
         }
+
         @PreAuthorize("permitAll()")
         @PostMapping("/reserve")
         public ResponseEntity<ResponseMessage<List<TicketResponse>>> reserve(
@@ -96,13 +101,13 @@ import java.util.List;
         }
         @PreAuthorize("permitAll()")
         @PostMapping("/buy-ticket")
-        public ResponseEntity<ResponseMessage<TicketResponse>> buy(
+        public ResponseEntity<ResponseMessage<List<TicketResponse>>> buy(
                 @AuthenticationPrincipal com.cinetime.security.service.UserDetailsImpl principal,
                 @RequestBody @Valid BuyTicketRequest request) {
             Long userId = principal != null ? principal.getId() : null;
-            TicketResponse body = ticketService.buy(request, userId);
+            List<TicketResponse> body = ticketService.buy(request, userId);
 
-            ResponseMessage<TicketResponse> response = ResponseMessage.<TicketResponse>builder()
+            ResponseMessage<List<TicketResponse>> response = ResponseMessage.<List<TicketResponse>>builder()
                     .returnBody(body)
                     .message(SuccessMessages.TICKET_BOUGHT)
                     .httpStatus(HttpStatus.OK)
