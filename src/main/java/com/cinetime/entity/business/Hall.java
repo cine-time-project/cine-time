@@ -2,10 +2,7 @@ package com.cinetime.entity.business;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.Builder;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -14,7 +11,8 @@ import java.util.Set;
 @Table(name = "halls", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"cinema_id", "name"})
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -41,21 +39,14 @@ public class Hall {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    //    // Foreign Key Field - Görseldeki kırmızı nota göre eklendi
-//    @NotNull
-//    @Column(name = "cinema_id", nullable = false)
-//    private Long cinemaId; // Foreign Key to CINEMA
-    //Buna gerek yokmuş.Şimdilik yoruma aldım.
-    //Çünkü JPA’da foreign key alanını manuel tanımlamaya gerek yok, mapping üzerinden hallediliyor.
-
-    // Entity Relationship - JPA mapping için
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cinema_id", insertable = false, updatable = false)
+    @JoinColumn(name = "cinema_id", nullable = false)
     private Cinema cinema;
 
-    @OneToMany(mappedBy = "hall", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "hall", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     private Set<Showtime> showtimes;
+
 
     @PrePersist
     protected void onCreate() {

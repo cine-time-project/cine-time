@@ -47,24 +47,14 @@ public class Showtime {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Foreign Key Relationships - Görseldeki kırmızı notlara göre eklendi
-    @NotNull
-    @Column(name = "hall_id", nullable = false)
-    private Long hallId;  // Foreign Key to HALL
-
-    @NotNull
-    @Column(name = "movie_id", nullable = false)
-    private Long movieId; // Foreign Key to MOVIE
-
-    // Entity Relationships - JPA mapping için
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hall_id", insertable = false, updatable = false)
+    @JoinColumn(name = "hall_id")
     private Hall hall;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "movie_id", insertable = false, updatable = false)
+    @JoinColumn(name = "movie_id")
     private Movie movie;
 
     @JsonIgnore

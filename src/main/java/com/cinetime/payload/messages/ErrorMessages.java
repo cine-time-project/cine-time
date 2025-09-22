@@ -4,8 +4,10 @@ public class ErrorMessages {
     private ErrorMessages() {
     }
 
+    //cinema
     public static final String CINEMA_NOT_FOUND = "Cinema not found";
     public static final String CITY_NOT_FOUND = "City not found";
+
 
     //user
     public static final String NOT_FOUND_USER_MESSAGE_UNIQUE_FIELD = "Error: User not found with %s";
@@ -39,6 +41,13 @@ public class ErrorMessages {
     public static final String MOVIE_ALREADY_HAS_POSTER = "This movie already has a poster.";
     public static final String MOVIE_ALREADY_HAS_DIFFERENT_POSTER = "This movie already has a different poster.";
 
+    //Hall
+    public static final String HALL_NOT_FOUND_ID = "Hall not found with id: %d";
+    public static final String HALLS_NOT_FOUND = "Halls not found";
+
+    //Showtime
+    public static final String SHOWTIME_NOT_FOUND_ID = "Showtime not found with id: %d";
+    public static final String SHOWTIMES_NOT_FOUND = "Showtimes not found";
 
     //Ticket
     //409 - Conflict

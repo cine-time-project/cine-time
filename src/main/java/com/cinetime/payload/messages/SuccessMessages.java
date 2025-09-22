@@ -30,6 +30,20 @@ public class SuccessMessages {
     public static final String USER_UPDATED = "User updated successfully.";
     public static final String USER_DELETED = "User deleted successfully.";
 
+    //Hall
+    public static final String HALL_FOUND = "Hall is found successfully";
+    public static final String HALLS_FOUND = "Halls found successfully";
+    public static final String HALL_CREATED = "Hall is saved successfully";
+    public static final String HALL_UPDATED = "Hall is updated successfully";
+    public static final String HALL_DELETED = "Hall is deleted successfully";
+
+    //Showtime
+    public static final String SHOWTIME_FOUND = "Showtime is found successfully";
+    public static final String SHOWTIMES_FOUND = "Showtime found successfully";
+    public static final String SHOWTIME_CREATED = "Showtime is saved successfully";
+    public static final String SHOWTIME_UPDATED = "Showtime is updated successfully";
+    public static final String SHOWTIME_DELETED = "Showtime is deleted successfully";
+
     //Ticket
     public static final String CURRENT_TICKETS_LISTED = "Current tickets listed successfully.";
     public static final String PASSED_TICKETS_LISTED = "Passed tickets listed successfully.";

@@ -1,10 +1,12 @@
 package com.cinetime.controller.business;
 
+import com.cinetime.payload.request.business.CinemaCreateRequest;
 import com.cinetime.payload.response.business.SpecialHallResponse;
 import com.cinetime.payload.response.business.*;
 import com.cinetime.service.business.CinemaService;
 import com.cinetime.service.helper.PageableHelper;
 import com.cinetime.payload.messages.SuccessMessages;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.http.*;
@@ -86,5 +88,13 @@ public class CinemaController {
     public ResponseEntity<List<SpecialHallResponse>> getSpecialHalls(){
         return ResponseEntity.ok(cinemaService.getAllSpecialHalls());
     }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping("/cinemas")
+    public ResponseEntity<CinemaSummaryResponse>create(@Valid @RequestBody CinemaCreateRequest request){
+        CinemaSummaryResponse response=cinemaService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
 
 }
