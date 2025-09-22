@@ -40,6 +40,10 @@ public class SeedConfig {
 
             seedCineTimeData(jdbc);
 
+            createMember(userRepo, roleRepo, passwordEncoder);
+            createEmployee(userRepo, roleRepo, passwordEncoder);
+            createAnonymous(userRepo, roleRepo, passwordEncoder);
+
         };
     }
 
@@ -65,6 +69,74 @@ public class SeedConfig {
         // E-posta must be unique
         if (!userRepo.existsByEmail(admin.getEmail())) {
             userRepo.save(admin);
+        }
+    }
+    private void createMember(UserRepository userRepo,
+                              RoleRepository roleRepo,
+                              PasswordEncoder passwordEncoder) {
+        Role role = roleRepo.findByRoleName(RoleName.MEMBER)
+                .orElseThrow(() -> new IllegalStateException("MEMBER role missing"));
+
+        User user = User.builder()
+                .name("Member")
+                .surname("User")
+                .email("member@cinetime.local")
+                .password(passwordEncoder.encode("Member123!"))
+                .phoneNumber("(555) 111-2222")
+                .birthDate(LocalDate.of(1995, 5, 5))
+                .gender(Gender.FEMALE)
+                .builtIn(false)
+                .roles(Set.of(role))
+                .build();
+
+        if (!userRepo.existsByEmail(user.getEmail())) {
+            userRepo.save(user);
+        }
+    }
+
+    private void createEmployee(UserRepository userRepo,
+                                RoleRepository roleRepo,
+                                PasswordEncoder passwordEncoder) {
+        Role role = roleRepo.findByRoleName(RoleName.EMPLOYEE)
+                .orElseThrow(() -> new IllegalStateException("EMPLOYEE role missing"));
+
+        User user = User.builder()
+                .name("Employee")
+                .surname("User")
+                .email("employee@cinetime.local")
+                .password(passwordEncoder.encode("Employee123!"))
+                .phoneNumber("(555) 222-3333")
+                .birthDate(LocalDate.of(1992, 2, 2))
+                .gender(Gender.MALE)
+                .builtIn(false)
+                .roles(Set.of(role))
+                .build();
+
+        if (!userRepo.existsByEmail(user.getEmail())) {
+            userRepo.save(user);
+        }
+    }
+
+    private void createAnonymous(UserRepository userRepo,
+                                 RoleRepository roleRepo,
+                                 PasswordEncoder passwordEncoder) {
+        Role role = roleRepo.findByRoleName(RoleName.ANONYMOUS)
+                .orElseThrow(() -> new IllegalStateException("ANONYMOUS role missing"));
+
+        User user = User.builder()
+                .name("Anonymous")
+                .surname("User")
+                .email("anonymous@cinetime.local")
+                .password(passwordEncoder.encode("Anonymous123!"))
+                .phoneNumber("(555) 000-0000")
+                .birthDate(LocalDate.of(2000, 1, 1))
+                .gender(Gender.MALE)
+                .builtIn(false)
+                .roles(Set.of(role))
+                .build();
+
+        if (!userRepo.existsByEmail(user.getEmail())) {
+            userRepo.save(user);
         }
     }
     private void seedCineTimeData(JdbcTemplate jdbc) {
@@ -172,5 +244,7 @@ public class SeedConfig {
                 AND s.start_time = t.start_time
             )
         """);
+
+
     }
 }

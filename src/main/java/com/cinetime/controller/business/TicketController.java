@@ -38,9 +38,8 @@ import java.util.List;
         })
 
 
-       // @PreAuthorize("hasRole('MEMBER')")
+        @PreAuthorize("hasAnyAuthority('MEMBER')")
         @GetMapping("/auth/current-tickets")
-        @PreAuthorize("permitAll()")
         public ResponseEntity<ResponseMessage<Page<TicketResponse>>> currentTickets(
                 @AuthenticationPrincipal UserDetailsImpl principal,
                 @RequestParam(defaultValue = "0") Integer page,
@@ -60,8 +59,7 @@ import java.util.List;
             return ResponseEntity.ok(response);
         }
 
-     //   @PreAuthorize("hasRole('MEMBER')")
-        @PreAuthorize("permitAll()")
+        @PreAuthorize("hasAnyAuthority('MEMBER')")
         @GetMapping("/auth/passed-tickets")
 
         public ResponseEntity<ResponseMessage<Page<TicketResponse>>> passedTickets(
@@ -83,7 +81,7 @@ import java.util.List;
             return ResponseEntity.ok(response);
         }
 
-        @PreAuthorize("permitAll()")
+        @PreAuthorize("hasAnyAuthority('MEMBER','ANONYMOUS')")
         @PostMapping("/reserve")
         public ResponseEntity<ResponseMessage<List<TicketResponse>>> reserve(
                 @AuthenticationPrincipal com.cinetime.security.service.UserDetailsImpl principal,
@@ -99,7 +97,7 @@ import java.util.List;
 
             return ResponseEntity.ok(response);
         }
-        @PreAuthorize("permitAll()")
+        @PreAuthorize("hasAnyAuthority('MEMBER')")
         @PostMapping("/buy-ticket")
         public ResponseEntity<ResponseMessage<List<TicketResponse>>> buy(
                 @AuthenticationPrincipal com.cinetime.security.service.UserDetailsImpl principal,

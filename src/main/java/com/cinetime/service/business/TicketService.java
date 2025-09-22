@@ -3,6 +3,8 @@ package com.cinetime.service.business;
 import com.cinetime.entity.business.Showtime;
 import com.cinetime.entity.business.Ticket;
 import com.cinetime.entity.enums.TicketStatus;
+import com.cinetime.exception.ConflictException;
+import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.TicketMapper;
 import com.cinetime.payload.request.business.BuyTicketRequest;
 import com.cinetime.payload.request.business.ReserveTicketRequest;
@@ -88,12 +90,12 @@ public class TicketService {
                 showtime.getDate().isAfter(today) ||
                         (showtime.getDate().isEqual(today) && showtime.getStartTime().isAfter(now));
         if (!isFuture) {
-            throw new IllegalArgumentException("Showtime is not in the future");
+            throw new IllegalArgumentException("Showtime is already passed, please try to reserve a upcoming showtime");
         }
 
         // 3) Load user
         var user = userRepository.findById(maybeUserId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // 4) Build tickets (one per requested seat) after availability check
         var ticketsToCreate = new java.util.ArrayList<Ticket>();
@@ -104,7 +106,8 @@ public class TicketService {
             boolean taken = ticketRepository
                     .existsByShowtime_IdAndSeatLetterAndSeatNumber(showtime.getId(), seatLetter, seatNumber);
             if (taken) {
-                throw new IllegalStateException("Seat " + seatLetter + "-" + seatNumber + " is already reserved/paid");
+               // throw new IllegalStateException("Seat " + seatLetter + "-" + seatNumber + " is already reserved/paid");
+                throw new ConflictException("Seat " + seatLetter + "-" + seatNumber + " is already reserved/paid");
             }
 
             Ticket ticket = new Ticket();
@@ -113,7 +116,7 @@ public class TicketService {
             ticket.setSeatLetter(seatLetter);
             ticket.setSeatNumber(seatNumber);
             ticket.setStatus(TicketStatus.RESERVED);
-            ticket.setPrice(0.0); // TODO set real price
+            ticket.setPrice(9.99); // TODO set real price
 
             ticketsToCreate.add(ticket);
         }
@@ -132,14 +135,14 @@ public class TicketService {
                         ticketRequest.getDate(),
                         ticketRequest.getShowtime()
                 )
-                .orElseThrow(() -> new IllegalArgumentException("Showtime not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Showtime not found"));
 
         var today = java.time.LocalDate.now();
         var now   = java.time.LocalTime.now();
 
         // 3) Load user (if your Ticket.user is non-nullable, this must be set)
         var user = userRepository.findById(maybeUserId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // 4) Build tickets (one per seat) with status = PAID after checking availability
         var toCreate = new java.util.ArrayList<Ticket>();
@@ -151,7 +154,7 @@ public class TicketService {
             boolean taken = ticketRepository
                     .existsByShowtime_IdAndSeatLetterAndSeatNumber(showtime.getId(), seatLetter, seatNumber);
             if (taken) {
-                throw new IllegalStateException("Seat " + seatLetter + "-" + seatNumber + " is already reserved/paid");
+                throw new ConflictException("Seat " + seatLetter + "-" + seatNumber + " is already reserved/paid");
             }
 
             Ticket ticket = new Ticket();
@@ -163,7 +166,7 @@ public class TicketService {
 
             // TODO: assign a real price. Ticket.price is @NotNull in your entity, so set something valid.
             // You can compute based on hall/format, or temporarily hardcode for now:
-            ticket.setPrice(0.0);
+            ticket.setPrice(9.99);
 
             toCreate.add(ticket);
         }
