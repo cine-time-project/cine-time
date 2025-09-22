@@ -1,17 +1,21 @@
 package com.cinetime.service.business;
 
 import com.cinetime.entity.business.Cinema;
+import com.cinetime.entity.business.City;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaMapper;
 import com.cinetime.payload.mappers.HallMapper;
 import com.cinetime.payload.messages.ErrorMessages;
+import com.cinetime.payload.request.business.CinemaCreateRequest;
 import com.cinetime.payload.response.business.*;
 import com.cinetime.repository.business.CinemaRepository;
+import com.cinetime.repository.business.CityRepository;
 import com.cinetime.repository.business.HallRepository;
 import com.cinetime.repository.business.ShowtimeRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.CinemasHelper;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +37,7 @@ public class CinemaService {
     private final ShowtimeRepository showtimeRepository;
     private final HallRepository hallRepository;
     private final HallMapper hallMapper;
+    private final CityRepository cityRepository;
 
 
     @Transactional(Transactional.TxType.SUPPORTS)
@@ -135,10 +140,47 @@ public class CinemaService {
 
 
     public List<SpecialHallResponse> getAllSpecialHalls() {
-    return hallRepository.findByIsSpecialTrueOrderByNameAsc()
-            .stream()
-            .map(hallMapper::toSpecial)
-            .toList();
+        return hallRepository.findByIsSpecialTrueOrderByNameAsc()
+                .stream()
+                .map(hallMapper::toSpecial)
+                .toList();
 
+    }
+
+    @Transactional
+    public CinemaSummaryResponse create(CinemaCreateRequest request) {
+        // 1) Slug hazır geldiyse temizle; gelmediyse isimden üret
+        String baseSlug = (request.getSlug() == null || request.getSlug().isBlank())
+                ? cinemasHelper.slugify(request.getName())
+                : cinemasHelper.slugify(request.getSlug());
+        // 2) Slug must be unique
+        String uniqueSlug = cinemasHelper.ensureUniqueSlug(baseSlug);
+
+        // 3) Entity
+        Cinema cinema = Cinema.builder()
+                .name(request.getName().trim())
+                .slug(uniqueSlug)
+                .build();
+
+        // 4) City association +ID control
+        if (request.getCityIds() != null && !request.getCityIds().isEmpty()) {
+            Set<Long> requestedIds = new LinkedHashSet<>(request.getCityIds());
+
+            // DB
+            Set<City> cities = new LinkedHashSet<>(cityRepository.findAllById(requestedIds));
+            Set<Long> foundIds = cities.stream().map(City::getId).collect(java.util.stream.Collectors.toSet());
+
+            // Eksikler = istenen - bulunan
+            requestedIds.removeAll(foundIds);
+            if (!requestedIds.isEmpty()) {
+                throw new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND + requestedIds);
+            }
+
+            cinema.setCities(cities);
+        }
+
+        // 5) Save & map
+        Cinema saved = cinemaRepository.save(cinema);
+        return cinemaMapper.toSummary(saved);
     }
 }
