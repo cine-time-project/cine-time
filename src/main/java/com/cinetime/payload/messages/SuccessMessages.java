@@ -43,4 +43,16 @@ public class SuccessMessages {
     public static final String SHOWTIME_CREATED = "Showtime is saved successfully";
     public static final String SHOWTIME_UPDATED = "Showtime is updated successfully";
     public static final String SHOWTIME_DELETED = "Showtime is deleted successfully";
+
+    //Ticket
+    public static final String CURRENT_TICKETS_LISTED = "Current tickets listed successfully.";
+    public static final String PASSED_TICKETS_LISTED = "Passed tickets listed successfully.";
+    public static final String TICKET_RESERVED = "Ticket reserved successfully.";
+    public static final String TICKET_BOUGHT = "Ticket bought successfully.";
+
+
+
+
+
+
 }
