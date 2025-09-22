@@ -28,5 +28,14 @@ public class UserController {
     public ResponseEntity<String> deleteAuthenticatedUser() {
         return ResponseEntity.ok(userService.deleteAuthenticatedUser());
     }
+
+    // U08 - Get authenticated user profile
+    @GetMapping("/auth")
+    public ResponseEntity<UserResponse> getAuthenticatedUser() {
+        return ResponseEntity.ok(userService.getAuthenticatedUser());
+    }
+
+
+
 }
 

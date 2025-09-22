@@ -50,6 +50,17 @@ public class UserService {
         userRepository.delete(user);
         return SuccessMessages.USER_DELETED;
     }
+
+    // U08 - Get Authenticated User
+    public UserResponse getAuthenticatedUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user = (User) userRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
+
+        return UserMapper.toResponse(user);
+    }
+
 }
 
 
