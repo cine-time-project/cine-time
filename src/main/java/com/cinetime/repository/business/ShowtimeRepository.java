@@ -70,7 +70,8 @@ public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
     default Optional<Showtime> findNextFutureShowtime(Long movieId) {
         return findNextFutureShowtime(movieId, LocalDate.now(), LocalTime.now());
     }
-
+    Optional<Showtime> findByMovie_TitleIgnoreCaseAndHall_NameIgnoreCaseAndHall_Cinema_NameIgnoreCaseAndDateAndStartTime(
+            String movieTitle, String hallName, String cinemaName, LocalDate date, LocalTime startTime);
     Optional<Showtime> findByMovie_IdAndHall_NameIgnoreCaseAndHall_Cinema_NameIgnoreCaseAndDateAndStartTime(
             Long movieId,
             String hallName,
@@ -101,7 +102,24 @@ public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
 
     Page<Showtime> findByDateAndStartTimeAfter(LocalDate date, LocalTime time, Pageable pageable);
 
-    Optional<Showtime> findByMovie_TitleIgnoreCaseAndHall_NameIgnoreCaseAndHall_Cinema_NameIgnoreCaseAndDateAndStartTime(
-            String movieTitle, String hallName, String cinemaName, LocalDate date, LocalTime startTime);
+    interface HallMovieTimeRow {
+        Long getHallId();
+
+        String getHallName();
+
+        Integer getSeatCapacity();
+
+        Boolean getIsSpecial();
+
+        Long getMovieId();
+
+        String getMovieTitle();
+
+        java.time.LocalDate getDate();
+
+        java.time.LocalTime getStartTime();
+    }
 }
+
+
 
