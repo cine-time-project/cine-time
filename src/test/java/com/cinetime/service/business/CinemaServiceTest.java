@@ -1,24 +1,24 @@
 package com.cinetime.service.business;
 
 import com.cinetime.entity.business.Cinema;
+import com.cinetime.entity.business.City;
 import com.cinetime.entity.business.Hall;
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaMapper;
 import com.cinetime.payload.mappers.HallMapper;
 import com.cinetime.payload.messages.ErrorMessages;
+import com.cinetime.payload.request.business.CinemaCreateRequest;
 import com.cinetime.payload.response.business.CinemaSummaryResponse;
 import com.cinetime.payload.response.business.HallWithShowtimesResponse;
 import com.cinetime.payload.response.business.SpecialHallResponse;
-import com.cinetime.repository.business.CinemaRepository;
-import com.cinetime.repository.business.HallMovieTimeRow;
-import com.cinetime.repository.business.HallRepository;
-import com.cinetime.repository.business.ShowtimeRepository;
+import com.cinetime.repository.business.*;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.CinemasHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,6 +32,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +43,7 @@ class CinemaServiceTest {
     @Mock private CinemasHelper cinemasHelper;
     @Mock private UserRepository userRepository; // <-- yeni
     @Mock private ShowtimeRepository showtimeRepository;
+    @Mock private CityRepository cityRepository;
 
     @Mock private HallRepository hallRepository;   // <-- özel salonlar için
     @Mock private HallMapper hallMapper;           // <-- entity->dto
@@ -350,6 +352,207 @@ class CinemaServiceTest {
         verify(hallMapper).toSpecial(h2);
         verifyNoMoreInteractions(hallMapper);
     }
+
+    // === UPDATE TESTLERİ ===
+
+    @Test
+    void update_whenCinemaNotFound_throwsNotFound() {
+        Long id = 999L;
+        when(cinemaRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cinemaService.update(id, CinemaCreateRequest.builder().build()))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(cinemaRepository).findById(id);
+        verifyNoMoreInteractions(cinemaRepository);
+    }
+
+    @Test
+    void update_whenNameChanges_slugRegeneratedAndUniqByExcludingSelf() {
+        // given: var olan sinema
+        Long id = 10L;
+        Cinema existing = Cinema.builder()
+                .id(id)
+                .name("Old Name")
+                .slug("old-name")
+                .cities(new java.util.LinkedHashSet<>()) // boş set ama PERSISTENT gibi davranması için non-null
+                .build();
+        when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
+
+        // istek: yeni name, slug alanı boş -> name'den üretilecek
+        var req = CinemaCreateRequest.builder()
+                .name("New Name")
+                .build();
+
+        // helper + uniq kontrol
+        when(cinemasHelper.slugify("New Name")).thenReturn("new-name");
+        // "new-name" dolu (ama kendimiz değilmişiz gibi), "new-name-2" boş
+        when(cinemaRepository.existsBySlugIgnoreCaseAndIdNot("new-name", id)).thenReturn(true);
+        when(cinemaRepository.existsBySlugIgnoreCaseAndIdNot("new-name-2", id)).thenReturn(false);
+
+        // save capture
+        ArgumentCaptor<Cinema> cap = ArgumentCaptor.forClass(Cinema.class);
+        when(cinemaRepository.save(cap.capture())).thenAnswer(inv -> cap.getValue());
+        when(cinemaMapper.toSummary(any(Cinema.class))).thenReturn(new CinemaSummaryResponse());
+
+        // when
+        cinemaService.update(id, req);
+
+        // then
+        Cinema saved = cap.getValue();
+        assertEquals("New Name", saved.getName());
+        assertEquals("new-name-2", saved.getSlug()); // uniqleşti
+        verify(cinemaRepository).existsBySlugIgnoreCaseAndIdNot("new-name", id);
+        verify(cinemaRepository).existsBySlugIgnoreCaseAndIdNot("new-name-2", id);
+    }
+
+    @Test
+    void update_whenSlugProvided_usedAsBaseAndUniqChecked() {
+        Long id = 11L;
+        Cinema existing = Cinema.builder()
+                .id(id).name("Any").slug("any").cities(new java.util.LinkedHashSet<>())
+                .build();
+        when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
+
+        var req = CinemaCreateRequest.builder()
+                .slug(" CineStar  ") // helper slugify tetiklenecek
+                .build();
+
+        when(cinemasHelper.slugify(" CineStar  ")).thenReturn("cinestar");
+        when(cinemaRepository.existsBySlugIgnoreCaseAndIdNot("cinestar", id)).thenReturn(false);
+
+        ArgumentCaptor<Cinema> cap = ArgumentCaptor.forClass(Cinema.class);
+        when(cinemaRepository.save(cap.capture())).thenAnswer(inv -> cap.getValue());
+        when(cinemaMapper.toSummary(any(Cinema.class))).thenReturn(new CinemaSummaryResponse());
+
+        cinemaService.update(id, req);
+
+        assertEquals("cinestar", cap.getValue().getSlug());
+        // name dokunulmadı
+        assertEquals("Any", cap.getValue().getName());
+    }
+
+    @Test
+    void update_whenCityIdsNull_doesNotTouchCities() {
+        Long id = 12L;
+        City c1 = City.builder().id(1L).name("Istanbul").build();
+        City c2 = City.builder().id(2L).name("Ankara").build();
+        Cinema existing = Cinema.builder()
+                .id(id).name("X").slug("x")
+                .cities(new java.util.LinkedHashSet<>(java.util.List.of(c1, c2)))
+                .build();
+        when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
+
+        var req = CinemaCreateRequest.builder()
+                .name("X2")       // sadece isim değişimi
+                .cityIds(null)    // şehirleri ELLEME
+                .build();
+
+        when(cinemasHelper.slugify("X2")).thenReturn("x2");
+        when(cinemaRepository.existsBySlugIgnoreCaseAndIdNot("x2", id)).thenReturn(false);
+
+        ArgumentCaptor<Cinema> cap = ArgumentCaptor.forClass(Cinema.class);
+        when(cinemaRepository.save(cap.capture())).thenAnswer(inv -> cap.getValue());
+        when(cinemaMapper.toSummary(any(Cinema.class))).thenReturn(new CinemaSummaryResponse());
+
+        cinemaService.update(id, req);
+
+        // cities aynı kaldı mı?
+        assertThat(cap.getValue().getCities())
+                .extracting(City::getId)
+                .containsExactlyInAnyOrder(1L, 2L);
+        verify(cityRepository, never()).findAllById(any());
+    }
+
+    @Test
+    void update_whenCityIdsEmpty_clearsAllLinks() {
+        Long id = 13L;
+        City c1 = City.builder().id(1L).name("Istanbul").build();
+        City c2 = City.builder().id(2L).name("Ankara").build();
+        Cinema existing = Cinema.builder()
+                .id(id).name("Y").slug("y")
+                .cities(new java.util.LinkedHashSet<>(java.util.List.of(c1, c2)))
+                .build();
+        when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
+
+        var req = CinemaCreateRequest.builder()
+                .cityIds(java.util.Set.of()) // hepsini sil
+                .build();
+
+        ArgumentCaptor<Cinema> cap = ArgumentCaptor.forClass(Cinema.class);
+        when(cinemaRepository.save(cap.capture())).thenAnswer(inv -> cap.getValue());
+        when(cinemaMapper.toSummary(any(Cinema.class))).thenReturn(new CinemaSummaryResponse());
+
+        cinemaService.update(id, req);
+
+        assertThat(cap.getValue().getCities()).isEmpty();
+        verify(cityRepository, never()).findAllById(any());
+    }
+
+    @Test
+    void update_whenCityIdsProvided_replacesWithFound_clearThenAddAll() {
+        Long id = 14L;
+        City old = City.builder().id(1L).name("Old").build();
+        Cinema existing = Cinema.builder()
+                .id(id).name("Z").slug("z")
+                .cities(new java.util.LinkedHashSet<>(java.util.List.of(old)))
+                .build();
+        when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
+
+        var req = CinemaCreateRequest.builder()
+                .cityIds(java.util.Set.of(2L, 3L))
+                .build();
+
+        City c2 = City.builder().id(2L).name("A").build();
+        City c3 = City.builder().id(3L).name("B").build();
+
+        // findAllById doğru sonucu dönsün
+        when(cityRepository.findAllById(any())).thenReturn(java.util.List.of(c2, c3));
+
+        // save'e giden entity'yi yakala
+        var cap = ArgumentCaptor.forClass(Cinema.class);
+        when(cinemaRepository.save(cap.capture())).thenAnswer(inv -> cap.getValue());
+
+        when(cinemaMapper.toSummary(any(Cinema.class))).thenReturn(new CinemaSummaryResponse());
+
+        // when
+        cinemaService.update(id, req);
+
+        // then: kaydedilen entity’nin şehirleri {2,3}
+        assertThat(cap.getValue().getCities())
+                .extracting(City::getId)
+                .containsExactlyInAnyOrder(2L, 3L);
+
+        // eski 1 yok
+        assertThat(cap.getValue().getCities())
+                .extracting(City::getId)
+                .doesNotContain(1L);
+    }
+
+
+    @Test
+    void update_whenAnyRequestedCityMissing_throws404_andDoesNotSave() {
+        Long id = 15L;
+        Cinema existing = Cinema.builder()
+                .id(id).name("K").slug("k")
+                .cities(new java.util.LinkedHashSet<>())
+                .build();
+        when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
+
+        var req = CinemaCreateRequest.builder()
+                .cityIds(java.util.Set.of(5L, 6L)) // 6 yok diyelim
+                .build();
+
+        City only5 = City.builder().id(5L).name("Only5").build();
+        when(cityRepository.findAllById(new java.util.LinkedHashSet<>(java.util.Set.of(5L, 6L))))
+                .thenReturn(java.util.List.of(only5));
+
+        assertThatThrownBy(() -> cinemaService.update(id, req))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(cinemaRepository, never()).save(any());
+    }
+
 
 }
 
