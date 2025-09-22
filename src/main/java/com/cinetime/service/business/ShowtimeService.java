@@ -13,6 +13,8 @@ import com.cinetime.payload.response.business.ShowtimeResponse;
 import com.cinetime.repository.business.ShowtimeRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,6 +82,17 @@ public class ShowtimeService {
                 .httpStatus(HttpStatus.OK)
                 .message(SuccessMessages.SHOWTIME_UPDATED)
                 .returnBody(showtimeMapper.mapShowtimeToResponse(updatedShowtime))
+                .build();
+    }
+
+    public ResponseMessage<Page<ShowtimeResponse>> getShowtimesByMovieId(Long movieId, Pageable pageable) {
+        Movie movie = movieService.findMovieById(movieId);
+        Page<Showtime> showtimes = showtimeRepository.findAllByMovie(movie, pageable);
+        if (showtimes.isEmpty()) throw new ResourceNotFoundException(ErrorMessages.SHOWTIMES_NOT_FOUND);
+        return ResponseMessage.<Page<ShowtimeResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.SHOWTIMES_FOUND)
+                .returnBody(showtimeMapper.mapToResponsePage(showtimes))
                 .build();
     }
 }

@@ -1,5 +1,6 @@
 package com.cinetime.repository.business;
 
+import com.cinetime.entity.business.Movie;
 import com.cinetime.entity.business.Showtime;
 
 
@@ -119,6 +120,8 @@ public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
 
         java.time.LocalTime getStartTime();
     }
+
+    Page<Showtime> findAllByMovie(Movie movie, Pageable pageable);
 }
 
 
