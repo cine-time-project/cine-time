@@ -34,4 +34,16 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
 
     Page<Showtime> findByDateAndStartTimeAfter(LocalDate date, LocalTime time, Pageable pageable);
 
+    interface HallMovieTimeRow {
+        Long getHallId();
+        String getHallName();
+        Integer getSeatCapacity();
+        Boolean getIsSpecial();
+        Long getMovieId();
+        String getMovieTitle();
+        java.time.LocalDate getDate();
+        java.time.LocalTime getStartTime();
+    }
+
+
 }
