@@ -38,7 +38,7 @@ public class Cinema {
   // Cinema <-> City ManyToMany
   @ManyToMany(
       // When cinema is persisted or updated, city table will also be persisted or updated.
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+      cascade = {CascadeType.MERGE},
       fetch = FetchType.LAZY //default behaviour
   )
   @JoinTable(

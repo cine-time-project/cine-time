@@ -5,6 +5,8 @@ public class SuccessMessages {
     }
 
     public static final String CINEMAS_LISTED = "Cinemas listed successfully.";
+    public static final String CINEMA_DELETED = "Cinema deleted successfully: %s";
+
 
     //movie
     public static final String MOVIE_FOUND = "Movies are Found Successfully";
