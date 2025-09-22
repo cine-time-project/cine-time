@@ -177,13 +177,4 @@ public class TicketService {
                 .map(ticketMapper::mapTicketToTicketResponse)
                 .toList();
     }
-    }
-
-
-
-
-
-
-
-
-
+}
