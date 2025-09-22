@@ -49,6 +49,10 @@ public class ErrorMessages {
     public static final String SHOWTIME_NOT_FOUND_ID = "Showtime not found with id: %d";
     public static final String SHOWTIMES_NOT_FOUND = "Showtimes not found";
 
+    //Ticket
+    //409 - Conflict
+    public static final String SHOWTIME_HAS_PASSED= "Movie time can not be in the past.";
+
 }
 
 
