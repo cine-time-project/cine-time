@@ -183,4 +183,61 @@ public class CinemaService {
         Cinema saved = cinemaRepository.save(cinema);
         return cinemaMapper.toSummary(saved);
     }
+
+    @Transactional
+    public CinemaSummaryResponse update(Long id, CinemaCreateRequest req) {
+        Cinema cinema = cinemaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.CINEMA_NOT_FOUND));
+
+        // 1) Name
+        if (req.getName() != null && !req.getName().isBlank()) {
+            cinema.setName(req.getName().trim());
+        }
+
+        // 2) Slug (yalnızca name değiştiyse veya slug verildiyse)
+        if ((req.getName() != null && !req.getName().isBlank()) || (req.getSlug() != null && !req.getSlug().isBlank())) {
+            String base = (req.getSlug() == null || req.getSlug().isBlank())
+                    ? cinemasHelper.slugify(cinema.getName())
+                    : cinemasHelper.slugify(req.getSlug());
+
+            // uniq: aynı slug ama FARKLI id var mı?
+            String unique = base;
+            int k = 2;
+            while (cinemaRepository.existsBySlugIgnoreCaseAndIdNot(unique, id)) {
+                unique = base + "-" + k++;
+            }
+            cinema.setSlug(unique);
+        }
+
+
+        // 3) Cities
+        if (req.getCityIds() != null) {
+            if (req.getCityIds().isEmpty()) {
+                // tamamen temizle
+                if (cinema.getCities() != null) {
+                    cinema.getCities().clear();
+                } else {
+                    cinema.setCities(new java.util.LinkedHashSet<>());
+                }
+            } else {
+                var wanted = new java.util.LinkedHashSet<>(req.getCityIds());
+                var found = new java.util.LinkedHashSet<>(cityRepository.findAllById(wanted));
+                var foundIds = found.stream().map(City::getId).collect(java.util.stream.Collectors.toSet());
+
+                wanted.removeAll(foundIds);
+                if (!wanted.isEmpty()) {
+                    throw new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND + wanted);
+                }
+
+                // 🔴 kritik değişiklik: clear+addAll yerine direkt set et
+                cinema.setCities(found);
+            }
+        }
+
+
+
+        Cinema saved = cinemaRepository.save(cinema); // flush zorunlu değil ama sorun da değil
+        return cinemaMapper.toSummary(saved);
+    }
+
 }

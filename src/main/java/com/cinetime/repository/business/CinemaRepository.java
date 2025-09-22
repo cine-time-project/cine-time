@@ -98,4 +98,8 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
 
     boolean existsBySlugIgnoreCase(String candidate);
+
+    boolean existsBySlugIgnoreCaseAndIdNot(String slug, Long id);
+
+
 }
