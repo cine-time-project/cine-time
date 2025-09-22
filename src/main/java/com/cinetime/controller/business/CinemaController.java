@@ -96,5 +96,13 @@ public class CinemaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PutMapping("/cinemas/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<CinemaSummaryResponse> updateCinema(
+            @PathVariable Long id,
+            @Valid @RequestBody CinemaCreateRequest request
+    ){
+        return ResponseEntity.ok(cinemaService.update(id, request));
+    }
 
 }

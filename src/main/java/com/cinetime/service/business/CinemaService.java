@@ -183,4 +183,53 @@ public class CinemaService {
         Cinema saved = cinemaRepository.save(cinema);
         return cinemaMapper.toSummary(saved);
     }
+
+    @Transactional
+    public CinemaSummaryResponse update(Long id, CinemaCreateRequest req) {
+        Cinema cinema = cinemaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.CINEMA_NOT_FOUND));
+
+        // 1) Name
+        if (req.getName() != null && !req.getName().isBlank()) {
+            cinema.setName(req.getName().trim());
+        }
+
+        // 2) Slug (name or provided from slug)
+        if ((req.getName() != null && !req.getName().isBlank()) || (req.getSlug() != null)) {
+            String base = (req.getSlug() == null || req.getSlug().isBlank())
+                    ? cinemasHelper.slugify(cinema.getName())
+                    : cinemasHelper.slugify(req.getSlug());
+            //  uniq
+            String unique = base; int k = 2;
+            while (cinemaRepository.existsBySlugIgnoreCaseAndIdNot(unique, id)) {
+                unique = base + "-" + k++;
+            }
+            cinema.setSlug(unique);
+        }
+
+        // 3) Cities
+        if (req.getCityIds() != null) {
+            if (req.getCityIds().isEmpty()) {
+                // Reletion delete → persistent set
+                cinema.getCities().clear();
+            } else {
+                var wanted = new java.util.LinkedHashSet<>(req.getCityIds());
+                var found = new java.util.LinkedHashSet<>(cityRepository.findAllById(wanted));
+                var foundIds = found.stream().map(City::getId).collect(java.util.stream.Collectors.toSet());
+                wanted.removeAll(foundIds);
+                if (!wanted.isEmpty()) {
+                    throw new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND + wanted);
+                }
+                // SET → clear + addAll
+                cinema.getCities().clear();
+                cinema.getCities().addAll(found);
+            }
+        }
+
+        // 4) save (or dirty checking with @Transactional)
+        Cinema saved = cinemaRepository.save(cinema);
+        return cinemaMapper.toSummary(saved);
+    }
+
+
 }
