@@ -49,12 +49,12 @@ public class Showtime {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hall_id", insertable = false, updatable = false)
+    @JoinColumn(name = "hall_id")
     private Hall hall;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "movie_id", insertable = false, updatable = false)
+    @JoinColumn(name = "movie_id")
     private Movie movie;
 
     @JsonIgnore
