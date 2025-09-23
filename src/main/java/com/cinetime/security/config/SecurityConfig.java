@@ -95,7 +95,7 @@ public class SecurityConfig {
             "/api/images/**",
             "/css/**",
             "/js/**",
-            "/auth/login",
+            "/api/login",
             "/api/cinemas",
             "/api/cinemas/**",
             "/api/movies",
