@@ -15,6 +15,9 @@ public class ErrorMessages {
     public static final String BUILT_IN_USER_UPDATE_NOT_ALLOWED = "Built-in users cannot be updated.";
     public static final String BUILT_IN_USER_DELETE_NOT_ALLOWED = "Built-in users cannot be deleted.";
     public static final String INVALID_GENDER = "Invalid gender value. Use MALE, FEMALE or OTHER.";
+    public static final String EMAIL_NOT_UNIQUE = "Email already in use";
+    public static final String PHONE_NUMBER_NOT_UNIQUE = "Phone number already in use";
+    public static final String MEMBER_ROLE_MISSING = "MEMBER role missing";
 
 
     //movie
