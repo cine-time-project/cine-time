@@ -92,10 +92,10 @@ public class UserService {
 
         // 1) unique
         if (userRepository.existsByEmail(req.getEmail()))
-            throw new ConflictException("Email already in use");
+            throw new ConflictException(ErrorMessages.EMAIL_NOT_UNIQUE);
 
         if (userRepository.existsByPhoneNumber(req.getPhone()))
-            throw new ConflictException("Phone already in use");
+            throw new ConflictException(ErrorMessages.PHONE_NUMBER_NOT_UNIQUE);
 
         // 2) request -> entity (STATIC mapper)
         User user = UserMapper.fromRegisterRequest(req);   // <<< static call
@@ -106,7 +106,7 @@ public class UserService {
 
         // 4) default role = MEMBER
         Role member = roleRepository.findByRoleName(RoleName.MEMBER)
-                .orElseThrow(() -> new IllegalStateException("MEMBER role missing"));
+                .orElseThrow(() -> new IllegalStateException(ErrorMessages.MEMBER_ROLE_MISSING));
         user.setRoles(Set.of(member));
 
         // 5) save + map to response (STATIC mapper)
