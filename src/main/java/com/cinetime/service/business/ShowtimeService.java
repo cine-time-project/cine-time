@@ -8,8 +8,8 @@ import com.cinetime.payload.mappers.ShowtimeMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.business.ShowtimeRequest;
-import com.cinetime.payload.response.business.ResponseMessage;
-import com.cinetime.payload.response.business.ShowtimeResponse;
+import com.cinetime.payload.response.business.*;
+import com.cinetime.repository.business.CinemaRepository;
 import com.cinetime.repository.business.ShowtimeRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +19,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class ShowtimeService {
@@ -27,6 +33,7 @@ public class ShowtimeService {
     private final HallService hallService;
     private final MovieService movieService;
     private final ShowtimeMapper showtimeMapper;
+    private final CinemaRepository cinemaRepository;
 
     @Transactional
     public ResponseMessage<ShowtimeResponse> saveShowtime(@Valid ShowtimeRequest showtimeRequest) {
@@ -95,4 +102,79 @@ public class ShowtimeService {
                 .returnBody(showtimeMapper.mapToResponsePage(showtimes))
                 .build();
     }
+
+    // S01 Endpoint - Get showtimes by cinema ID
+    public ResponseMessage<List<HallWithShowtimesResponse>> getShowtimesByCinemaId(Long cinemaId) {
+        // Validate cinema exists using repository directly
+        cinemaRepository.findById(cinemaId)
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessages.CINEMA_NOT_FOUND, cinemaId)));
+
+        List<ShowtimeRepository.HallMovieTimeRow> rows = showtimeRepository.findShowtimesByCinemaId(cinemaId);
+
+        if (rows.isEmpty()) {
+            throw new ResourceNotFoundException(ErrorMessages.SHOWTIMES_NOT_FOUND);
+        }
+
+        List<HallWithShowtimesResponse> hallResponses = groupShowtimesByHallAndMovie(rows);
+
+        return ResponseMessage.<List<HallWithShowtimesResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.SHOWTIMES_FOUND_BY_CINEMA)
+                .returnBody(hallResponses)
+                .build();
+    }
+
+    private List<HallWithShowtimesResponse> groupShowtimesByHallAndMovie(List<ShowtimeRepository.HallMovieTimeRow> rows) {
+        // Group by hall
+        Map<Long, List<ShowtimeRepository.HallMovieTimeRow>> hallGroups = rows.stream()
+                .collect(Collectors.groupingBy(ShowtimeRepository.HallMovieTimeRow::getHallId));
+
+        return hallGroups.entrySet().stream()
+                .map(hallEntry -> {
+                    Long hallId = hallEntry.getKey();
+                    List<ShowtimeRepository.HallMovieTimeRow> hallRows = hallEntry.getValue();
+
+                    // Get hall info from first row
+                    ShowtimeRepository.HallMovieTimeRow firstRow = hallRows.get(0);
+
+                    // Group by movie within this hall
+                    Map<Long, List<ShowtimeRepository.HallMovieTimeRow>> movieGroups = hallRows.stream()
+                            .collect(Collectors.groupingBy(ShowtimeRepository.HallMovieTimeRow::getMovieId));
+
+                    List<HallMovieShowtimesResponse> movieShowtimes = movieGroups.entrySet().stream()
+                            .map(movieEntry -> {
+                                List<ShowtimeRepository.HallMovieTimeRow> movieRows = movieEntry.getValue();
+                                ShowtimeRepository.HallMovieTimeRow movieFirstRow = movieRows.get(0);
+
+                                MovieMiniResponse movie = MovieMiniResponse.builder()
+                                        .id(movieFirstRow.getMovieId())
+                                        .title(movieFirstRow.getMovieTitle())
+                                        .build();
+
+                                List<LocalDateTime> times = movieRows.stream()
+                                        .map(row -> LocalDateTime.of(row.getDate(), row.getStartTime()))
+                                        .sorted()
+                                        .collect(Collectors.toList());
+
+                                return HallMovieShowtimesResponse.builder()
+                                        .movie(movie)
+                                        .times(times)
+                                        .build();
+                            })
+                            .sorted(Comparator.comparing(hms -> hms.getMovie().getTitle()))
+                            .collect(Collectors.toList());
+
+                    return HallWithShowtimesResponse.builder()
+                            .id(hallId)
+                            .name(firstRow.getHallName())
+                            .seatCapacity(firstRow.getSeatCapacity())
+                            .isSpecial(firstRow.getIsSpecial())
+                            .movies(movieShowtimes)
+                            .build();
+                })
+                .sorted(Comparator.comparing(HallWithShowtimesResponse::getName))
+                .collect(Collectors.toList());
+    }
+
+
 }
