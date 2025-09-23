@@ -245,6 +245,5 @@ public class SeedConfig {
             )
         """);
 
-
     }
 }

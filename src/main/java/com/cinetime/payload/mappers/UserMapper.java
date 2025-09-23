@@ -1,6 +1,7 @@
 package com.cinetime.payload.mappers;
 
 import com.cinetime.payload.messages.ErrorMessages;
+import com.cinetime.payload.request.user.UserRegisterRequest;
 import com.cinetime.payload.request.user.UserUpdateRequest;
 import com.cinetime.payload.response.user.UserResponse;
 import com.cinetime.entity.enums.Gender;
@@ -36,4 +37,22 @@ public class UserMapper {
         response.setGender(user.getGender() != null ? user.getGender().name() : null);
         return response;
     }
+
+    // UserRegisterRequest -> User
+    public static User fromRegisterRequest(UserRegisterRequest req) {
+        User user = new User();
+        user.setName(req.getFirstName());
+        user.setSurname(req.getLastName());
+        user.setEmail(req.getEmail());
+        user.setPhoneNumber(req.getPhone());
+        user.setPassword(req.getPassword());     // encode in service
+        user.setBirthDate(req.getBirthDate());   // LocalDate
+        if (req.getGender() != null) {
+            user.setGender(req.getGender());
+        }
+        return user;
+    }
+
+
+
 }

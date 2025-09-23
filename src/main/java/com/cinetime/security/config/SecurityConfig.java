@@ -101,6 +101,7 @@ public class SecurityConfig {
             "/api/movies",
             "/api/movies/**",
             "/api/special-halls",
+            "/api/register",
             "/error"
     };
 
