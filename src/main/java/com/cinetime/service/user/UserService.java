@@ -10,8 +10,11 @@ import com.cinetime.exception.ConflictException;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -60,6 +63,16 @@ public class UserService {
 
         return UserMapper.toResponse(user);
     }
+
+    // U09 - Get all users (ADMIN or EMPLOYEE)
+    @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
+    public List<UserResponse> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(UserMapper::toResponse)
+                .toList();
+    }
+
 
 }
 
