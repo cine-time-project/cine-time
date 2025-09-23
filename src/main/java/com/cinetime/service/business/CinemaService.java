@@ -6,12 +6,10 @@ import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaMapper;
 import com.cinetime.payload.mappers.HallMapper;
 import com.cinetime.payload.messages.ErrorMessages;
+import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.business.CinemaCreateRequest;
 import com.cinetime.payload.response.business.*;
-import com.cinetime.repository.business.CinemaRepository;
-import com.cinetime.repository.business.CityRepository;
-import com.cinetime.repository.business.HallRepository;
-import com.cinetime.repository.business.ShowtimeRepository;
+import com.cinetime.repository.business.*;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.CinemasHelper;
 import jakarta.transaction.Transactional;
@@ -19,6 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import com.cinetime.entity.user.User;
 
@@ -38,6 +37,7 @@ public class CinemaService {
     private final HallRepository hallRepository;
     private final HallMapper hallMapper;
     private final CityRepository cityRepository;
+    private final TicketRepository ticketRepository;
 
 
     @Transactional(Transactional.TxType.SUPPORTS)
@@ -229,7 +229,6 @@ public class CinemaService {
                     throw new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND + wanted);
                 }
 
-                // 🔴 kritik değişiklik: clear+addAll yerine direkt set et
                 cinema.setCities(found);
             }
         }
@@ -239,5 +238,29 @@ public class CinemaService {
         Cinema saved = cinemaRepository.save(cinema); // flush zorunlu değil ama sorun da değil
         return cinemaMapper.toSummary(saved);
     }
+
+    @Transactional
+    public String delete(Long id) {
+        // 1) id kontrol
+        Cinema c = cinemaRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(String.format(ErrorMessages.CINEMA_NOT_FOUND, id)));
+
+        String message = String.format(SuccessMessages.CINEMA_DELETED,id);
+
+        // 2) Relation clear
+        ticketRepository.deleteByCinemaId(id);   // ticket -> showtime -> hall -> cinema
+        showtimeRepository.deleteByCinemaId(id); // showtime -> hall -> cinema
+        hallRepository.deleteByCinemaId(id);     // hall -> cinema
+        cinemaRepository.deleteMovieLinks(id);   // movie_cinema
+        cinemaRepository.deleteCityLinks(id);    // cinema_city
+
+        // 3) Cinema delete
+        cinemaRepository.deleteById(id);
+
+        // 4) Message
+        return message;
+    }
+
 
 }

@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api") // <-- tek base path
@@ -103,6 +104,13 @@ public class CinemaController {
             @Valid @RequestBody CinemaCreateRequest request
     ){
         return ResponseEntity.ok(cinemaService.update(id, request));
+    }
+
+
+    @DeleteMapping("/cinemas/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Map<String,String>> delete(@PathVariable Long id) {
+        return ResponseEntity.ok(Map.of("message", cinemaService.delete(id)));
     }
 
 }

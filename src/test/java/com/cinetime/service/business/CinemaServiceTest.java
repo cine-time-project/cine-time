@@ -8,14 +8,12 @@ import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaMapper;
 import com.cinetime.payload.mappers.HallMapper;
 import com.cinetime.payload.messages.ErrorMessages;
+import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.business.CinemaCreateRequest;
 import com.cinetime.payload.response.business.CinemaSummaryResponse;
 import com.cinetime.payload.response.business.HallWithShowtimesResponse;
 import com.cinetime.payload.response.business.SpecialHallResponse;
-import com.cinetime.repository.business.CinemaRepository;
-import com.cinetime.repository.business.CityRepository;
-import com.cinetime.repository.business.HallRepository;
-import com.cinetime.repository.business.ShowtimeRepository;
+import com.cinetime.repository.business.*;
 import com.cinetime.repository.business.ShowtimeRepository.HallMovieTimeRow;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.CinemasHelper;
@@ -24,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -50,6 +49,7 @@ class CinemaServiceTest {
     @Mock private CityRepository cityRepository;
     @Mock private HallRepository hallRepository;
     @Mock private HallMapper hallMapper;
+    @Mock private TicketRepository ticketRepository;
 
     @InjectMocks private CinemaService cinemaService;
 
@@ -568,4 +568,55 @@ class CinemaServiceTest {
         verify(cityRepository, never()).findAllById(anySet());
         verify(cinemaRepository, times(2)).save(any(Cinema.class));
     }
+
+    @Test
+    void delete_whenCinemaExists_deletesRelationsAndReturnsMessage() {
+        // given
+        Long id = 12L;
+        Cinema existing = Cinema.builder().id(id).name("Any").slug("any").build();
+        when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
+
+        // when
+        String result = cinemaService.delete(id);
+
+        // then: mesaj
+        assertThat(result).isEqualTo(String.format(SuccessMessages.CINEMA_DELETED, id));
+
+        // then: çağrı sırası (opsiyonel ama güzel bir güvence)
+        InOrder inOrder = inOrder(cinemaRepository, ticketRepository, showtimeRepository, hallRepository);
+        inOrder.verify(cinemaRepository).findById(id);
+        inOrder.verify(ticketRepository).deleteByCinemaId(id);
+        inOrder.verify(showtimeRepository).deleteByCinemaId(id);
+        inOrder.verify(hallRepository).deleteByCinemaId(id);
+        inOrder.verify(cinemaRepository).deleteMovieLinks(id);
+        inOrder.verify(cinemaRepository).deleteCityLinks(id);
+        inOrder.verify(cinemaRepository).deleteById(id);
+        inOrder.verifyNoMoreInteractions();
+
+        // emniyet: hiçbir ekstra etkileşim yok
+        verifyNoMoreInteractions(ticketRepository, showtimeRepository, hallRepository, cinemaRepository);
+    }
+
+    @Test
+    void delete_whenCinemaNotFound_throws404_andDoesNotTouchRelations() {
+        // given
+        Long id = 99L;
+        when(cinemaRepository.findById(id)).thenReturn(Optional.empty());
+
+        // when + then
+        assertThatThrownBy(() -> cinemaService.delete(id))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(String.format(ErrorMessages.CINEMA_NOT_FOUND, id));
+
+        // then: silme metotları hiç çağrılmadı
+        verify(ticketRepository, never()).deleteByCinemaId(anyLong());
+        verify(showtimeRepository, never()).deleteByCinemaId(anyLong());
+        verify(hallRepository, never()).deleteByCinemaId(anyLong());
+        verify(cinemaRepository, never()).deleteMovieLinks(anyLong());
+        verify(cinemaRepository, never()).deleteCityLinks(anyLong());
+        verify(cinemaRepository, never()).deleteById(anyLong());
+    }
+
+
+
 }

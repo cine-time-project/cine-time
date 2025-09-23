@@ -5,8 +5,8 @@ public class ErrorMessages {
     }
 
     //cinema
-    public static final String CINEMA_NOT_FOUND = "Cinema not found";
-    public static final String CITY_NOT_FOUND = "City not found";
+    public static final String CINEMA_NOT_FOUND = "Cinema not found by id: %s";
+    public static final String CITY_NOT_FOUND = "City not found by id: %s";
 
 
     //user

@@ -7,6 +7,7 @@ import com.cinetime.entity.business.Showtime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import org.springframework.data.repository.query.Param;
@@ -120,6 +121,13 @@ public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
 
         java.time.LocalTime getStartTime();
     }
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("delete from Showtime s where s.hall.cinema.id = :cinemaId")
+    void deleteByCinemaId(@Param("cinemaId") Long cinemaId);
+
+
+
 
     Page<Showtime> findAllByMovie(Movie movie, Pageable pageable);
 }
