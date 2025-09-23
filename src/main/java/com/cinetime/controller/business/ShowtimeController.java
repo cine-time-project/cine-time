@@ -1,6 +1,7 @@
 package com.cinetime.controller.business;
 
 import com.cinetime.payload.request.business.ShowtimeRequest;
+import com.cinetime.payload.response.business.HallWithShowtimesResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.business.ShowtimeResponse;
 import com.cinetime.service.business.ShowtimeService;
@@ -14,8 +15,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/show-time") // <-- tek base path
+@RequestMapping("/api/show-times") // <--Changed for multi base path
 @RequiredArgsConstructor
 public class ShowtimeController {
 
@@ -56,6 +59,13 @@ public class ShowtimeController {
             @PathVariable Long movieId,
             @PageableDefault(page = 0, size = 10, sort = "date", direction = Sort.Direction.ASC) Pageable pageable) {
         return showTimeService.getShowtimesByMovieId(movieId, pageable);
+    }
+
+    // S01 Endpoint - Get showtimes by cinema ID
+    @GetMapping("/cinema/{cinemaId}")
+    @PreAuthorize("permitAll()")
+    public ResponseMessage<List<HallWithShowtimesResponse>> getShowtimesByCinemaId(@PathVariable Long cinemaId) {
+        return showTimeService.getShowtimesByCinemaId(cinemaId);
     }
 
 
