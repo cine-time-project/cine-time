@@ -16,11 +16,14 @@ import com.cinetime.repository.user.RoleRepository;
 import com.cinetime.repository.user.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -74,34 +77,44 @@ public class UserService {
     }
 
 
-    // U02 - User Register
-        public UserResponse saveUser(UserRegisterRequest req) {
 
-            // 1) unique
-            if (userRepository.existsByEmail(req.getEmail()))
-                throw new ConflictException("Email already in use");
-
-            if (userRepository.existsByPhoneNumber(req.getPhone()))
-                throw new ConflictException("Phone already in use");
-
-            // 2) request -> entity (STATIC mapper)
-            User user = UserMapper.fromRegisterRequest(req);   // <<< static call
-            user.setEmail(user.getEmail().trim().toLowerCase());
-
-            // 3) encode password
-            user.setPassword(encoder.encode(user.getPassword()));
-
-            // 4) default role = MEMBER
-            Role member = roleRepository.findByRoleName(RoleName.MEMBER)
-                    .orElseThrow(() -> new IllegalStateException("MEMBER role missing"));
-            user.setRoles(Set.of(member));
-
-            // 5) save + map to response (STATIC mapper)
-            User saved = userRepository.save(user);
-            return UserMapper.toResponse(saved);               // <<< static call while mapper is not component
-        }
+    // U09 - Get all users (ADMIN or EMPLOYEE)
+    @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
+    public List<UserResponse> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(UserMapper::toResponse)
+                .toList();
     }
 
+    // U02 - User Register
+    public UserResponse saveUser(UserRegisterRequest req) {
+
+        // 1) unique
+        if (userRepository.existsByEmail(req.getEmail()))
+            throw new ConflictException("Email already in use");
+
+        if (userRepository.existsByPhoneNumber(req.getPhone()))
+            throw new ConflictException("Phone already in use");
+
+        // 2) request -> entity (STATIC mapper)
+        User user = UserMapper.fromRegisterRequest(req);   // <<< static call
+        user.setEmail(user.getEmail().trim().toLowerCase());
+
+        // 3) encode password
+        user.setPassword(encoder.encode(user.getPassword()));
+
+        // 4) default role = MEMBER
+        Role member = roleRepository.findByRoleName(RoleName.MEMBER)
+                .orElseThrow(() -> new IllegalStateException("MEMBER role missing"));
+        user.setRoles(Set.of(member));
+
+        // 5) save + map to response (STATIC mapper)
+        User saved = userRepository.save(user);
+        return UserMapper.toResponse(saved);               // <<< static call while mapper is not component
+    }
+
+}
 
 
 
