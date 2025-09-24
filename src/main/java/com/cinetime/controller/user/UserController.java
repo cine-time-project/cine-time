@@ -78,6 +78,14 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUserByAdminOrEmployee(userId, request));
     }
 
+    // U11 - Delete user by ADMIN or EMPLOYEE
+    @DeleteMapping("/{userId}/admin")
+    @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
+    public ResponseEntity<UserResponse> deleteUserByAdminOrEmployee(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.deleteUserByAdminOrEmployee(userId));
+    }
+
+
 
 
 
