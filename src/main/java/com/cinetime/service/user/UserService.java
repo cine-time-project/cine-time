@@ -143,6 +143,22 @@ public class UserService {
         return UserMapper.toResponse(user);
     }
 
+   // U11 – Delete User by Admin or Employee
+   @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
+   public UserResponse deleteUserByAdminOrEmployee(Long userId) {
+       User user = userRepository.findById(userId)
+               .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
+
+       if (Boolean.TRUE.equals(user.getBuiltIn())) {
+           throw new ConflictException(ErrorMessages.BUILT_IN_USER_DELETE_NOT_ALLOWED);
+       }
+
+       userRepository.delete(user);
+
+       return UserMapper.toResponse(user);
+   }
+
+
 
     public ResponseMessage<UserCreateResponse> createUser(UserCreateRequest request) {
 

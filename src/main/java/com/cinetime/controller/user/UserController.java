@@ -82,6 +82,16 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUserByAdminOrEmployee(userId, request));
     }
 
+
+    // U11 - Delete user by ADMIN or EMPLOYEE
+    @DeleteMapping("/{userId}/admin")
+    @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
+    public ResponseEntity<UserResponse> deleteUserByAdminOrEmployee(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.deleteUserByAdminOrEmployee(userId));
+    }
+
+
+
     //U05 - Create User
     @PostMapping("/users/auth")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'EMPLOYEE','MEMBER')")
@@ -90,6 +100,7 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(userService.createUser(userCreateRequest));
+
 
     }
 
