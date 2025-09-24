@@ -1,13 +1,23 @@
 package com.cinetime.payload.mappers;
 
+import com.cinetime.entity.business.Role;
+import com.cinetime.entity.enums.RoleName;
 import com.cinetime.payload.messages.ErrorMessages;
+import com.cinetime.payload.request.user.UserCreateRequest;
 import com.cinetime.payload.request.user.UserRegisterRequest;
 import com.cinetime.payload.request.user.UserUpdateRequest;
+import com.cinetime.payload.response.user.UserCreateResponse;
 import com.cinetime.payload.response.user.UserResponse;
 import com.cinetime.entity.enums.Gender;
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.BadRequestException;
+import lombok.Data;
+import org.springframework.stereotype.Component;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Component
 public class UserMapper {
 
     // UserUpdateRequest -> User
@@ -67,6 +77,38 @@ public class UserMapper {
         return user;
     }
 
+    // Request → Entity
+    public User mapUserCreateRequestToUser(UserCreateRequest request) {
+        return User.builder()
+                .name(request.getName())
+                .surname(request.getSurname())
+                .email(request.getEmail())
+                .phoneNumber(request.getPhoneNumber())
+                .birthDate(request.getBirthDate())
+                .gender(request.getGender())
+                .password(request.getPassword()) // şifre encode edilecek service içinde
+                .build();
+    }
+
+    // Entity → Response
+    public UserCreateResponse mapUserToUserCreateResponse(User user) {
+        Set<RoleName> roles = user.getRoles()
+                .stream()
+                .map(Role::getRoleName) // Role entity → RoleName enum
+                .collect(Collectors.toSet());
+
+        return UserCreateResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .birthDate(user.getBirthDate())
+                .gender(user.getGender())
+                .builtIn(Boolean.TRUE.equals(user.getBuiltIn()))
+                .roles(roles) //Enum olarak ekledik
+                .build();
+    }
 
 
 }
