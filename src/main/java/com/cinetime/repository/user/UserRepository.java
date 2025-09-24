@@ -23,7 +23,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
   boolean existsByEmail(String email);
   boolean existsByRoles_RoleName(com.cinetime.entity.enums.RoleName roleName);
 
-    Optional<Object> findByEmail(String username);
+  Optional<User> findByEmail(String email);
 
   boolean existsByPhoneNumber(String phoneNumber);
   Optional<User> findByEmailIgnoreCase(String email);

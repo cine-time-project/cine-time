@@ -29,7 +29,7 @@ public class UserController {
     // U06 - Update authenticated user
     @PutMapping("/users/auth")
     public ResponseEntity<UserResponse> updateAuthenticatedUser(
-            @RequestBody UserUpdateRequest request) {
+            @Valid @RequestBody UserUpdateRequest request) {
         return ResponseEntity.ok(userService.updateAuthenticatedUser(request));
     }
 
