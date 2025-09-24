@@ -9,4 +9,8 @@ public enum Gender {
     public static Gender from(String v) {
         return Gender.valueOf(v.trim().toUpperCase());
     }
+
+    public String toUpperCase() {
+        return null;
+    }
 }
