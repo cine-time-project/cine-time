@@ -1,7 +1,11 @@
 package com.cinetime.controller.user;
 
+import com.cinetime.payload.request.authentication.LoginRequest;
+import com.cinetime.payload.request.user.UserCreateRequest;
 import com.cinetime.payload.request.user.UserRegisterRequest;
 import com.cinetime.payload.request.user.UserUpdateRequest;
+import com.cinetime.payload.response.business.ResponseMessage;
+import com.cinetime.payload.response.user.UserCreateResponse;
 import com.cinetime.payload.response.user.UserResponse;
 import com.cinetime.service.user.UserService;
 import jakarta.validation.Valid;
@@ -78,6 +82,7 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUserByAdminOrEmployee(userId, request));
     }
 
+
     // U11 - Delete user by ADMIN or EMPLOYEE
     @DeleteMapping("/{userId}/admin")
     @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
@@ -87,8 +92,26 @@ public class UserController {
 
 
 
+    //U05 - Create User
+    @PostMapping("/users/auth")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'EMPLOYEE','MEMBER')")
+    public ResponseEntity<ResponseMessage<UserCreateResponse>> createUser(
+            @RequestBody @Valid UserCreateRequest userCreateRequest) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(userService.createUser(userCreateRequest));
 
+
+    }
 
 
 }
+
+
+
+
+
+
+
+
 

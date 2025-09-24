@@ -8,15 +8,21 @@ import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.UserMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
+import com.cinetime.payload.request.user.UserCreateRequest;
 import com.cinetime.payload.request.user.UserRegisterRequest;
 import com.cinetime.payload.request.user.UserUpdateRequest;
+import com.cinetime.payload.response.business.ResponseMessage;
+import com.cinetime.payload.response.user.UserCreateResponse;
 import com.cinetime.payload.response.user.UserResponse;
 import com.cinetime.repository.user.RoleRepository;
 import com.cinetime.repository.user.UserRepository;
+import com.cinetime.service.business.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,7 +37,9 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder encoder;
-
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final RoleService roleService;
 
     // U06 - Update Authenticated User
     public UserResponse updateAuthenticatedUser(UserUpdateRequest request) {
@@ -151,6 +159,42 @@ public class UserService {
    }
 
 
+
+    public ResponseMessage<UserCreateResponse> createUser(UserCreateRequest request) {
+
+        if (userRepository.existsByEmail(request.getEmail()))
+            throw new ConflictException(ErrorMessages.EMAIL_NOT_UNIQUE);
+
+        if (userRepository.existsByPhoneNumber(request.getPhoneNumber()))
+            throw new ConflictException(ErrorMessages.PHONE_NUMBER_NOT_UNIQUE);
+
+        User user = userMapper.mapUserCreateRequestToUser(request);
+
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        Role role;
+        if (isAdmin) {
+            user.setBuiltIn(request.isBuiltIn());
+            role = roleService.getRole(request.getRole());
+        } else {
+            user.setBuiltIn(false);
+            role = roleService.getRole(RoleName.MEMBER);
+        }
+        user.setRoles(Set.of(role));
+
+        userRepository.save(user);
+        UserCreateResponse response = userMapper.mapUserToUserCreateResponse(user);
+
+        return ResponseMessage.<UserCreateResponse>builder()
+                .message(SuccessMessages.USER_CREATE)
+                .httpStatus(HttpStatus.CREATED)
+                .returnBody(response)
+                .build();
+    }
 
 }
 
