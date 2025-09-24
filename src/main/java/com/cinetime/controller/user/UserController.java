@@ -1,6 +1,8 @@
 package com.cinetime.controller.user;
 
+import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.authentication.LoginRequest;
+import com.cinetime.payload.request.user.ResetPasswordRequest;
 import com.cinetime.payload.request.user.UserCreateRequest;
 import com.cinetime.payload.request.user.UserRegisterRequest;
 import com.cinetime.payload.request.user.UserUpdateRequest;
@@ -102,6 +104,18 @@ public class UserController {
                 .body(userService.createUser(userCreateRequest));
 
 
+    }
+
+    //U04-Reset Password
+    @PostMapping("/reset-password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseMessage<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        userService.resetPasswordForAuthenticatedUser(request);
+        return ResponseMessage.<String>builder()
+                .message(SuccessMessages.PASSWORD_CHANGED)
+                .httpStatus(HttpStatus.OK)
+                .returnBody(null) // <-- use the correct field name
+                .build();
     }
 
 

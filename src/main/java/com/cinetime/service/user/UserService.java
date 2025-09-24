@@ -3,11 +3,13 @@ package com.cinetime.service.user;
 import com.cinetime.entity.business.Role;
 import com.cinetime.entity.enums.RoleName;
 import com.cinetime.entity.user.User;
+import com.cinetime.exception.BadRequestException;
 import com.cinetime.exception.ConflictException;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.UserMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
+import com.cinetime.payload.request.user.ResetPasswordRequest;
 import com.cinetime.payload.request.user.UserCreateRequest;
 import com.cinetime.payload.request.user.UserRegisterRequest;
 import com.cinetime.payload.request.user.UserUpdateRequest;
@@ -17,6 +19,7 @@ import com.cinetime.payload.response.user.UserResponse;
 import com.cinetime.repository.user.RoleRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.business.RoleService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -194,6 +197,36 @@ public class UserService {
                 .httpStatus(HttpStatus.CREATED)
                 .returnBody(response)
                 .build();
+    }
+
+    //U04-Reset Password
+    @Transactional
+    public void resetPasswordForAuthenticatedUser(ResetPasswordRequest request) {
+        User user = getCurrentUser();
+
+        // 1) Verify old password
+        if (!encoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new BadRequestException(ErrorMessages.OLD_PASSWORD_MISMATCH); // use your constant
+        }
+
+        // 2) Optional extra validations (keep if useful; remove if you prefer minimal)
+        if (encoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new BadRequestException(ErrorMessages.NEW_PASSWORD_SAME_AS_OLD);
+        }
+
+        // 3) Update
+        user.setPassword(encoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    private User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // Depending on your UserDetails implementation:
+        // If principal holds email/phone/ID, adapt this logic accordingly.
+        // Example assumes username = email:
+        String username = auth.getName();
+        return userRepository.findByEmail(username)
+                .orElseThrow(() -> new BadRequestException(ErrorMessages.USER_NOT_FOUND));
     }
 
 }
