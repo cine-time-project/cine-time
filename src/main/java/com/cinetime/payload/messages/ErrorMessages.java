@@ -18,6 +18,8 @@ public class ErrorMessages {
     public static final String EMAIL_NOT_UNIQUE = "Email already in use";
     public static final String PHONE_NUMBER_NOT_UNIQUE = "Phone number already in use";
     public static final String MEMBER_ROLE_MISSING = "MEMBER role missing";
+    public static final String OLD_PASSWORD_MISMATCH = "Old password is incorrect.";
+    public static final String NEW_PASSWORD_SAME_AS_OLD = "New password cannot be the same as old password.";
 
 
     //movie
