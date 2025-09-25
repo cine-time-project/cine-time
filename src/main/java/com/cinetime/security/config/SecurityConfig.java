@@ -104,6 +104,8 @@ public class SecurityConfig {
             "/api/register",
             "/api/show-times",
             "/api/show-times/**",
+            "/api/forgot-password",
+            "/api/reset-password-code",
             "/error"
     };
 

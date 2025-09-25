@@ -2,10 +2,7 @@ package com.cinetime.controller.user;
 
 import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.authentication.LoginRequest;
-import com.cinetime.payload.request.user.ResetPasswordRequest;
-import com.cinetime.payload.request.user.UserCreateRequest;
-import com.cinetime.payload.request.user.UserRegisterRequest;
-import com.cinetime.payload.request.user.UserUpdateRequest;
+import com.cinetime.payload.request.user.*;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.user.UserCreateResponse;
 import com.cinetime.payload.response.user.UserResponse;
@@ -21,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -116,6 +114,20 @@ public class UserController {
                 .httpStatus(HttpStatus.OK)
                 .returnBody(null) // <-- use the correct field name
                 .build();
+    }
+
+    // U03 - Forgot Password
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequestEmail req){
+        String msg=userService.forgotPassword(req.getEmail());
+        return ResponseEntity.ok(Map.of("message", msg));
+    }
+
+    //Reset Password with Email code
+    @PostMapping("/reset-password-code")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequestEmail req) {
+        String msg = userService.resetPassword(req);
+        return ResponseEntity.ok(msg);
     }
 
 
