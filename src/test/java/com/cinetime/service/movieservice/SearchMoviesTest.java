@@ -9,7 +9,6 @@ import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.repository.business.MovieRepository;
 import com.cinetime.service.business.MovieService;
 import com.cinetime.service.helper.MovieServiceHelper;
-import com.cinetime.service.helper.PageableHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,8 +23,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -34,9 +32,6 @@ class SearchMoviesTest {
 
     @Mock
     private MovieRepository movieRepository;
-
-    @Mock
-    private PageableHelper pageableHelper;
 
     @Mock
     private MovieMapper movieMapper;
@@ -90,20 +85,18 @@ class SearchMoviesTest {
     void searchMovies_WithValidQuery_ShouldReturnMovies() {
         String query = "test";
 
-        when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
         when(movieRepository.findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(query, query, mockPageable))
                 .thenReturn(mockMoviePage);
         when(movieMapper.mapToResponsePage(mockMoviePage)).thenReturn(mockMovieResponsePage);
 
         ResponseMessage<Page<MovieResponse>> result =
-                movieService.searchMovies(query, 0, 10, "title", "asc");
+                movieService.searchMovies(query, mockPageable);
 
         assertThat(result).isNotNull();
         assertThat(result.getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(result.getReturnBody().getContent()).hasSize(1);
         assertThat(result.getReturnBody().getContent().get(0).getTitle()).isEqualTo("Test Movie");
 
-        verify(pageableHelper).buildPageable(0, 10, "title", "asc");
         verify(movieRepository).findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(query, query, mockPageable);
         verify(movieMapper).mapToResponsePage(mockMoviePage);
     }
@@ -121,15 +114,13 @@ class SearchMoviesTest {
                         .returnBody(Page.empty(mockPageable))
                         .build();
 
-        when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
         when(movieRepository.findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(query, query, mockPageable))
                 .thenReturn(emptyMoviePage);
-        // cast eklendi!
         when(movieServiceHelper.buildEmptyPageResponse(eq(mockPageable), eq(ErrorMessages.MOVIES_NOT_FOUND), eq(HttpStatus.OK)))
                 .thenReturn((ResponseMessage) emptyResponse);
 
         ResponseMessage<Page<MovieResponse>> result =
-                movieService.searchMovies(query, 0, 10, "title", "asc");
+                movieService.searchMovies(query, mockPageable);
 
         assertThat(result.getReturnBody().getContent()).isEmpty();
         assertThat(result.getMessage()).isEqualTo(ErrorMessages.MOVIES_NOT_FOUND);
@@ -143,12 +134,11 @@ class SearchMoviesTest {
     void searchMovies_WithEmptyQuery_ShouldReturnAllMovies() {
         String query = "";
 
-        when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
         when(movieRepository.findAll(mockPageable)).thenReturn(mockMoviePage);
         when(movieMapper.mapToResponsePage(mockMoviePage)).thenReturn(mockMovieResponsePage);
 
         ResponseMessage<Page<MovieResponse>> result =
-                movieService.searchMovies(query, 0, 10, "title", "asc");
+                movieService.searchMovies(query, mockPageable);
 
         assertThat(result.getReturnBody().getContent()).hasSize(1);
 
@@ -161,12 +151,11 @@ class SearchMoviesTest {
     void searchMovies_WithNullQuery_ShouldReturnAllMovies() {
         String query = null;
 
-        when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
         when(movieRepository.findAll(mockPageable)).thenReturn(mockMoviePage);
         when(movieMapper.mapToResponsePage(mockMoviePage)).thenReturn(mockMovieResponsePage);
 
         ResponseMessage<Page<MovieResponse>> result =
-                movieService.searchMovies(query, 0, 10, "title", "asc");
+                movieService.searchMovies(query, mockPageable);
 
         assertThat(result.getReturnBody().getContent()).hasSize(1);
 
@@ -179,11 +168,10 @@ class SearchMoviesTest {
     void searchMovies_WhenRepositoryThrowsException_ShouldPropagate() {
         String query = "test";
 
-        when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(mockPageable);
         when(movieRepository.findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(query, query, mockPageable))
                 .thenThrow(new RuntimeException("Database error"));
 
-        assertThatThrownBy(() -> movieService.searchMovies(query, 0, 10, "title", "asc"))
+        assertThatThrownBy(() -> movieService.searchMovies(query, mockPageable))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Database error");
 

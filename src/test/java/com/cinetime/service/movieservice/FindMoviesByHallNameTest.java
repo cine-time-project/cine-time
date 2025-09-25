@@ -10,7 +10,6 @@ import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.repository.business.MovieRepository;
 import com.cinetime.service.business.MovieService;
 import com.cinetime.service.helper.MovieServiceHelper;
-import com.cinetime.service.helper.PageableHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,9 +36,6 @@ class FindMoviesByHallNameTest {
 
     @Mock
     private MovieRepository movieRepository;
-
-    @Mock
-    private PageableHelper pageableHelper;
 
     @Mock
     private MovieMapper movieMapper;
@@ -99,15 +95,13 @@ class FindMoviesByHallNameTest {
         String hallName = "IMAX";
         Page<Movie> moviesPage = new PageImpl<>(Collections.singletonList(testMovie), defaultPageable, 1);
 
-        when(pageableHelper.buildPageable(0, 10, "releaseDate", "asc"))
-                .thenReturn(defaultPageable);
         when(movieRepository.findAllByHallIgnoreCase(hallName, defaultPageable))
                 .thenReturn(moviesPage);
         when(movieMapper.mapMovieToMovieResponse(testMovie))
                 .thenReturn(testMovieResponse);
 
         ResponseMessage<Page<MovieResponse>> res =
-                movieService.findMoviesByHallName(hallName, 0, 10, "releaseDate", "asc");
+                movieService.findMoviesByHallName(hallName, defaultPageable);
 
         assertThat(res.getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(res.getReturnBody()).isNotNull();
@@ -131,8 +125,6 @@ class FindMoviesByHallNameTest {
                         .message(ErrorMessages.MOVIES_NOT_FOUND_IN_HALL)
                         .build();
 
-        when(pageableHelper.buildPageable(0, 10, "releaseDate", "asc"))
-                .thenReturn(defaultPageable);
         when(movieRepository.findAllByHallIgnoreCase(hallName, defaultPageable))
                 .thenReturn(emptyPage);
         when(movieServiceHelper.buildEmptyPageResponse(defaultPageable,
@@ -140,7 +132,7 @@ class FindMoviesByHallNameTest {
                 .thenReturn((ResponseMessage) emptyResponse);
 
         ResponseMessage<Page<MovieResponse>> res =
-                movieService.findMoviesByHallName(hallName, 0, 10, "releaseDate", "asc");
+                movieService.findMoviesByHallName(hallName, defaultPageable);
 
         assertThat(res.getHttpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(res.getMessage()).isEqualTo(ErrorMessages.MOVIES_NOT_FOUND_IN_HALL);
@@ -153,15 +145,13 @@ class FindMoviesByHallNameTest {
         Pageable custom = PageRequest.of(2, 5, Sort.by("releaseDate").descending());
         Page<Movie> moviesPage = new PageImpl<>(Collections.singletonList(testMovie), custom, 1);
 
-        when(pageableHelper.buildPageable(2, 5, "releaseDate", "desc"))
-                .thenReturn(custom);
         when(movieRepository.findAllByHallIgnoreCase(hallName, custom))
                 .thenReturn(moviesPage);
         when(movieMapper.mapMovieToMovieResponse(testMovie))
                 .thenReturn(testMovieResponse);
 
         ResponseMessage<Page<MovieResponse>> res =
-                movieService.findMoviesByHallName(hallName, 2, 5, "releaseDate", "desc");
+                movieService.findMoviesByHallName(hallName, custom);
 
         assertThat(res.getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(res.getMessage())
@@ -172,7 +162,7 @@ class FindMoviesByHallNameTest {
     @DisplayName("Should throw exception when hallName is null")
     void shouldHandleNullHallName() {
         assertThatThrownBy(() ->
-                movieService.findMoviesByHallName(null, 0, 10, "releaseDate", "asc"))
+                movieService.findMoviesByHallName(null, defaultPageable))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Hall name cannot be null or empty");
 
@@ -183,7 +173,7 @@ class FindMoviesByHallNameTest {
     @DisplayName("Should throw exception when hallName is empty")
     void shouldHandleEmptyHallName() {
         assertThatThrownBy(() ->
-                movieService.findMoviesByHallName("   ", 0, 10, "releaseDate", "asc"))
+                movieService.findMoviesByHallName("   ", defaultPageable))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Hall name cannot be null or empty");
 
@@ -193,13 +183,11 @@ class FindMoviesByHallNameTest {
     @Test
     @DisplayName("Should propagate exception when repository throws")
     void shouldPropagateWhenRepositoryThrows() {
-        when(pageableHelper.buildPageable(0, 10, "releaseDate", "asc"))
-                .thenReturn(defaultPageable);
         when(movieRepository.findAllByHallIgnoreCase(any(), any()))
                 .thenThrow(new RuntimeException("DB error"));
 
         assertThatThrownBy(() ->
-                movieService.findMoviesByHallName("IMAX", 0, 10, "releaseDate", "asc"))
+                movieService.findMoviesByHallName("IMAX", defaultPageable))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("DB error");
     }

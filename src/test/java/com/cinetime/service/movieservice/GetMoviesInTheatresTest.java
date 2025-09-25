@@ -4,7 +4,6 @@ import com.cinetime.payload.response.business.MovieResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.service.business.MovieService;
 import com.cinetime.service.helper.MovieServiceHelper;
-import com.cinetime.service.helper.PageableHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
@@ -28,9 +28,6 @@ import static org.mockito.Mockito.*;
 class GetMoviesInTheatresTest {
 
     @Mock
-    private PageableHelper pageableHelper;
-
-    @Mock
     private MovieServiceHelper movieServiceHelper;
 
     @InjectMocks
@@ -41,7 +38,7 @@ class GetMoviesInTheatresTest {
 
     @BeforeEach
     void setUp() {
-        pageable = Pageable.ofSize(10);
+        pageable = PageRequest.of(0, 10);
         Page<MovieResponse> page = new PageImpl<>(Collections.singletonList(
                 MovieResponse.builder().id(1L).title("Inception").build()
         ));
@@ -55,16 +52,14 @@ class GetMoviesInTheatresTest {
     @Test
     @DisplayName("Should delegate to helper.getCurrentlyInTheatres when date is null")
     void shouldCallHelperForCurrentlyInTheatres_whenDateIsNull() {
-        when(pageableHelper.buildPageable(0, 10, "releaseDate", "asc")).thenReturn(pageable);
         when(movieServiceHelper.getCurrentlyInTheatres(pageable)).thenReturn(responseWithMovie);
 
         ResponseMessage<Page<MovieResponse>> result =
-                movieService.getMoviesInTheatres(null, 0, 10, "releaseDate", "asc");
+                movieService.getMoviesInTheatres(null, pageable);
 
         assertThat(result.getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(result.getReturnBody().getContent()).hasSize(1);
 
-        verify(pageableHelper).buildPageable(0, 10, "releaseDate", "asc");
         verify(movieServiceHelper).getCurrentlyInTheatres(pageable);
         verifyNoMoreInteractions(movieServiceHelper);
     }
@@ -74,16 +69,14 @@ class GetMoviesInTheatresTest {
     void shouldCallHelperForMoviesByDate_whenDateIsProvided() {
         LocalDate date = LocalDate.of(2025, 1, 1);
 
-        when(pageableHelper.buildPageable(1, 5, "title", "desc")).thenReturn(pageable);
         when(movieServiceHelper.getMoviesByDate(date, pageable)).thenReturn(responseWithMovie);
 
         ResponseMessage<Page<MovieResponse>> result =
-                movieService.getMoviesInTheatres(date, 1, 5, "title", "desc");
+                movieService.getMoviesInTheatres(date, pageable);
 
         assertThat(result.getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(result.getReturnBody().getContent().get(0).getTitle()).isEqualTo("Inception");
 
-        verify(pageableHelper).buildPageable(1, 5, "title", "desc");
         verify(movieServiceHelper).getMoviesByDate(date, pageable);
         verifyNoMoreInteractions(movieServiceHelper);
     }

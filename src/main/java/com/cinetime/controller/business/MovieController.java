@@ -31,15 +31,12 @@ public class MovieController {
     //M01
     @PreAuthorize("permitAll()")
     @GetMapping("/search")
-    @Transactional(readOnly = true)
     public ResponseEntity<ResponseMessage<Page<MovieResponse>>> searchMovies(
             @RequestParam(required = false) String q,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sort", defaultValue = "title") String sort,
-            @RequestParam(value = "type", defaultValue = "asc") String type) {
+            @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC)
+            Pageable pageable) {
 
-        ResponseMessage<Page<MovieResponse>> response = movieService.searchMovies(q, page, size, sort, type);
+        ResponseMessage<Page<MovieResponse>> response = movieService.searchMovies(q, pageable);
         return ResponseEntity.status(response.getHttpStatus()).body(response);
     }
 
@@ -49,13 +46,11 @@ public class MovieController {
     public ResponseEntity<ResponseMessage<Page<CinemaMovieResponse>>> findMoviesByCinemaSlug(
             @Parameter(description = "Cinema slug", required = true)
             @PathVariable String cinemaSlug,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sort", defaultValue = "title") String sort,
-            @RequestParam(value = "type", defaultValue = "asc") String type) {
+            @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC)
+            Pageable pageable) {
 
         ResponseMessage<Page<CinemaMovieResponse>> response =
-                movieService.findMoviesByCinemaSlug(cinemaSlug, page, size, sort, type);
+                movieService.findMoviesByCinemaSlug(cinemaSlug, pageable);
         return ResponseEntity.status(response.getHttpStatus()).body(response);
     }
 
@@ -65,15 +60,14 @@ public class MovieController {
     public ResponseEntity<ResponseMessage<Page<MovieResponse>>> findMoviesByHallName(
             @Parameter(description = "Hall name (e.g., imax, vip, goldclass)", required = true)
             @PathVariable String hallName,
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "sort", defaultValue = "releaseDate") String sort,
-            @RequestParam(value = "type", defaultValue = "asc") String type
+            @PageableDefault(page = 0, size = 10, sort = "releaseDate", direction = Sort.Direction.ASC)
+            Pageable pageable
     ) {
         ResponseMessage<Page<MovieResponse>> response =
-                movieService.findMoviesByHallName(hallName, page, size, sort, type);
+                movieService.findMoviesByHallName(hallName, pageable);
         return ResponseEntity.status(response.getHttpStatus()).body(response);
     }
+
 
     //M04
     @PreAuthorize("permitAll()")
@@ -82,31 +76,30 @@ public class MovieController {
             @Parameter(description = "Optional search date (yyyy-MM-dd)")
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "releaseDate") String sort,
-            @RequestParam(defaultValue = "asc") String type
+            @PageableDefault(page = 0, size = 10, sort = "releaseDate", direction = Sort.Direction.ASC)
+            Pageable pageable
     ) {
         ResponseMessage<Page<MovieResponse>> response =
-                movieService.getMoviesInTheatres(date, page, size, sort, type);
+                movieService.getMoviesInTheatres(date, pageable);
         return ResponseEntity.status(response.getHttpStatus()).body(response);
     }
+
 
     //M05
     @PreAuthorize("permitAll()")
     @GetMapping("/coming-soon")
     public ResponseEntity<ResponseMessage<Page<MovieResponse>>> getComingSoonMovies(
             @Parameter(description = "Optional release date (yyyy-MM-dd) to filter")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "releaseDate") String sort,
-            @RequestParam(defaultValue = "asc") String type
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @PageableDefault(page = 0, size = 10, sort = "releaseDate", direction = Sort.Direction.ASC)
+            Pageable pageable
     ) {
         ResponseMessage<Page<MovieResponse>> response =
-                movieService.getComingSoonMovies(date, page, size, sort, type);
+                movieService.getComingSoonMovies(date, pageable);
         return ResponseEntity.status(response.getHttpStatus()).body(response);
     }
+
 
     //M08
     @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
@@ -114,14 +107,13 @@ public class MovieController {
     public ResponseEntity<ResponseMessage<Page<MovieResponse>>> searchAuthorizedMovies(
             @Parameter(description = "Search query (optional)")
             @RequestParam(required = false) String q,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "title") String sort,
-            @RequestParam(defaultValue = "asc") String type
+            @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC)
+            Pageable pageable
     ) {
-        return ResponseEntity.ok(movieService.searchAuthorizedMovies(q, page, size, sort, type)
-        );
+        ResponseMessage<Page<MovieResponse>> response = movieService.searchAuthorizedMovies(q, pageable);
+        return ResponseEntity.ok(response);
     }
+
 
     //M09 - Get Movie By ID
     @PreAuthorize("permitAll()")
