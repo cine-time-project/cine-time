@@ -83,9 +83,4 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
                                      Pageable pageable);
 
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("delete from Ticket t where t.showtime.hall.cinema.id = :cinemaId")
-    void deleteByCinemaId(@Param("cinemaId") Long cinemaId);
-
-
 }
