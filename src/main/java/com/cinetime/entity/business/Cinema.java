@@ -4,18 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
-@Table(
-    name = "cinemas"
-)
+@Table(name = "cinemas")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -35,34 +31,26 @@ public class Cinema {
   @Column(nullable = false, unique = true, length = 50)
   private String slug;
 
-  // Cinema <-> City ManyToMany
-  @ManyToMany(
-      // When cinema is persisted or updated, city table will also be persisted or updated.
-      cascade = {CascadeType.MERGE},
-      fetch = FetchType.LAZY //default behaviour
-  )
+  // Cinema <-> City (ManyToMany): City bağımsız referans veri, cascade vermiyoruz
+  @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(
-      name = "cinema_city",
-      joinColumns = @JoinColumn(name = "cinema_id"),
-      inverseJoinColumns = @JoinColumn(name = "city_id")
+          name = "cinema_city",
+          joinColumns = @JoinColumn(name = "cinema_id"),
+          inverseJoinColumns = @JoinColumn(name = "city_id")
   )
-  private Set<City> cities = new HashSet<>();
+  private Set<City> cities = new LinkedHashSet<>();
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "cinema")
-    private List<Hall> halls;
+  // Cinema -> Hall (OneToMany): Cinema silinirse Hall'lar da silinsin
+  @JsonIgnore
+  @OneToMany(mappedBy = "cinema", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Hall> halls = new LinkedHashSet<>();
 
-    @JsonIgnore
-    @OneToMany(
-          mappedBy = "cinema",
-          fetch = FetchType.LAZY,
-          cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE },
-          orphanRemoval = true
-  )
+  // Cinema -> Favorite (OneToMany): Cinema silinince favoriler de silinsin
+  @JsonIgnore
+  @OneToMany(mappedBy = "cinema", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private Set<Favorite> favorites = new LinkedHashSet<>();
 
-
-
+  // Cinema <-> Movie (ManyToMany): Movie'ler bağımsız, cascade yok; join satırı unique
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(
           name = "movie_cinema",
@@ -81,16 +69,15 @@ public class Cinema {
   )
   private Set<Movie> movies = new LinkedHashSet<>();
 
-
   @NotNull
-    @Column(name = "createdAt", nullable = false)
-    private LocalDateTime createdAt;
+  @Column(name = "createdAt", nullable = false, updatable = false)
+  private LocalDateTime createdAt;
 
   @NotNull
   @Column(name = "updatedAt", nullable = false)
   private LocalDateTime updatedAt;
 
-  //-------------------- LIFECYCLE --------------------
+  // -------------------- LIFECYCLE --------------------
   @PrePersist
   protected void onCreate() {
     this.createdAt = LocalDateTime.now();

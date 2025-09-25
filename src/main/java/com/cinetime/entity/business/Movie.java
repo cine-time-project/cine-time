@@ -88,21 +88,21 @@ public class Movie {
     @Column(name = "genre", nullable = false)
     private List<String> genre;
 
-
-    /*@NotNull
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "varchar(32) default 'COMING_SOON'")
+    @Column(length = 32, nullable = false)
     private MovieStatus status;
-   // private MovieStatus status = MovieStatus.COMING_SOON;*/
-
-    @Enumerated(EnumType.STRING)
-    @Column(length = 32, nullable = false)   // ← BURADA columnDefinition KULLANMAYIN
-    private MovieStatus status;
-
 
     @JsonIgnore
     @ManyToMany(mappedBy = "movies", fetch = FetchType.LAZY)
     private Set<Cinema> cinemas = new LinkedHashSet<>();
+
+    // Movie -> Showtime : Movie silinince bağlı seanslar da silinsin
+    @JsonIgnore
+    @OneToMany(mappedBy = "movie",
+            cascade = CascadeType.REMOVE,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
+    private Set<Showtime> showtimes = new LinkedHashSet<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "movie",
@@ -110,7 +110,6 @@ public class Movie {
             orphanRemoval = true,
             fetch = FetchType.LAZY)
     private Set<Image> images = new LinkedHashSet<>();
-
 
     @PrePersist
     public void prePersist() {
@@ -127,7 +126,4 @@ public class Movie {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
-
 }
-

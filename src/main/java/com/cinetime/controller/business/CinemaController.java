@@ -90,8 +90,8 @@ public class CinemaController {
     //C08: Delete Cinema
     @DeleteMapping("/cinemas/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Map<String,String>> delete(@PathVariable Long id) {
-        return ResponseEntity.ok(Map.of("message", cinemaService.delete(id)));
+    public ResponseEntity<ResponseMessage<Void>> delete(@PathVariable Long id) {
+        return ResponseEntity.ok(cinemaService.delete(id));
     }
 
 }

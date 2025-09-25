@@ -255,28 +255,23 @@ public class CinemaService {
                 .build();
     }
 
-
+    //C08 : Delete Cinema
     @Transactional
-    public String delete(Long id) {
-        // 1) id kontrol
-        Cinema c = cinemaRepository.findById(id)
+    public ResponseMessage<Void> delete(Long id) {
+        // 1) Id kontrol
+        Cinema cinema = cinemaRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(String.format(ErrorMessages.CINEMA_NOT_FOUND, id)));
 
-        String message = String.format(SuccessMessages.CINEMA_DELETED,id);
+        // 2) Tek satır: cascade zinciri halleder
+        cinemaRepository.delete(cinema);
 
-        // 2) Relation clear
-        ticketRepository.deleteByCinemaId(id);   // ticket -> showtime -> hall -> cinema
-        showtimeRepository.deleteByCinemaId(id); // showtime -> hall -> cinema
-        hallRepository.deleteByCinemaId(id);     // hall -> cinema
-        cinemaRepository.deleteMovieLinks(id);   // movie_cinema
-        cinemaRepository.deleteCityLinks(id);    // cinema_city
-
-        // 3) Cinema delete
-        cinemaRepository.deleteById(id);
-
-        // 4) Message
-        return message;
+        // 3) Standart cevap
+        return ResponseMessage.<Void>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(String.format(SuccessMessages.CINEMA_DELETED, id))
+                .returnBody(null)
+                .build();
     }
 
 
