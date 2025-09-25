@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -136,6 +137,87 @@ public class MovieServiceHelper {
     public <T> ResponseMessage<Page<T>> buildEmptyPageResponse(
             Pageable pageable, String message, HttpStatus status) {
         return buildPageResponse(Page.empty(pageable), message, status);
+    }
+
+    /**
+     * Ensures that the given slug is unique in the database.
+     * <p>
+     * If the slug already exists, a numeric suffix (-2, -3, …) is appended
+     * until a unique slug is found.
+     *
+     * @param base initial slug candidate
+     * @return unique slug string
+     */
+    public String ensureUniqueSlug(String base) {
+        String candidate = base;
+        int i = 2;
+        while (movieRepository.existsBySlugIgnoreCase(candidate)) {
+            candidate = base + "-" + i;
+            i++;
+        }
+        return candidate;
+    }
+
+
+    /**
+     * Converts a string into a URL-friendly slug, limited to maxLength characters.
+     * Accents removed, lowercase, spaces to hyphens, special chars removed.
+     *
+     * @param input raw string to slugify
+     * @param maxLength maximum allowed length of the slug
+     * @return URL-safe slug
+     */
+    private String slugify(String input, int maxLength) {
+        String n = Normalizer.normalize(input, Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        n = n.toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .replaceAll("\\s+", "-")
+                .replaceAll("-{2,}", "-")
+                .replaceAll("^-|-$", "");
+        return n.length() > maxLength ? n.substring(0, maxLength).replaceAll("-+$", "") : n;
+    }
+
+    /**
+     * Ensures that the slug is unique in the database.
+     * Adds numeric suffix if needed, truncating to max length to avoid DB errors.
+     * Uses save-time exception handling for performance instead of repeated exists check.
+     *
+     * @param base initial slug candidate
+     * @param maxLength maximum allowed slug length
+     * @return unique slug
+     */
+    private String ensureUniqueSlug(String base, int maxLength, Long currentMovieId) {
+        String candidate = slugify(base, maxLength);
+        int suffix = 2;
+
+        while (currentMovieId == null
+                ? movieRepository.existsBySlugIgnoreCase(candidate)
+                : movieRepository.existsBySlugIgnoreCaseAndIdNot(candidate, currentMovieId)) {
+
+            int allowedLength = maxLength - ("-" + suffix).length();
+            String truncatedBase = candidate.length() > allowedLength ? candidate.substring(0, allowedLength) : candidate;
+            candidate = truncatedBase + "-" + suffix;
+            suffix++;
+        }
+        return candidate;
+    }
+
+    /**
+     * Generates a unique slug for a movie.
+     * Considers max length and ignores the current movie's ID during update.
+     *
+     * @param title         Movie title if requestedSlug is null/blank
+     * @param requestedSlug Optional slug provided by user
+     * @param maxLength     Maximum slug length
+     * @param currentMovieId ID of the movie being updated, null for new movies
+     * @return unique slug string
+     */
+    public String generateUniqueSlug(String title, String requestedSlug, int maxLength, Long currentMovieId) {
+        String baseSlug = (requestedSlug == null || requestedSlug.isBlank())
+                ? slugify(title, maxLength)
+                : slugify(requestedSlug, maxLength);
+        return ensureUniqueSlug(baseSlug, maxLength, currentMovieId);
     }
 
 

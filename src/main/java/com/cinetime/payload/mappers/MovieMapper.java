@@ -4,6 +4,7 @@ import com.cinetime.entity.business.Movie;
 import com.cinetime.payload.request.business.MovieRequest;
 import com.cinetime.payload.response.business.CinemaMovieResponse;
 import com.cinetime.payload.response.business.MovieResponse;
+import com.cinetime.service.helper.MovieServiceHelper;
 import lombok.Data;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
@@ -62,7 +63,6 @@ public class MovieMapper {
 
         return Movie.builder()
                 .title(movieRequest.getTitle())
-                .slug(movieRequest.getSlug())
                 .summary(movieRequest.getSummary())
                 .releaseDate(movieRequest.getReleaseDate())
                 .duration(movieRequest.getDuration())
@@ -73,7 +73,7 @@ public class MovieMapper {
                 .formats(movieRequest.getFormats())
                 .genre(movieRequest.getGenre())
                 .status(movieRequest.getStatus())
-                //cinemas and images will be assigned in MovieService by retrieving them from DB.
+                //slug, cinemas and images will be assigned in MovieService.
                 .build();
     }
 
