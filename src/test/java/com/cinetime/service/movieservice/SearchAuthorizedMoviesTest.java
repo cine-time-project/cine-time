@@ -11,7 +11,6 @@ import com.cinetime.repository.business.MovieRepository;
 import com.cinetime.repository.business.ShowtimeRepository;
 import com.cinetime.service.business.MovieService;
 import com.cinetime.service.helper.MovieServiceHelper;
-import com.cinetime.service.helper.PageableHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("MovieService - searchAuthorizedMovies Tests")
@@ -35,9 +34,6 @@ class SearchAuthorizedMoviesTest {
 
     @Mock
     private MovieRepository movieRepository;
-
-    @Mock
-    private PageableHelper pageableHelper;
 
     @Mock
     private MovieMapper movieMapper;
@@ -64,10 +60,10 @@ class SearchAuthorizedMoviesTest {
         // movieService içindeki helper field'ını replace et
         movieService = new MovieService(
                 movieRepository,
-                pageableHelper,
+                null,
                 movieMapper,
-                null, // cinemaService testte lazım değil
-                null, // imageService testte lazım değil
+                null,
+                null,
                 showtimeRepository,
                 movieServiceHelper
         );
@@ -99,13 +95,12 @@ class SearchAuthorizedMoviesTest {
         Page<Movie> moviesPage = new PageImpl<>(Collections.singletonList(testMovie), pageable, 1);
         Page<MovieResponse> mappedPage = new PageImpl<>(Collections.singletonList(testMovieResponse), pageable, 1);
 
-        when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(pageable);
         when(movieRepository.findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase("inception", "inception", pageable))
                 .thenReturn(moviesPage);
         when(movieMapper.mapToResponsePage(moviesPage)).thenReturn(mappedPage);
 
         ResponseMessage<Page<MovieResponse>> response =
-                movieService.searchAuthorizedMovies("inception", 0, 10, "title", "asc");
+                movieService.searchAuthorizedMovies("inception", pageable);
 
         assertThat(response.getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(response.getMessage()).isEqualTo(SuccessMessages.MOVIES_LISTED);
@@ -115,14 +110,11 @@ class SearchAuthorizedMoviesTest {
     @Test
     @DisplayName("Should return NOT_FOUND when no movies match keyword")
     void shouldReturnNotFound_whenNoMoviesFound() {
-        Page<Movie> emptyPage = Page.empty(pageable);
-
-        when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(pageable);
         when(movieRepository.findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase("matrix", "matrix", pageable))
-                .thenReturn(emptyPage);
+                .thenReturn(Page.empty(pageable));
 
         ResponseMessage<Page<MovieResponse>> response =
-                movieService.searchAuthorizedMovies("matrix", 0, 10, "title", "asc");
+                movieService.searchAuthorizedMovies("matrix", pageable);
 
         assertThat(response.getHttpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getMessage()).isEqualTo(ErrorMessages.MOVIES_NOT_FOUND);
@@ -135,12 +127,11 @@ class SearchAuthorizedMoviesTest {
         Page<Movie> moviesPage = new PageImpl<>(Collections.singletonList(testMovie), pageable, 1);
         Page<MovieResponse> mappedPage = new PageImpl<>(Collections.singletonList(testMovieResponse), pageable, 1);
 
-        when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(pageable);
         when(movieRepository.findAll(pageable)).thenReturn(moviesPage);
         when(movieMapper.mapToResponsePage(moviesPage)).thenReturn(mappedPage);
 
         ResponseMessage<Page<MovieResponse>> response =
-                movieService.searchAuthorizedMovies(null, 0, 10, "title", "asc");
+                movieService.searchAuthorizedMovies(null, pageable);
 
         assertThat(response.getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(response.getMessage()).isEqualTo(SuccessMessages.MOVIES_LISTED);
@@ -150,11 +141,10 @@ class SearchAuthorizedMoviesTest {
     @Test
     @DisplayName("Should return NOT_FOUND when no query provided and repository is empty")
     void shouldReturnNotFound_whenNoQueryProvidedAndNoMovies() {
-        when(pageableHelper.buildPageable(0, 10, "title", "asc")).thenReturn(pageable);
         when(movieRepository.findAll(pageable)).thenReturn(Page.empty(pageable));
 
         ResponseMessage<Page<MovieResponse>> response =
-                movieService.searchAuthorizedMovies(null, 0, 10, "title", "asc");
+                movieService.searchAuthorizedMovies(null, pageable);
 
         assertThat(response.getHttpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getMessage()).isEqualTo(ErrorMessages.MOVIES_NOT_FOUND);

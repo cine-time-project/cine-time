@@ -39,9 +39,7 @@ public class MovieService {
 
 
     //M01
-    public ResponseMessage<Page<MovieResponse>> searchMovies(
-            String q, int page, int size, String sort, String type) {
-        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
+    public ResponseMessage<Page<MovieResponse>> searchMovies(String q, Pageable pageable) {
         Page<Movie> movies;
         if (q != null && !q.trim().isEmpty()) {
             String keyword = q.trim();
@@ -63,17 +61,18 @@ public class MovieService {
 
     // M02
     public ResponseMessage<Page<CinemaMovieResponse>> findMoviesByCinemaSlug(
-            String cinemaSlug, int page, int size, String sort, String type) {
+            String cinemaSlug, Pageable pageable) {
+
         if (cinemaSlug == null || cinemaSlug.trim().isEmpty()) {
             throw new IllegalArgumentException("Cinema slug cannot be null or empty");
         }
-        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
         Page<Movie> movies = movieRepository.findAllByCinemaSlugIgnoreCase(cinemaSlug, pageable);
         if (movies.isEmpty()) {
             return movieServiceHelper.buildEmptyPageResponse(
                     pageable, ErrorMessages.MOVIES_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
-        Page<CinemaMovieResponse> responsePage = movies.map(movieMapper::mapMovieToCinemaMovieResponse);
+        Page<CinemaMovieResponse> responsePage =
+                movies.map(movieMapper::mapMovieToCinemaMovieResponse);
         return ResponseMessage.<Page<CinemaMovieResponse>>builder()
                 .returnBody(responsePage)
                 .message(String.format(SuccessMessages.MOVIE_WITH_SLUG_FOUND, cinemaSlug))
@@ -82,18 +81,14 @@ public class MovieService {
     }
 
     //M03
-    public ResponseMessage<Page<MovieResponse>> findMoviesByHallName(
-            String hallName, int page, int size, String sort, String type) {
+    public ResponseMessage<Page<MovieResponse>> findMoviesByHallName(String hallName, Pageable pageable) {
         if (hallName == null || hallName.trim().isEmpty()) {
             throw new IllegalArgumentException("Hall name cannot be null or empty");
         }
-        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
         Page<Movie> movies = movieRepository.findAllByHallIgnoreCase(hallName, pageable);
         if (movies.isEmpty()) {
             return movieServiceHelper.buildEmptyPageResponse(
                     pageable, ErrorMessages.MOVIES_NOT_FOUND_IN_HALL, HttpStatus.NOT_FOUND);
-
-
         }
         Page<MovieResponse> responsePage = movies.map(movieMapper::mapMovieToMovieResponse);
         return ResponseMessage.<Page<MovieResponse>>builder()
@@ -103,10 +98,9 @@ public class MovieService {
                 .build();
     }
 
+
     //M04
-    public ResponseMessage<Page<MovieResponse>> getMoviesInTheatres(
-            LocalDate date, int page, int size, String sort, String type) {
-        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
+    public ResponseMessage<Page<MovieResponse>> getMoviesInTheatres(LocalDate date, Pageable pageable) {
         if (date != null) {
             return movieServiceHelper.getMoviesByDate(date, pageable);
         }
@@ -116,19 +110,16 @@ public class MovieService {
 
 
     //M05
-    public ResponseMessage<Page<MovieResponse>> getComingSoonMovies(
-            LocalDate date, int page, int size, String sort, String type) {
-        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
+    public ResponseMessage<Page<MovieResponse>> getComingSoonMovies(LocalDate date, Pageable pageable) {
         if (date != null) {
             return movieServiceHelper.getComingSoonByDate(date, pageable);
         }
         return movieServiceHelper.getAllComingSoon(pageable);
     }
 
+
     //M08
-    public ResponseMessage<Page<MovieResponse>> searchAuthorizedMovies(
-            String q, int page, int size, String sort, String type) {
-        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
+    public ResponseMessage<Page<MovieResponse>> searchAuthorizedMovies(String q, Pageable pageable) {
         Page<Movie> movies;
         if (q != null && !q.trim().isEmpty()) {
             String keyword = q.trim();
@@ -147,6 +138,7 @@ public class MovieService {
                 .returnBody(movieMapper.mapToResponsePage(movies))
                 .build();
     }
+
 
 
     //Reusable Method to find a Movie by id. If it doesn't exist, throws exception

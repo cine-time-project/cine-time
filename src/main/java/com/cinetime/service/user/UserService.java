@@ -180,7 +180,6 @@ public class UserService {
             throw new ConflictException(ErrorMessages.PHONE_NUMBER_NOT_UNIQUE);
 
         User user = userMapper.mapUserCreateRequestToUser(request);
-
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -196,7 +195,6 @@ public class UserService {
             role = roleService.getRole(RoleName.MEMBER);
         }
         user.setRoles(Set.of(role));
-
         userRepository.save(user);
         UserCreateResponse response = userMapper.mapUserToUserCreateResponse(user);
 
