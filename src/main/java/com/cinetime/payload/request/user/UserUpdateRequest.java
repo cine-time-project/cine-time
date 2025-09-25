@@ -46,6 +46,15 @@ public class UserUpdateRequest {
     public String getPhoneNumber() {
         return null;
     }
+
+    public void setName(String newName) {
+    }
+
+    public void setSurname(String newSurname) {
+    }
+
+    public void setPhoneNumber(String s) {
+    }
 }
 
 

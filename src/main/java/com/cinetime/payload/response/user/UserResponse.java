@@ -12,4 +12,7 @@ public class UserResponse {
     private String phoneNumber;
     private LocalDate birthDate;
     private String gender;
+
+    public void setUsername(String updatedUser) {
+    }
 }
