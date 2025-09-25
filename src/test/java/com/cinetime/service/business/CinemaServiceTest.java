@@ -507,7 +507,7 @@ class CinemaServiceTest {
 
         when(cinemaMapper.toSummary(any(Cinema.class))).thenReturn(new CinemaSummaryResponse());
 
-        cinemaService.create(req);
+        cinemaService.createCinema(req);
 
         Cinema saved = savedCap.getValue();
         assertEquals("CineStar Adanaaa", saved.getName());

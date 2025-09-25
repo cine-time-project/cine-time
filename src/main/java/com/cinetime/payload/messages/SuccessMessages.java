@@ -4,8 +4,15 @@ public class SuccessMessages {
     private SuccessMessages() {
     }
 
+    //cinema
     public static final String CINEMAS_LISTED = "Cinemas listed successfully.";
     public static final String CINEMA_DELETED = "Cinema deleted successfully: %s";
+    public static final String CINEMA_FETCHED = "Cinema fetched successfully: %s";
+    public static final String SPECIAL_HALLS_LISTED = "Special Halls listed successfully";
+    public static final String FAVORITES_LISTED = "Favorites listed successfully";
+    public static final String CINEMA_CREATED = "Cinema created successfully";
+    public static final String CINEMA_UPDATED = "Cinema updated successfully: %s";
+
 
 
     //movie

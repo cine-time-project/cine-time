@@ -9,6 +9,7 @@ import com.cinetime.payload.messages.SuccessMessages;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -26,87 +27,67 @@ public class CinemaController {
     private final CinemaService cinemaService;
     private final PageableHelper pageableHelper;
 
+    //C01: Cinemas based on city and sipecialHalls
     @PreAuthorize("permitAll()")
     @GetMapping("/cinemas")
-    public ResponseEntity<ResponseMessage<PageResponse<CinemaSummaryResponse>>> listCinemas(
+    public ResponseMessage<Page<CinemaSummaryResponse>> listCinemas(
             @RequestParam(required = false) Long cityId,
-            @RequestParam(required = false) String specialHall,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "name") String sort,
-            @RequestParam(defaultValue = "asc") String type
-    ) {
-        Pageable pageable = pageableHelper.buildPageable(page, size, sort, type);
-        Page<CinemaSummaryResponse> result = cinemaService.searchCinemas(cityId, specialHall, pageable);
+            @RequestParam(required = false) Boolean specialHall,
+            @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC)Pageable pageable) {
 
-        PageResponse<CinemaSummaryResponse> body = PageResponse.of(result, sort, type);
+     return cinemaService.listCinemas(cityId, specialHall, pageable);
 
-        ResponseMessage<PageResponse<CinemaSummaryResponse>> response =
-                ResponseMessage.<PageResponse<CinemaSummaryResponse>>builder()
-                        .returnBody(body)
-                        .message(SuccessMessages.CINEMAS_LISTED)
-                        .httpStatus(HttpStatus.OK)
-                        .build();
-
-        return ResponseEntity.ok(response);
     }
 
-
-    @GetMapping("/cinemas/{id}")
-    public ResponseEntity<CinemaSummaryResponse> getCinema(@PathVariable Long id){
-        return ResponseEntity.ok(cinemaService.getCinemaById(id));
-    }
-
+    //C02: Get Users Favorites
     @PreAuthorize("hasAuthority('MEMBER')")           // ROLE_ prefix gerekmeden çalışır
     @GetMapping("/favorites/auth")
-    public ResponseEntity<List<CinemaSummaryResponse>> getAuthFavorites(
-            @RequestParam(defaultValue = "0")  int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "name") String sort,
-            @RequestParam(defaultValue = "asc")  String type,
-            org.springframework.security.core.Authentication authentication
-    ) {
-        String login = authentication.getName();       // token’dan gelen username (email/telefon)
+    public ResponseEntity<ResponseMessage<Page<CinemaSummaryResponse>>> getAuthFavorites(
+            org.springframework.security.core.Authentication authentication,
+            @PageableDefault(page = 0, size = 10, sort = "name", direction = Sort.Direction.ASC)
+            Pageable pageable) {
 
-        Pageable pageable = (pageableHelper != null)
-                ? pageableHelper.buildPageable(page, size, sort, type)
-                : PageRequest.of(
-                Math.max(page, 0),
-                Math.max(size, 1),
-                "desc".equalsIgnoreCase(type) ? Sort.Direction.DESC : Sort.Direction.ASC,
-                sort
-        );
-
+        String login = authentication.getName();
         return ResponseEntity.ok(cinemaService.getAuthFavoritesByLogin(login, pageable));
     }
 
+    //C03: Cinemas Details By id
+    @GetMapping("/cinemas/{id}")
+    public ResponseEntity<ResponseMessage<CinemaSummaryResponse>> getCinema(@PathVariable Long id){
+        return ResponseEntity.ok(cinemaService.getCinemaById(id));
+    }
+
+
+    // C04: get cinemas Halls
     @GetMapping("/cinemas/{id}/halls")
     public ResponseEntity<List<HallWithShowtimesResponse>> getCinemaHalls(@PathVariable Long id) {
         return ResponseEntity.ok(cinemaService.getCinemaHallsWithShowtimes(id));
     }
 
+    //C05: All of the Special Halls
     @GetMapping("/special-halls")
-    public ResponseEntity<List<SpecialHallResponse>> getSpecialHalls(){
+    public ResponseEntity<ResponseMessage<List<SpecialHallResponse>>> getSpecialHalls(){
         return ResponseEntity.ok(cinemaService.getAllSpecialHalls());
     }
 
+    //C06: Create Cinema
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/cinemas")
-    public ResponseEntity<CinemaSummaryResponse>create(@Valid @RequestBody CinemaCreateRequest request){
-        CinemaSummaryResponse response=cinemaService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<ResponseMessage<CinemaSummaryResponse>> create(@Valid @RequestBody CinemaCreateRequest request){
+        return ResponseEntity.status(HttpStatus.CREATED).body(cinemaService.createCinema(request));
     }
 
+    //C07: Cinema Update
     @PutMapping("/cinemas/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<CinemaSummaryResponse> updateCinema(
+    public ResponseEntity<ResponseMessage<CinemaSummaryResponse>> updateCinema(
             @PathVariable Long id,
-            @Valid @RequestBody CinemaCreateRequest request
-    ){
+            @Valid @RequestBody CinemaCreateRequest request) {
+
         return ResponseEntity.ok(cinemaService.update(id, request));
     }
 
-
+    //C08: Delete Cinema
     @DeleteMapping("/cinemas/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Map<String,String>> delete(@PathVariable Long id) {
