@@ -9,21 +9,21 @@ import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.UserMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
-import com.cinetime.payload.request.user.ResetPasswordRequest;
-import com.cinetime.payload.request.user.UserCreateRequest;
-import com.cinetime.payload.request.user.UserRegisterRequest;
-import com.cinetime.payload.request.user.UserUpdateRequest;
+import com.cinetime.payload.request.user.*;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.user.UserCreateResponse;
 import com.cinetime.payload.response.user.UserResponse;
 import com.cinetime.repository.user.RoleRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.business.RoleService;
+import com.cinetime.service.helper.MailHelper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,6 +43,14 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final RoleService roleService;
+
+
+    private final JavaMailSender mailSender;
+    private final MailHelper mailHelper;
+    @Value("${app.mail.from}") private String mailForm;
+    @Value("${app.mail.reset.subject}") private String resetSubject;
+    @Value("${app.mail.reset.template}") private String resetTemplateHtml;
+
 
     // U06 - Update Authenticated User
     public UserResponse updateAuthenticatedUser(UserUpdateRequest request) {
@@ -228,6 +236,49 @@ public class UserService {
         return userRepository.findByEmail(username)
                 .orElseThrow(() -> new BadRequestException(ErrorMessages.USER_NOT_FOUND));
     }
+
+    //U03 Forgot-Reset Password Email
+    public String forgotPassword(String rawEmail) {
+        final String email = rawEmail.trim().toLowerCase();
+
+        userRepository.findByLoginProperty(email).ifPresent(user -> {
+            String code = generateSixDigitCode();
+            user.setResetPasswordCode(code);
+            userRepository.save(user);
+
+            mailHelper.sendResetCodeEmail(user.getEmail(), code); // <—
+        });
+
+        return SuccessMessages.FORGOT_PASSWORD_EMAIL_SENT;
+    }
+
+    private String generateSixDigitCode() {
+        var r = new java.security.SecureRandom();
+        return String.format("%06d", r.nextInt(1_000_000));
+    }
+
+
+    public String resetPassword(ResetPasswordRequestEmail req) {
+        final String email = req.getEmail().trim().toLowerCase();
+        final String code  = req.getCode().trim();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
+
+        String savedCode = user.getResetPasswordCode();
+        if (savedCode == null || savedCode.isBlank())
+            throw new BadRequestException(ErrorMessages.RESET_CODE_REQUIRED);
+
+        if (!savedCode.equals(code))
+            throw new BadRequestException(ErrorMessages.INVALID_RESET_CODE);
+
+        user.setPassword(encoder.encode(req.getNewPassword()));
+        user.setResetPasswordCode(null); // kod tüket
+        userRepository.save(user);
+
+        return SuccessMessages.PASSWORD_RESET_SUCCESS;
+    }
+
 
 }
 

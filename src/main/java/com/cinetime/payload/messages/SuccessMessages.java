@@ -4,6 +4,7 @@ public class SuccessMessages {
     private SuccessMessages() {
     }
 
+    //cinema
     public static final String CINEMAS_LISTED = "Cinemas listed successfully.";
     public static final String CINEMA_DELETED = "Cinema deleted successfully: %s";
 
@@ -31,6 +32,11 @@ public class SuccessMessages {
     //user
     public static final String USER_UPDATED = "User updated successfully.";
     public static final String USER_DELETED = "User deleted successfully.";
+    public static final String FORGOT_PASSWORD_EMAIL_SENT ="If the email exists, a reset code has been sent.";
+    public static final String PASSWORD_RESET_SUCCESS = "Password has been reset successfully.";
+    public static final String USER_REGISTERED = "User registered successfully.";
+
+
     public static final String USER_CREATE = "User successfully created";
     public static final String PASSWORD_CHANGED = "Password has been updated successfully.";
 

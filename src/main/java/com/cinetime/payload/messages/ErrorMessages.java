@@ -16,10 +16,15 @@ public class ErrorMessages {
     public static final String BUILT_IN_USER_DELETE_NOT_ALLOWED = "Built-in users cannot be deleted.";
     public static final String INVALID_GENDER = "Invalid gender value. Use MALE, FEMALE or OTHER.";
     public static final String EMAIL_NOT_UNIQUE = "Email already in use";
-    public static final String PHONE_NUMBER_NOT_UNIQUE = "Phone number already in use";
+    public static final String PHONE_NUMBER_NOT_UNIQUE = "Phone already in use";
     public static final String MEMBER_ROLE_MISSING = "MEMBER role missing";
     public static final String OLD_PASSWORD_MISMATCH = "Old password is incorrect.";
     public static final String NEW_PASSWORD_SAME_AS_OLD = "New password cannot be the same as old password.";
+
+    public static final String EMAIL_SENDING_FAILED = "Error: Failed to send email.";
+    public static final String RESET_CODE_REQUIRED = "Reset code is required.";
+    public static final String INVALID_RESET_CODE = "Invalid reset code.";
+
 
 
     //movie
