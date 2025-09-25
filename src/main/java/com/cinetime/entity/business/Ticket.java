@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uk_tickets_showtime_seat",
-                        columnNames = {"showtime_id", "seatLetter", "seatNumber"} //FK
+                        columnNames = {"showtime_id", "seatLetter", "seatNumber"}
                 )
         }
 )
@@ -54,8 +54,10 @@ public class Ticket {
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
-    // -------------------- RELATIONS) --------------------
+    // -------------------- RELATIONS --------------------
 
+    // Ticket -> Showtime (ebeveyn): Cascade burada YOK.
+    // Silme zinciri Showtime tarafında @OneToMany(cascade=ALL, orphanRemoval=true) ile kurulmalı.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
             name = "showtime_id",
@@ -64,6 +66,7 @@ public class Ticket {
     )
     private Showtime showtime;
 
+    // Ticket -> User: Kullanıcı bağımsız varlık; cascade yok (doğru).
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
             name = "user_id",
@@ -72,10 +75,13 @@ public class Ticket {
     )
     private User user;
 
-
-    @OneToOne(fetch = FetchType.LAZY, optional = true,
+    // Ticket -> Payment: Bilet silinince ödeme de silinsin istiyorsanız REMOVE + orphanRemoval doğrudur.
+    @OneToOne(
+            fetch = FetchType.LAZY,
+            optional = true,
             cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE },
-            orphanRemoval = true)
+            orphanRemoval = true
+    )
     @JoinColumn(
             name = "payment_id",
             unique = true,
@@ -83,8 +89,6 @@ public class Ticket {
             foreignKey = @ForeignKey(name = "fk_ticket_payment")
     )
     private Payment payment;
-
-
 
     // -------------------- LIFECYCLE --------------------
     @PrePersist

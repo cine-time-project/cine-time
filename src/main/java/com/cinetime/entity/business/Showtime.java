@@ -1,7 +1,5 @@
 package com.cinetime.entity.business;
 
-
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -61,11 +59,10 @@ public class Showtime {
     @OneToMany(
             mappedBy = "showtime",
             fetch = FetchType.LAZY,
-            cascade = { CascadeType.PERSIST, CascadeType.MERGE },
+            cascade = CascadeType.ALL,     // <-- PERSIST+MERGE yerine ALL (REMOVE dahil)
             orphanRemoval = true
     )
     private Set<Ticket> tickets = new LinkedHashSet<>();
-
 
     @PrePersist
     protected void onCreate() {

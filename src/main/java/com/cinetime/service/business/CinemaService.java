@@ -2,6 +2,7 @@ package com.cinetime.service.business;
 
 import com.cinetime.entity.business.Cinema;
 import com.cinetime.entity.business.City;
+import com.cinetime.entity.business.Movie;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaMapper;
 import com.cinetime.payload.mappers.HallMapper;
@@ -40,56 +41,69 @@ public class CinemaService {
     private final TicketRepository ticketRepository;
 
 
-    @Transactional(Transactional.TxType.SUPPORTS)
     public Page<CinemaSummaryResponse> searchCinemas(Long cityId, Pageable pageable) {
         cinemasHelper.validateCityIfProvided(cityId);
         return cinemaRepository.search(cityId, pageable)
                 .map(cinemaMapper::toSummary);
     }
 
-    @Transactional(Transactional.TxType.SUPPORTS)
-    public Page<CinemaSummaryResponse> searchCinemas(Long cityId, String specialHall, Pageable pageable) {
-        cinemasHelper.validateCityIfProvided(cityId);
-        Boolean isSpecial = cinemasHelper.parseSpecialHall(specialHall); // <-- statik değil, instance
-        return cinemaRepository.search(cityId, isSpecial, pageable)
-                .map(cinemaMapper::toSummary);
+    //C01: Cinemas based on city and sipecialHalls
+    public ResponseMessage<Page<CinemaSummaryResponse>> listCinemas(Long cityId, Boolean isSpecial,
+                                                                    Pageable pageable) {
+
+        Page<Cinema> cinemas = cinemaRepository.search(cityId, isSpecial, pageable);
+        Page<CinemaSummaryResponse> dtoPage = cinemas.map(cinemaMapper::toSummary);
+        return ResponseMessage.<Page<CinemaSummaryResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.CINEMAS_LISTED)
+                .returnBody(dtoPage) // <-- Page<CinemaSummaryResponse>
+                .build();
     }
 
-    @Transactional(Transactional.TxType.SUPPORTS)
+
     public Set<Cinema> getAllByIdIn(Set<Long> ids) {
         Set<Cinema> cinemas = cinemaRepository.findAllByIdIn(ids);
         if (cinemas.isEmpty()) throw new ResourceNotFoundException(ErrorMessages.CINEMA_NOT_FOUND);
         return cinemas;
     }
 
-    @Transactional(Transactional.TxType.SUPPORTS)
     public Cinema getById(Long id) {
         return cinemaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.CINEMA_NOT_FOUND));
     }
 
-    @Transactional(Transactional.TxType.SUPPORTS)
-    public CinemaSummaryResponse getCinemaById(Long id) {
+    //C03: Cinemas Details By id
+    public ResponseMessage<CinemaSummaryResponse> getCinemaById(Long id) {
         var cinema = getById(id);
-        return cinemaMapper.toSummary(cinema);
+        return ResponseMessage.<CinemaSummaryResponse>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(String.format(SuccessMessages.CINEMA_FETCHED, id))// yoksa ekleyin; geçici: "Cinema fetched"
+                .returnBody(cinemaMapper.toSummary(cinema))
+                .build();
     }
 
-    @Transactional(Transactional.TxType.SUPPORTS)
-    public List<CinemaSummaryResponse> getAuthFavoritesByLogin(String login, Pageable pageable) {
+    //C02: Get Users Favorites
+    public ResponseMessage<Page<CinemaSummaryResponse>> getAuthFavoritesByLogin(String login, Pageable pageable) {
         Long userId = userRepository.findByLoginProperty(login)
                 .map(User::getId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(ErrorMessages.NOT_FOUND_USER_MESSAGE_UNIQUE_FIELD));
 
-        return cinemaRepository.findFavoriteCinemasByUserId(userId, pageable)
-                .map(cinemaMapper::toSummary)
-                .getContent();
+        Page<Cinema> page = cinemaRepository.findFavoriteCinemasByUserId(userId, pageable);
+
+        Page<CinemaSummaryResponse> dtoPage = page.map(cinemaMapper::toSummary);
+
+        return ResponseMessage.<Page<CinemaSummaryResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.FAVORITES_LISTED)
+                .returnBody(dtoPage)
+                .build();
     }
 
-    @Transactional(Transactional.TxType.SUPPORTS)
+    //C04: get cinemas Halls
     public List<HallWithShowtimesResponse> getCinemaHallsWithShowtimes(Long cinemaId) {
         if (!cinemaRepository.existsById(cinemaId)) {
-            throw new ResourceNotFoundException(ErrorMessages.CINEMA_NOT_FOUND);
+            throw new ResourceNotFoundException(String.format(ErrorMessages.CINEMA_NOT_FOUND, cinemaId));
         }
 
         var rows = showtimeRepository.findShowtimesByCinemaId(cinemaId);
@@ -130,77 +144,81 @@ public class CinemaService {
 
         // seans saatlerini sırala
         halls.values().forEach(h ->
-                h.getMovies().forEach(m ->
-                        m.setTimes(m.getTimes().stream().sorted().collect(Collectors.toList()))
-                )
+                h.getMovies().forEach(m -> m.getTimes().sort(Comparator.naturalOrder()))
         );
 
         return new ArrayList<>(halls.values());
     }
 
-
-    public List<SpecialHallResponse> getAllSpecialHalls() {
-        return hallRepository.findByIsSpecialTrueOrderByNameAsc()
+    //C05: All of the Special Halls
+    public ResponseMessage<List<SpecialHallResponse>> getAllSpecialHalls() {
+        List<SpecialHallResponse> body = hallRepository.findByIsSpecialTrueOrderByNameAsc()
                 .stream()
                 .map(hallMapper::toSpecial)
                 .toList();
 
+        return ResponseMessage.<List<SpecialHallResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.SPECIAL_HALLS_LISTED)
+                .returnBody(body)
+                .build();
     }
 
+
+    //C06: Create Cinema
     @Transactional
-    public CinemaSummaryResponse create(CinemaCreateRequest request) {
-        // 1) Slug hazır geldiyse temizle; gelmediyse isimden üret
-        String baseSlug = (request.getSlug() == null || request.getSlug().isBlank())
-                ? cinemasHelper.slugify(request.getName())
+    public ResponseMessage<CinemaSummaryResponse> createCinema(@Valid CinemaCreateRequest request) {
+        final String name = request.getName().trim();
+        String baseSlug = (request.getSlug()==null || request.getSlug().isBlank())
+                ? cinemasHelper.slugify(name)
                 : cinemasHelper.slugify(request.getSlug());
-        // 2) Slug must be unique
         String uniqueSlug = cinemasHelper.ensureUniqueSlug(baseSlug);
 
-        // 3) Entity
-        Cinema cinema = Cinema.builder()
-                .name(request.getName().trim())
-                .slug(uniqueSlug)
-                .build();
+        Cinema cinema = Cinema.builder().name(name).slug(uniqueSlug).build();
 
-        // 4) City association +ID control
-        if (request.getCityIds() != null && !request.getCityIds().isEmpty()) {
-            Set<Long> requestedIds = new LinkedHashSet<>(request.getCityIds());
-
-            // DB
-            Set<City> cities = new LinkedHashSet<>(cityRepository.findAllById(requestedIds));
-            Set<Long> foundIds = cities.stream().map(City::getId).collect(java.util.stream.Collectors.toSet());
-
-            // Eksikler = istenen - bulunan
-            requestedIds.removeAll(foundIds);
-            if (!requestedIds.isEmpty()) {
-                throw new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND + requestedIds);
+        var ids = request.getCityIds();
+        if (ids != null && !ids.isEmpty()) {
+            var cities = new LinkedHashSet<>(cityRepository.findAllById(ids));
+            var foundIds = cities.stream().map(City::getId).collect(java.util.stream.Collectors.toSet());
+            var missing = new LinkedHashSet<>(ids);
+            missing.removeAll(foundIds);
+            if (!missing.isEmpty()) {
+                throw new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND + missing);
             }
-
             cinema.setCities(cities);
         }
 
-        // 5) Save & map
-        Cinema saved = cinemaRepository.save(cinema);
-        return cinemaMapper.toSummary(saved);
+        var dto = cinemaMapper.toSummary(cinemaRepository.save(cinema));
+        return ResponseMessage.<CinemaSummaryResponse>builder()
+                .httpStatus(HttpStatus.CREATED)
+                .message(SuccessMessages.CINEMA_CREATED)
+                .returnBody(dto)
+                .build();
     }
 
+    //C07: Cinema Update
     @Transactional
-    public CinemaSummaryResponse update(Long id, CinemaCreateRequest req) {
+    public ResponseMessage<CinemaSummaryResponse> update(Long id, CinemaCreateRequest req) {
         Cinema cinema = cinemaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.CINEMA_NOT_FOUND));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                String.format(ErrorMessages.CINEMA_NOT_FOUND, String.valueOf(id))
+                        )
+                );
 
         // 1) Name
         if (req.getName() != null && !req.getName().isBlank()) {
             cinema.setName(req.getName().trim());
         }
 
-        // 2) Slug (yalnızca name değiştiyse veya slug verildiyse)
-        if ((req.getName() != null && !req.getName().isBlank()) || (req.getSlug() != null && !req.getSlug().isBlank())) {
+        // 2) Slug (name değiştiyse veya slug verildiyse)
+        if ((req.getName() != null && !req.getName().isBlank())
+                || (req.getSlug() != null && !req.getSlug().isBlank())) {
+
             String base = (req.getSlug() == null || req.getSlug().isBlank())
                     ? cinemasHelper.slugify(cinema.getName())
                     : cinemasHelper.slugify(req.getSlug());
 
-            // uniq: aynı slug ama FARKLI id var mı?
             String unique = base;
             int k = 2;
             while (cinemaRepository.existsBySlugIgnoreCaseAndIdNot(unique, id)) {
@@ -209,57 +227,51 @@ public class CinemaService {
             cinema.setSlug(unique);
         }
 
-
         // 3) Cities
         if (req.getCityIds() != null) {
             if (req.getCityIds().isEmpty()) {
-                // tamamen temizle
-                if (cinema.getCities() != null) {
-                    cinema.getCities().clear();
-                } else {
-                    cinema.setCities(new java.util.LinkedHashSet<>());
-                }
+                if (cinema.getCities() != null) cinema.getCities().clear();
+                else cinema.setCities(new java.util.LinkedHashSet<>());
             } else {
-                var wanted = new java.util.LinkedHashSet<>(req.getCityIds());
-                var found = new java.util.LinkedHashSet<>(cityRepository.findAllById(wanted));
+                var wanted  = new java.util.LinkedHashSet<>(req.getCityIds());
+                var found   = new java.util.LinkedHashSet<>(cityRepository.findAllById(wanted));
                 var foundIds = found.stream().map(City::getId).collect(java.util.stream.Collectors.toSet());
 
                 wanted.removeAll(foundIds);
                 if (!wanted.isEmpty()) {
                     throw new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND + wanted);
                 }
-
                 cinema.setCities(found);
             }
         }
 
+        var saved = cinemaRepository.save(cinema);
+        var dto   = cinemaMapper.toSummary(saved);
 
-
-        Cinema saved = cinemaRepository.save(cinema); // flush zorunlu değil ama sorun da değil
-        return cinemaMapper.toSummary(saved);
+        return ResponseMessage.<CinemaSummaryResponse>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(String.format(SuccessMessages.CINEMA_UPDATED,id))
+                .returnBody(dto)
+                .build();
     }
 
+    //C08 : Delete Cinema
     @Transactional
-    public String delete(Long id) {
-        // 1) id kontrol
-        Cinema c = cinemaRepository.findById(id)
+    public ResponseMessage<Void> delete(Long id) {
+        // 1) Id kontrol
+        Cinema cinema = cinemaRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(String.format(ErrorMessages.CINEMA_NOT_FOUND, id)));
 
-        String message = String.format(SuccessMessages.CINEMA_DELETED,id);
+        // 2) Tek satır: cascade zinciri halleder
+        cinemaRepository.delete(cinema);
 
-        // 2) Relation clear
-        ticketRepository.deleteByCinemaId(id);   // ticket -> showtime -> hall -> cinema
-        showtimeRepository.deleteByCinemaId(id); // showtime -> hall -> cinema
-        hallRepository.deleteByCinemaId(id);     // hall -> cinema
-        cinemaRepository.deleteMovieLinks(id);   // movie_cinema
-        cinemaRepository.deleteCityLinks(id);    // cinema_city
-
-        // 3) Cinema delete
-        cinemaRepository.deleteById(id);
-
-        // 4) Message
-        return message;
+        // 3) Standart cevap
+        return ResponseMessage.<Void>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(String.format(SuccessMessages.CINEMA_DELETED, id))
+                .returnBody(null)
+                .build();
     }
 
 

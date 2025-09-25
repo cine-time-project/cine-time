@@ -15,7 +15,4 @@ public interface HallRepository extends JpaRepository<Hall, Long> {
     @EntityGraph(attributePaths = "cinema")
     List<Hall> findByIsSpecialTrueOrderByNameAsc();
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("delete from Hall h where h.cinema.id = :cinemaId")
-    void deleteByCinemaId(@Param("cinemaId") Long cinemaId);
 }

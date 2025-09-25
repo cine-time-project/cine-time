@@ -102,9 +102,6 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
     boolean existsBySlugIgnoreCaseAndIdNot(String slug, Long id);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query(value = "DELETE FROM movie_cinema WHERE cinema_id = :cinemaId", nativeQuery = true)
-    void deleteMovieLinks(@Param("cinemaId") Long cinemaId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = "DELETE FROM cinema_city WHERE cinema_id = :cinemaId", nativeQuery = true)
