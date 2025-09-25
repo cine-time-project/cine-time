@@ -221,9 +221,13 @@ public class MovieService {
         // 2️⃣ Update primitive and ElementCollection fields via the mapper
         // (title, slug, summary, releaseDate, duration, rating, specialHalls, director, cast, formats, genre, status)
 
-        // // Regenerate slug if changed
+        // Regenerate slug if changed
         if (!movie.getSlug().equals(movieRequest.getSlug())) {
             String uniqueSlug = movieServiceHelper.generateUniqueSlug(movieRequest.getTitle(), movieRequest.getSlug(), MAX_LENGTH_FOR_SLUG, movieId);
+            movieRequest.setSlug(uniqueSlug);
+        } else if (!movie.getTitle().equals(movieRequest.getTitle())){
+            //if Slugs are equal but the title has been changed, sending null Slug in order to produce a new slug from title.
+            String uniqueSlug = movieServiceHelper.generateUniqueSlug(movieRequest.getTitle(), null, MAX_LENGTH_FOR_SLUG, movieId);
             movieRequest.setSlug(uniqueSlug);
         }
         movieMapper.updateMovieFromRequest(movieRequest, movie);
