@@ -1,8 +1,6 @@
 package com.cinetime.service.business;
 
 import com.cinetime.entity.business.Movie;
-import com.cinetime.entity.business.Showtime;
-import com.cinetime.entity.enums.MovieStatus;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.MovieMapper;
 import com.cinetime.payload.messages.ErrorMessages;
@@ -12,29 +10,25 @@ import com.cinetime.payload.response.business.CinemaMovieResponse;
 import com.cinetime.payload.response.business.MovieResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.repository.business.MovieRepository;
-import com.cinetime.repository.business.ShowtimeRepository;
 import com.cinetime.service.helper.MovieServiceHelper;
-import com.cinetime.service.helper.PageableHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
-import java.time.LocalTime;
 
 @Service
 @RequiredArgsConstructor
 public class MovieService {
 
+    private final int MAX_LENGTH_FOR_SLUG = 50;
+
     private final MovieRepository movieRepository;
-    private final PageableHelper pageableHelper;
     private final MovieMapper movieMapper;
     private final CinemaService cinemaService;
     private final ImageService imageService;
-    private final ShowtimeRepository showtimeRepository;
     private final MovieServiceHelper movieServiceHelper;
 
 
@@ -160,8 +154,28 @@ public class MovieService {
     }
 
     //M11
+    /**
+     * M11 - Save Movie
+     * <p>
+     * Creates and persists a new {@link Movie} entity based on the provided request.
+     * Handles:
+     * <ul>
+     *   <li>Mapping request data to entity</li>
+     *   <li>Generating and ensuring a unique slug</li>
+     *   <li>Setting related cinemas and images if provided</li>
+     * </ul>
+     *
+     * @param movieRequest DTO with movie creation data
+     * @return ResponseMessage containing the created MovieResponse
+     */
+    @Transactional
     public ResponseMessage<MovieResponse> saveMovie(MovieRequest movieRequest) {
         Movie movie = movieMapper.mapMovieRequestToMovie(movieRequest);
+
+        // Generate unique slug
+        String uniqueSlug = movieServiceHelper.generateUniqueSlug(movieRequest.getTitle(), movieRequest.getSlug(), MAX_LENGTH_FOR_SLUG, null);
+        movie.setSlug(uniqueSlug);
+
         if (movieRequest.getCinemaIds() != null && !movieRequest.getCinemaIds().isEmpty()) {
             movie.setCinemas(cinemaService.getAllByIdIn(movieRequest.getCinemaIds()));
         }
@@ -169,6 +183,7 @@ public class MovieService {
             movie.setImages(imageService.getAllByIdIn(movieRequest.getImageIds()));
         }
         Movie savedMovie = movieRepository.save(movie);
+
         return ResponseMessage.<MovieResponse>builder()
                 .httpStatus(HttpStatus.CREATED)
                 .message(SuccessMessages.MOVIE_CREATE)
@@ -179,20 +194,24 @@ public class MovieService {
     //M12
 
     /**
-     * M12 - Update Movie
-     * This service method updates an existing movie entity.
-     * It handles:
-     * - Primitive fields (title, slug, summary, releaseDate, duration, rating, specialHalls, director)
-     * - ElementCollection fields (cast, formats, genre)
-     * - ManyToMany relationship (cinemas)
-     * - OneToMany relationship (images)
-     * Null-safe behavior:
-     * - If movieRequest.getCinemaIds() or movieRequest.getImageIds() is null, the existing relationships are preserved.
-     * - If an empty Set is provided, the relationships are completely removed.
+     * Updates an existing movie entity with data from the provided request.
+     * <p>
+     * Handles:
+     * <ul>
+     *   <li>Primitive and collection fields (title, summary, releaseDate, etc.)</li>
+     *   <li>Slug regeneration and uniqueness check</li>
+     *   <li>Many-to-Many cinemas relation (replace if provided)</li>
+     *   <li>One-to-Many images relation (replace if provided)</li>
+     * </ul>
+     * Null handling:
+     * <ul>
+     *   <li>If cinemaIds or imageIds are null → keep existing relations</li>
+     *   <li>If empty set → clear relations</li>
+     * </ul>
      *
      * @param movieRequest DTO containing updated movie information
-     * @param movieId      ID of the movie to be updated
-     * @return ResponseMessage containing the updated MovieResponse
+     * @param movieId      ID of the movie to update
+     * @return ResponseMessage with the updated movie response
      */
     @Transactional
     public ResponseMessage<MovieResponse> updateMovie(MovieRequest movieRequest, Long movieId) {
@@ -201,6 +220,16 @@ public class MovieService {
 
         // 2️⃣ Update primitive and ElementCollection fields via the mapper
         // (title, slug, summary, releaseDate, duration, rating, specialHalls, director, cast, formats, genre, status)
+
+        // Regenerate slug if changed
+        if (!movie.getSlug().equals(movieRequest.getSlug())) {
+            String uniqueSlug = movieServiceHelper.generateUniqueSlug(movieRequest.getTitle(), movieRequest.getSlug(), MAX_LENGTH_FOR_SLUG, movieId);
+            movieRequest.setSlug(uniqueSlug);
+        } else if (!movie.getTitle().equals(movieRequest.getTitle())){
+            //if Slugs are equal but the title has been changed, sending null Slug in order to produce a new slug from title.
+            String uniqueSlug = movieServiceHelper.generateUniqueSlug(movieRequest.getTitle(), null, MAX_LENGTH_FOR_SLUG, movieId);
+            movieRequest.setSlug(uniqueSlug);
+        }
         movieMapper.updateMovieFromRequest(movieRequest, movie);
 
         // 3️⃣ Update cinemas (ManyToMany)

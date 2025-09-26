@@ -24,8 +24,7 @@ public class MovieRequest {
     @Size(min = 3, max = 100)
     private String title;
 
-    @NotNull(message = "Movie slug cannot be empty")
-    @Size(min = 5, max = 20)
+    @Size(min = 5, max = 50)
     private String slug;
 
     @NotNull(message = "Summary cannot be empty")
@@ -46,12 +45,15 @@ public class MovieRequest {
     private String director;
 
     @NotNull(message = "Cast cannot be empty")
+    @Size(min = 1)
     private List<String> cast;
 
     @NotNull(message = "Formats cannot be empty")
+    @Size(min = 1)
     private List<String> formats;
 
     @NotNull(message = "Genre cannot be empty")
+    @Size(min = 1)
     private List<String> genre;
 
     @NotNull(message = "Movie Status cannot be empty")

@@ -31,8 +31,8 @@ public class Movie {
     private String title;
 
     @NotNull
-    @Size(min = 5, max = 20)
-    @Column(nullable = false, unique = true, length = 20)
+    @Size(min = 5, max = 50)
+    @Column(nullable = false, unique = true, length = 50)
     private String slug;
 
     @NotNull
