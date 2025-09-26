@@ -22,29 +22,26 @@ public class UserMapper {
 
     // UserUpdateRequest -> User
     public static void updateEntityFromRequest(UserUpdateRequest req, User user) {
-        if (req.getName() != null) {
-            user.setName(req.getName());
+        if (req.getFirstName() != null) {
+            user.setName(req.getFirstName());
         }
-        if (req.getSurname() != null) {
-            user.setSurname(req.getSurname());
+        if (req.getLastName() != null) {
+            user.setSurname(req.getLastName());
         }
         if (req.getEmail() != null) {
             user.setEmail(req.getEmail());
         }
-        if (req.getPhoneNumber() != null) {
-            user.setPhoneNumber(req.getPhoneNumber());
+        if (req.getPhone() != null) {
+            user.setPhoneNumber(req.getPhone());
         }
         if (req.getBirthDate() != null) {
             user.setBirthDate(req.getBirthDate());
         }
         if (req.getGender() != null) {
-            try {
-                user.setGender(Gender.valueOf(req.getGender().toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                throw new BadRequestException(ErrorMessages.INVALID_GENDER);
-            }
+            user.setGender(req.getGender());
         }
     }
+
 
     // User -> UserResponse
     public static UserResponse toResponse(User user) {
@@ -60,7 +57,6 @@ public class UserMapper {
         }
         return resp;
     }
-
 
     // UserRegisterRequest -> User
     public static User fromRegisterRequest(UserRegisterRequest req) {

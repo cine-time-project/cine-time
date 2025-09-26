@@ -16,16 +16,15 @@ public class UserUpdateRequest {
     private String lastName;
 
     // (XXX) XXX-XXXX
-    @Pattern(regexp = "^\\(\\d{3}\\)\\s\\d{3}-\\d{4}$",
-            message = "Phone must be in form of (XXX) XXX-XXXX")
+    @Pattern(regexp = "^\\(\\d{3}\\)\\s\\d{3}-\\d{4}$", message = "Phone must be in form of (XXX) XXX-XXXX")
     private String phone;
 
     @Email(message = "Invalid email format")
     private String email;
 
     // 8+ char, 1 upper, 1 lower, 1 digit, 1 special
-    @Pattern(regexp="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{8,}$",
-            message="Password must contain upper, lower, digit and special char, min 8")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{8,}$",
+            message = "Password must contain upper, lower, digit and special char, min 8")
     private String password;
 
     @Past(message = "Birth date must be in the past")
@@ -33,28 +32,4 @@ public class UserUpdateRequest {
     private LocalDate birthDate;
 
     private Gender gender; // MALE, FEMALE, OTHER
-
-
-    public String getName() {
-        return null;
-    }
-
-    public String getSurname() {
-        return null;
-    }
-
-    public String getPhoneNumber() {
-        return null;
-    }
-
-    public void setName(String newName) {
-    }
-
-    public void setSurname(String newSurname) {
-    }
-
-    public void setPhoneNumber(String s) {
-    }
 }
-
-
