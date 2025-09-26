@@ -38,8 +38,7 @@ public class CinemaController {
     }
 
     //C02: Get Users Favorites
-    //@PreAuthorize("hasAuthority('MEMBER')")           // ROLE_ prefix gerekmeden çalışır
-    @PreAuthorize("hasAuthority('MEMBER')")
+    @PreAuthorize("hasAuthority('MEMBER')")     //<= ***changed***
     @GetMapping("/favorites/auth")
     public ResponseEntity<ResponseMessage<Page<CinemaSummaryResponse>>> getAuthFavorites(
             org.springframework.security.core.Authentication authentication,
@@ -78,7 +77,7 @@ public class CinemaController {
 
     //C07: Cinema Update
     @PutMapping("/cinemas/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")  //<= ***changed***
     public ResponseEntity<ResponseMessage<CinemaSummaryResponse>> updateCinema(
             @PathVariable Long id,
             @Valid @RequestBody CinemaCreateRequest request) {

@@ -261,14 +261,15 @@ public class CinemaService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException(String.format(ErrorMessages.CINEMA_NOT_FOUND, id)));
 
+        // 2) Relation clear
         cinema.getMovies().clear();
         cinema.getCities().clear();
 
 
-        // 2) Tek satır: cascade zinciri halleder
+        // 3) Tek satır: cascade zinciri halleder
         cinemaRepository.delete(cinema);
 
-        // 3) Standart cevap
+        // 4) Response
         return ResponseMessage.<Void>builder()
                 .httpStatus(HttpStatus.OK)
                 .message(String.format(SuccessMessages.CINEMA_DELETED, id))
