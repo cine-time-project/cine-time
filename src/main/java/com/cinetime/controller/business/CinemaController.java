@@ -5,7 +5,6 @@ import com.cinetime.payload.response.business.SpecialHallResponse;
 import com.cinetime.payload.response.business.*;
 import com.cinetime.service.business.CinemaService;
 import com.cinetime.service.helper.PageableHelper;
-import com.cinetime.payload.messages.SuccessMessages;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -16,7 +15,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api") // <-- tek base path
@@ -40,7 +38,8 @@ public class CinemaController {
     }
 
     //C02: Get Users Favorites
-    @PreAuthorize("hasAuthority('MEMBER')")           // ROLE_ prefix gerekmeden çalışır
+    //@PreAuthorize("hasAuthority('MEMBER')")           // ROLE_ prefix gerekmeden çalışır
+    @PreAuthorize("hasAuthority('MEMBER')")
     @GetMapping("/favorites/auth")
     public ResponseEntity<ResponseMessage<Page<CinemaSummaryResponse>>> getAuthFavorites(
             org.springframework.security.core.Authentication authentication,
@@ -89,7 +88,7 @@ public class CinemaController {
 
     //C08: Delete Cinema
     @DeleteMapping("/cinemas/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")  // <= ***changed***
     public ResponseEntity<ResponseMessage<Void>> delete(@PathVariable Long id) {
         return ResponseEntity.ok(cinemaService.delete(id));
     }
