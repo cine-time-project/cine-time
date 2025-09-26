@@ -110,5 +110,30 @@ public class UserMapper {
                 .build();
     }
 
+    public static void updateUserFromRequest(UserUpdateRequest req, User user) {
+
+        if (req.getFirstName() != null && !req.getFirstName().isBlank()) {
+            user.setName(req.getFirstName().trim());
+        }
+        if (req.getLastName() != null && !req.getLastName().isBlank()) {
+            user.setSurname(req.getLastName().trim());
+        }
+        if (req.getPhone() != null && !req.getPhone().isBlank()) {
+            user.setPhoneNumber(req.getPhone().trim());
+        }
+        if (req.getEmail() != null && !req.getEmail().isBlank()) {
+            user.setEmail(req.getEmail().trim().toLowerCase());
+        }
+        if (req.getBirthDate() != null) {
+            user.setBirthDate(req.getBirthDate());
+        }
+        if (req.getGender() != null) {
+            // DTO zaten enum (Gender) ise direkt set et
+            user.setGender(req.getGender());
+        }
+
+    }
+
+
 
 }

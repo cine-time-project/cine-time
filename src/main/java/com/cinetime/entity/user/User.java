@@ -85,7 +85,7 @@ public class User {
   private Set<Role> roles = new HashSet<>();
 
   @JsonIgnore
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private Set<Ticket> tickets = new HashSet<>();
 
   @JsonIgnore
@@ -93,7 +93,7 @@ public class User {
   private Set<Payment> payments = new HashSet<>();
 
   @JsonIgnore
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private Set<Favorite> favorites = new HashSet<>();
 
 

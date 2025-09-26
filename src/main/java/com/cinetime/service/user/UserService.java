@@ -17,6 +17,7 @@ import com.cinetime.repository.user.RoleRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.business.RoleService;
 import com.cinetime.service.helper.MailHelper;
+import com.cinetime.service.helper.SecurityHelper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -47,6 +49,7 @@ public class UserService {
 
     private final JavaMailSender mailSender;
     private final MailHelper mailHelper;
+    private final SecurityHelper securityHelper;
     @Value("${app.mail.from}") private String mailForm;
     @Value("${app.mail.reset.subject}") private String resetSubject;
     @Value("${app.mail.reset.template}") private String resetTemplateHtml;
@@ -139,23 +142,30 @@ public class UserService {
     }
 
     //U10-Update user by ADMIN or EMPLOYEE
-    @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','ROLE_ADMIN','EMPLOYEE','ROLE_EMPLOYEE')")
     public UserResponse updateUserByAdminOrEmployee(Long userId, UserUpdateRequest request) {
-        User user = userRepository.findById(userId)
+        User target = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
 
-        if (Boolean.TRUE.equals(user.getBuiltIn())) {
+        if (Boolean.TRUE.equals(target.getBuiltIn())) {
             throw new ConflictException(ErrorMessages.BUILT_IN_USER_UPDATE_NOT_ALLOWED);
         }
 
-        UserMapper.updateEntityFromRequest(request, user);
-        userRepository.save(user);
+        Authentication caller = SecurityContextHolder.getContext().getAuthentication();
 
-        return UserMapper.toResponse(user);
+        // Employee can only  MEMBER update.
+        if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(target, RoleName.MEMBER)) {
+            throw new AccessDeniedException("Employees can operate only on MEMBER users");
+        }
+
+        UserMapper.updateUserFromRequest(request, target);
+        userRepository.save(target);
+        return UserMapper.toResponse(target);
     }
 
-   // U11 – Delete User by Admin or Employee
-   @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
+    // U11 – Delete User by Admin or Employee
+
+    @PreAuthorize("hasAnyAuthority('ADMIN','ROLE_ADMIN','EMPLOYEE','ROLE_EMPLOYEE')")
    public UserResponse deleteUserByAdminOrEmployee(Long userId) {
        User user = userRepository.findById(userId)
                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
@@ -164,6 +174,11 @@ public class UserService {
            throw new ConflictException(ErrorMessages.BUILT_IN_USER_DELETE_NOT_ALLOWED);
        }
 
+       Authentication caller = SecurityContextHolder.getContext().getAuthentication();
+
+       if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(user, RoleName.MEMBER)) {
+           throw new AccessDeniedException("Employees can operate only on MEMBER users");
+       }
        userRepository.delete(user);
 
        return UserMapper.toResponse(user);
