@@ -24,6 +24,7 @@ public class ErrorMessages {
     public static final String EMAIL_SENDING_FAILED = "Error: Failed to send email.";
     public static final String RESET_CODE_REQUIRED = "Reset code is required.";
     public static final String INVALID_RESET_CODE = "Invalid reset code.";
+    public static final String ACCESS_DANIED = "Employees can operate only on MEMBER users.";
 
 
 

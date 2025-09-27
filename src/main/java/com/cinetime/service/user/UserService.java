@@ -142,8 +142,7 @@ public class UserService {
     }
 
     //U10-Update user by ADMIN or EMPLOYEE
-    @PreAuthorize("hasAnyAuthority('ADMIN','ROLE_ADMIN','EMPLOYEE','ROLE_EMPLOYEE')")
-    public UserResponse updateUserByAdminOrEmployee(Long userId, UserUpdateRequest request) {
+    public ResponseMessage<UserResponse> updateUserByAdminOrEmployee(Long userId, UserUpdateRequest request) {
         User target = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
 
@@ -155,18 +154,21 @@ public class UserService {
 
         // Employee can only  MEMBER update.
         if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(target, RoleName.MEMBER)) {
-            throw new AccessDeniedException("Employees can operate only on MEMBER users");
+            throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
         }
 
         UserMapper.updateUserFromRequest(request, target);
         userRepository.save(target);
-        return UserMapper.toResponse(target);
+        return ResponseMessage.<UserResponse>builder()
+                .message(SuccessMessages.USER_UPDATED)
+                .httpStatus(HttpStatus.OK)
+                .returnBody(UserMapper.toResponse(target))
+                .build();
     }
 
     // U11 – Delete User by Admin or Employee
 
-    @PreAuthorize("hasAnyAuthority('ADMIN','ROLE_ADMIN','EMPLOYEE','ROLE_EMPLOYEE')")
-   public UserResponse deleteUserByAdminOrEmployee(Long userId) {
+    public ResponseMessage<UserResponse> deleteUserByAdminOrEmployee(Long userId) {
        User user = userRepository.findById(userId)
                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
 
@@ -177,11 +179,16 @@ public class UserService {
        Authentication caller = SecurityContextHolder.getContext().getAuthentication();
 
        if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(user, RoleName.MEMBER)) {
-           throw new AccessDeniedException("Employees can operate only on MEMBER users");
+           throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
        }
+        UserResponse body = UserMapper.toResponse(user);
        userRepository.delete(user);
 
-       return UserMapper.toResponse(user);
+        return ResponseMessage.<UserResponse>builder()
+                .message(SuccessMessages.USER_DELETED)
+                .httpStatus(HttpStatus.OK)
+                .returnBody(body)
+                .build();
    }
 
 

@@ -74,8 +74,8 @@ public class UserController {
 
     // U10 - Update user by ADMIN or EMPLOYEE
     @PutMapping("/{userId}/admin")
-    @PreAuthorize("hasAnyAuthority('ADMIN','ROLE_ADMIN','EMPLOYEE','ROLE_EMPLOYEE')")
-    public ResponseEntity<UserResponse> updateUserByAdminOrEmployee(
+    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
+    public ResponseEntity<ResponseMessage<UserResponse>> updateUserByAdminOrEmployee(
             @PathVariable Long userId,
             @Valid @RequestBody UserUpdateRequest request) {
 
@@ -85,8 +85,8 @@ public class UserController {
 
     // U11 - Delete user by ADMIN or EMPLOYEE
     @DeleteMapping("/{userId}/admin")
-    @PreAuthorize("hasAnyAuthority('ADMIN','ROLE_ADMIN','EMPLOYEE','ROLE_EMPLOYEE')")
-    public ResponseEntity<UserResponse> deleteUserByAdminOrEmployee(@PathVariable Long userId) {
+    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
+    public ResponseEntity<ResponseMessage<UserResponse>> deleteUserByAdminOrEmployee(@PathVariable Long userId) {
         return ResponseEntity.ok(userService.deleteUserByAdminOrEmployee(userId));
     }
 
