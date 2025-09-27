@@ -18,6 +18,7 @@ import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.business.RoleService;
 import com.cinetime.service.helper.MailHelper;
 import com.cinetime.service.helper.SecurityHelper;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -142,6 +143,7 @@ public class UserService {
     }
 
     //U10-Update user by ADMIN or EMPLOYEE
+    @Transactional
     public ResponseMessage<UserResponse> updateUserByAdminOrEmployee(Long userId, UserUpdateRequest request) {
         User target = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
@@ -167,7 +169,7 @@ public class UserService {
     }
 
     // U11 – Delete User by Admin or Employee
-
+    @Transactional
     public ResponseMessage<UserResponse> deleteUserByAdminOrEmployee(Long userId) {
        User user = userRepository.findById(userId)
                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
