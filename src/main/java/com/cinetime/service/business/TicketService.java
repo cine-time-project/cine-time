@@ -5,6 +5,7 @@ import com.cinetime.entity.business.Showtime;
 import com.cinetime.entity.business.Ticket;
 import com.cinetime.entity.enums.PaymentStatus;
 import com.cinetime.entity.enums.TicketStatus;
+import com.cinetime.entity.user.User;
 import com.cinetime.exception.ConflictException;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.PaymentMapper;
@@ -25,7 +26,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -141,6 +144,10 @@ public class TicketService {
 
     @Transactional
     public PaymentResponse buy (BuyTicketRequest buyTicketRequest,Long maybeUserId, String idempotencyKey){
+        if (idempotencyKey == null || idempotencyKey.isBlank()) {
+            throw new IllegalArgumentException("idempotencyKey is required");
+        }
+
         Optional<Payment> existingPayment = paymentRepository.findByIdempotencyKey(idempotencyKey);
 
         if (existingPayment.isPresent()){
@@ -162,11 +169,11 @@ public class TicketService {
                 )
                 .orElseThrow(() -> new ResourceNotFoundException("Showtime not found"));
 
-        var today = java.time.LocalDate.now();
-        var now   = java.time.LocalTime.now();
+        LocalDate today = java.time.LocalDate.now();
+        LocalTime now  = java.time.LocalTime.now();
 
         // 3) Load user (if your Ticket.user is non-nullable, this must be set)
-        var user = userRepository.findById(maybeUserId)
+        User user = userRepository.findById(maybeUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // So far we checked if there is an existing payment for this user, if so we return the payment response.
@@ -179,6 +186,10 @@ public class TicketService {
                 .user(user)
                 .idempotencyKey(idempotencyKey).build();
        payment = paymentRepository.saveAndFlush(payment);
+
+        if (buyTicketRequest.getSeatInformation() == null || buyTicketRequest.getSeatInformation().isEmpty()) {
+            throw new IllegalArgumentException("seatInformation must be a non-empty array of seats");
+        }
 
         // 4) Build tickets (one per seat) with status = PAID after checking availability
 

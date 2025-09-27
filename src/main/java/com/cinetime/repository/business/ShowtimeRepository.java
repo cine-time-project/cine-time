@@ -74,6 +74,7 @@ public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
     }
     Optional<Showtime> findByMovie_TitleIgnoreCaseAndHall_NameIgnoreCaseAndHall_Cinema_NameIgnoreCaseAndDateAndStartTime(
             String movieTitle, String hallName, String cinemaName, LocalDate date, LocalTime startTime);
+
     Optional<Showtime> findByMovie_IdAndHall_NameIgnoreCaseAndHall_Cinema_NameIgnoreCaseAndDateAndStartTime(
             Long movieId,
             String hallName,

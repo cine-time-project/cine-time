@@ -25,7 +25,9 @@ public class PaymentMapper {
                 .paymentIdempotencyKey(payment.getIdempotencyKey())
                 .paymentCurrency(payment.getCurrency())
                 .paymentStatus(payment.getPaymentStatus())
-                .paymentDate(payment.getPaymentDate()).build();
+                .paymentProviderReference(payment.getProviderReference())
+                .paymentDate(payment.getPaymentDate())
+                .build();
 
     }
 

@@ -1,7 +1,10 @@
 package com.cinetime.payload.request.business;
 
 import com.cinetime.entity.enums.TicketStatus;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,7 +30,9 @@ public class BuyTicketRequest {
     @NotNull(message = "Show start time can not be null")
     LocalTime showtime;
     Integer count;
+
     @NotNull(message = "Seat has to be selected")
+    @Size(min = 1)
     List<SeatInfo> seatInformation;
     LocalDate date;
 
@@ -37,7 +42,9 @@ public class BuyTicketRequest {
     @AllArgsConstructor
     @Builder
     public static class SeatInfo {
+        @NotBlank
         private String seatLetter;
+        @Min(1)
         private int seatNumber;
     }
 
