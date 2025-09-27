@@ -17,6 +17,8 @@ import com.cinetime.repository.user.RoleRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.business.RoleService;
 import com.cinetime.service.helper.MailHelper;
+import com.cinetime.service.helper.SecurityHelper;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -47,6 +50,7 @@ public class UserService {
 
     private final JavaMailSender mailSender;
     private final MailHelper mailHelper;
+    private final SecurityHelper securityHelper;
     @Value("${app.mail.from}") private String mailForm;
     @Value("${app.mail.reset.subject}") private String resetSubject;
     @Value("${app.mail.reset.template}") private String resetTemplateHtml;
@@ -85,21 +89,22 @@ public class UserService {
     }
 
     // U08 - Get Authenticated User
-    @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
-    public Page<UserResponse> searchUsers(String q, Pageable pageable) {
-        Page<User> users;
+    public ResponseMessage<Page<UserResponse>> searchUsers(String q, Pageable pageable) {
+        String k = (q == null) ? "" : q.trim();
+        Page<User> page = (q == null || q.isBlank())
+                ? userRepository.findAll(pageable)
+                : userRepository
+                .findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrPhoneNumberContainingIgnoreCase(
+                        q, q, q, q, pageable);
 
-        if (q == null || q.isBlank()) {
-            users = userRepository.findAll(pageable);
-        } else {
-            users = userRepository.findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseOrEmailContainingIgnoreCase(
-                    q, q, q, pageable
-            );
-        }
+        Page<UserResponse> body = page.map(UserMapper::toResponse);
 
-        return users.map(UserMapper::toResponse);
+        return ResponseMessage.<Page<UserResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.USERS_LISTED) // örn: "Users listed successfully"
+                .returnBody(body)
+                .build();
     }
-
 
 
     // U09 - Get users (ADMIN or EMPLOYEE)
@@ -139,24 +144,34 @@ public class UserService {
     }
 
     //U10-Update user by ADMIN or EMPLOYEE
-    @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
-    public UserResponse updateUserByAdminOrEmployee(Long userId, UserUpdateRequest request) {
-        User user = userRepository.findById(userId)
+    @Transactional
+    public ResponseMessage<UserResponse> updateUserByAdminOrEmployee(Long userId, UserUpdateRequest request) {
+        User target = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
 
-        if (Boolean.TRUE.equals(user.getBuiltIn())) {
+        if (Boolean.TRUE.equals(target.getBuiltIn())) {
             throw new ConflictException(ErrorMessages.BUILT_IN_USER_UPDATE_NOT_ALLOWED);
         }
 
-        UserMapper.updateEntityFromRequest(request, user);
-        userRepository.save(user);
+        Authentication caller = SecurityContextHolder.getContext().getAuthentication();
 
-        return UserMapper.toResponse(user);
+        // Employee can only  MEMBER update.
+        if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(target, RoleName.MEMBER)) {
+            throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
+        }
+
+        UserMapper.updateUserFromRequest(request, target);
+        userRepository.save(target);
+        return ResponseMessage.<UserResponse>builder()
+                .message(SuccessMessages.USER_UPDATED)
+                .httpStatus(HttpStatus.OK)
+                .returnBody(UserMapper.toResponse(target))
+                .build();
     }
 
-   // U11 – Delete User by Admin or Employee
-   @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
-   public UserResponse deleteUserByAdminOrEmployee(Long userId) {
+    // U11 – Delete User by Admin or Employee
+    @Transactional
+    public ResponseMessage<UserResponse> deleteUserByAdminOrEmployee(Long userId) {
        User user = userRepository.findById(userId)
                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
 
@@ -164,9 +179,19 @@ public class UserService {
            throw new ConflictException(ErrorMessages.BUILT_IN_USER_DELETE_NOT_ALLOWED);
        }
 
+       Authentication caller = SecurityContextHolder.getContext().getAuthentication();
+
+       if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(user, RoleName.MEMBER)) {
+           throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
+       }
+        UserResponse body = UserMapper.toResponse(user);
        userRepository.delete(user);
 
-       return UserMapper.toResponse(user);
+        return ResponseMessage.<UserResponse>builder()
+                .message(SuccessMessages.USER_DELETED)
+                .httpStatus(HttpStatus.OK)
+                .returnBody(body)
+                .build();
    }
 
 
