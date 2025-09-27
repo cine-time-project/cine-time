@@ -19,6 +19,7 @@ import com.cinetime.repository.business.ShowtimeRepository;
 import com.cinetime.repository.business.TicketRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.PageableHelper;
+import com.cinetime.service.mail.MailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -44,6 +45,7 @@ public class TicketService {
     private final UserRepository userRepository;
     private final PaymentMapper paymentMapper;
     private final PaymentRepository paymentRepository;
+    private final MailService mailService;
 
     //T01
     @Transactional(readOnly = true)
@@ -225,6 +227,19 @@ public class TicketService {
             payment.setPaymentStatus(PaymentStatus.SUCCESS);
             payment.setProviderReference("MasterCard(We can change later) "+ payment.getId());
             paymentRepository.save(payment);
+
+
+            // Send email after successful purchase (best-effort; don't fail purchase on email errors)
+            try {
+                String to = user.getEmail(); // ensure User has an email field
+                if (to != null && !to.isBlank()) {
+                    mailService.sendPurchaseReceipt(to, payment, saved);
+                }
+            } catch (Exception mailEx) {
+                // Log-only; do not interrupt the successful purchase flow
+                System.err.println("Email send failed: " + mailEx.getMessage());
+            }
+
             return paymentMapper.mapPaymentToPaymentResponse(payment,saved);
         } catch (DataIntegrityViolationException ex){
             throw new ConflictException("One or more seats are already reserved/paid");
