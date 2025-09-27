@@ -41,6 +41,7 @@ public class SuccessMessages {
     public static final String FORGOT_PASSWORD_EMAIL_SENT ="If the email exists, a reset code has been sent.";
     public static final String PASSWORD_RESET_SUCCESS = "Password has been reset successfully.";
     public static final String USER_REGISTERED = "User registered successfully.";
+    public static final String USERS_LISTED = "Users listed successfully.";
 
 
     public static final String USER_CREATE = "User successfully created";

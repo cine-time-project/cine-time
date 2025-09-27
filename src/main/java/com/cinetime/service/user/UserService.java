@@ -89,21 +89,22 @@ public class UserService {
     }
 
     // U08 - Get Authenticated User
-    @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
-    public Page<UserResponse> searchUsers(String q, Pageable pageable) {
-        Page<User> users;
+    public ResponseMessage<Page<UserResponse>> searchUsers(String q, Pageable pageable) {
+        String k = (q == null) ? "" : q.trim();
+        Page<User> page = (q == null || q.isBlank())
+                ? userRepository.findAll(pageable)
+                : userRepository
+                .findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrPhoneNumberContainingIgnoreCase(
+                        q, q, q, q, pageable);
 
-        if (q == null || q.isBlank()) {
-            users = userRepository.findAll(pageable);
-        } else {
-            users = userRepository.findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseOrEmailContainingIgnoreCase(
-                    q, q, q, pageable
-            );
-        }
+        Page<UserResponse> body = page.map(UserMapper::toResponse);
 
-        return users.map(UserMapper::toResponse);
+        return ResponseMessage.<Page<UserResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.USERS_LISTED) // örn: "Users listed successfully"
+                .returnBody(body)
+                .build();
     }
-
 
 
     // U09 - Get users (ADMIN or EMPLOYEE)

@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,21 +45,15 @@ public class UserController {
     }
 
     // U08 - Search users with pagination
-    @GetMapping("/admin")
-    @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
-    public ResponseEntity<Page<UserResponse>> searchUsers(
+    @GetMapping("/users/admin")
+    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
+    public ResponseEntity<ResponseMessage<Page<UserResponse>>> searchUsers(
             @RequestParam(required = false) String q,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "id") String sort,
-            @RequestParam(defaultValue = "asc") String type
-    ) {
-        Sort.Direction direction = type.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort));
+            @PageableDefault(page = 0, size = 20, sort = "id", direction = Sort.Direction.ASC)
+            Pageable pageable) {
 
         return ResponseEntity.ok(userService.searchUsers(q, pageable));
     }
-
     // U02 - User Register
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRegisterRequest req){
