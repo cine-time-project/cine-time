@@ -3,10 +3,7 @@ package com.cinetime.entity.business;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.Builder;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,7 +15,8 @@ import java.util.Set;
 @Table(name = "showtimes", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"hall_id", "date", "start_time"})
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

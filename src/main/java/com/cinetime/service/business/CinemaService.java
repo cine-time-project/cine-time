@@ -2,7 +2,6 @@ package com.cinetime.service.business;
 
 import com.cinetime.entity.business.Cinema;
 import com.cinetime.entity.business.City;
-import com.cinetime.entity.business.Movie;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaMapper;
 import com.cinetime.payload.mappers.HallMapper;
@@ -24,7 +23,6 @@ import com.cinetime.entity.user.User;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -263,10 +261,15 @@ public class CinemaService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException(String.format(ErrorMessages.CINEMA_NOT_FOUND, id)));
 
-        // 2) Tek satır: cascade zinciri halleder
+        // 2) Relation clear
+        cinema.getMovies().clear();
+        cinema.getCities().clear();
+
+
+        // 3) Tek satır: cascade zinciri halleder
         cinemaRepository.delete(cinema);
 
-        // 3) Standart cevap
+        // 4) Response
         return ResponseMessage.<Void>builder()
                 .httpStatus(HttpStatus.OK)
                 .message(String.format(SuccessMessages.CINEMA_DELETED, id))
