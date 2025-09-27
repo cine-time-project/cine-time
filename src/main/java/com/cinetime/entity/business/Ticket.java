@@ -75,16 +75,11 @@ public class Ticket {
     )
     private User user;
 
-    // Ticket -> Payment: Bilet silinince ödeme de silinsin istiyorsanız REMOVE + orphanRemoval doğrudur.
-    @OneToOne(
-            fetch = FetchType.LAZY,
-            optional = true,
-            cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE },
-            orphanRemoval = true
-    )
+    // Ticket -> Payment: Many tickets can belong to one payment (single purchase).
+// Do NOT cascade REMOVE from Ticket to Payment.
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(
             name = "payment_id",
-            unique = true,
             nullable = true,
             foreignKey = @ForeignKey(name = "fk_ticket_payment")
     )

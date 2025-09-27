@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "payments")
@@ -23,6 +24,16 @@ public class Payment {
     @Column(nullable = false)
     private Double amount;
 
+    @Column(nullable = false,unique = true,length = 100)
+    private String idempotencyKey;
+
+    @Column(length = 120)
+    private String providerReference;
+
+    @Column(length = 3)
+    private String currency;
+
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PaymentStatus paymentStatus = PaymentStatus.PENDING;
@@ -38,8 +49,8 @@ public class Payment {
 
     // -------------------- RELATIONS --------------------
     @JsonIgnore
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "payment")
-    private Ticket ticket;
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "payment" , cascade = CascadeType.ALL)
+    private List<Ticket> tickets;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -48,8 +59,12 @@ public class Payment {
     // -------------------- LIFECYCLE --------------------
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        if (this.paymentDate == null) {
+            this.paymentDate = now;
+        }
+        this.createdAt = now;
+        this.updatedAt = now;
     }
 
     @PreUpdate

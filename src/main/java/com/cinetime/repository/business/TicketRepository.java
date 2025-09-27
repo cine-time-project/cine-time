@@ -21,6 +21,7 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
 
     boolean existsByShowtime_IdAndSeatLetterAndSeatNumber(Long showtimeId, String seatLetter, int seatNumber);
 
+    List<Ticket> findAllByPaymentId(Long id);
 
 
 

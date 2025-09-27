@@ -31,8 +31,7 @@ public class BuyTicketRequest {
     List<SeatInfo> seatInformation;
     LocalDate date;
 
-     //Yukaridaki seatInfo bilgilerini saklamak icin ChatGpt yeni bir entity olusturmak yerine sadece burda bi static
-    //yardimci bir static inner class yapmanin daha mantikli oldugunu soyledi. Sonradan degistirebiliriz.
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

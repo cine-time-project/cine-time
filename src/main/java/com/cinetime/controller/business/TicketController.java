@@ -3,6 +3,7 @@ package com.cinetime.controller.business;
 import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.business.BuyTicketRequest;
 import com.cinetime.payload.request.business.ReserveTicketRequest;
+import com.cinetime.payload.response.business.PaymentResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.business.TicketResponse;
 import com.cinetime.security.service.UserDetailsImpl;
@@ -97,20 +98,22 @@ import java.util.List;
 
             return ResponseEntity.ok(response);
         }
+
+
         @PreAuthorize("hasAnyAuthority('MEMBER')")
         @PostMapping("/buy-ticket")
-        public ResponseEntity<ResponseMessage<List<TicketResponse>>> buy(
+        public ResponseEntity<ResponseMessage<PaymentResponse>> buy(
                 @AuthenticationPrincipal com.cinetime.security.service.UserDetailsImpl principal,
+                @RequestHeader(name = "Idempotency-Key") String idempotencyKey,
                 @RequestBody @Valid BuyTicketRequest request) {
             Long userId = principal != null ? principal.getId() : null;
-            List<TicketResponse> body = ticketService.buy(request, userId);
+            PaymentResponse body = ticketService.buy(request, userId, idempotencyKey);
 
-            ResponseMessage<List<TicketResponse>> response = ResponseMessage.<List<TicketResponse>>builder()
+      ResponseMessage<PaymentResponse> response = ResponseMessage.<PaymentResponse>builder()
                     .returnBody(body)
                     .message(SuccessMessages.TICKET_BOUGHT)
-                    .httpStatus(HttpStatus.OK)
-                    .build();
-
-            return new ResponseEntity<>(response, org.springframework.http.HttpStatus.CREATED);
+                     .httpStatus(HttpStatus.CREATED)
+                     .build();
+                  return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
     }
