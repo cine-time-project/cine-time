@@ -46,7 +46,7 @@ public class UserService_UpdateUserByAdminOrEmployee_Test {
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
         when(userRepository.save(any(User.class))).thenReturn(mockUser);
 
-        UserResponse response = userService.updateUserByAdminOrEmployee(userId, request);
+        UserResponse response = userService.updateUserByAdminOrEmployee(userId, request).getReturnBody();
 
         assertNotNull(response);
         verify(userRepository).save(mockUser);

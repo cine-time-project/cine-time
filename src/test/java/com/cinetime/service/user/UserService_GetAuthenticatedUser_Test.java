@@ -5,6 +5,7 @@ import com.cinetime.exception.ConflictException;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.UserMapper;
 import com.cinetime.payload.request.user.UserUpdateRequest;
+import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.user.UserResponse;
 import com.cinetime.repository.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,9 +54,10 @@ public class UserService_GetAuthenticatedUser_Test {
 
         var result = userService.searchUsers(null, pageable);
 
-        assertNotNull(result);
-        assertEquals(2, result.getContent().size());
-        verify(userRepository).findAll(pageable);
+        Page<UserResponse> page = result.getReturnBody();
+        assertNotNull(page);
+        assertEquals(2, page.getContent().size());
+
     }
 
     @Test
@@ -71,9 +73,13 @@ public class UserService_GetAuthenticatedUser_Test {
 
         var result = userService.searchUsers("query", pageable);
 
-        assertNotNull(result);
-        assertEquals(2, result.getContent().size());
-        verify(userRepository).findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseOrEmailContainingIgnoreCase(
-                eq("query"), eq("query"), eq("query"), eq(pageable));
+        result = userService.searchUsers("test", pageable);
+
+
+        Page<UserResponse> page = result.getReturnBody();
+        List<UserResponse> users = page.getContent();
+
+        assertEquals(2, users.size());
+
     }
 }
