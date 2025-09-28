@@ -18,6 +18,7 @@ import com.cinetime.repository.business.PaymentRepository;
 import com.cinetime.repository.business.ShowtimeRepository;
 import com.cinetime.repository.business.TicketRepository;
 import com.cinetime.repository.user.UserRepository;
+import com.cinetime.service.helper.MailHelper;
 import com.cinetime.service.helper.PageableHelper;
 import com.cinetime.service.mail.MailService;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class TicketService {
     private final PaymentMapper paymentMapper;
     private final PaymentRepository paymentRepository;
     private final MailService mailService;
+    private final MailHelper mailHelper;
 
     //T01
     @Transactional(readOnly = true)
@@ -233,7 +235,7 @@ public class TicketService {
             try {
                 String to = user.getEmail(); // ensure User has an email field
                 if (to != null && !to.isBlank()) {
-                    mailService.sendPurchaseReceipt(to, payment, saved);
+                    mailHelper.sendPurchaseReceipt(to, payment, saved);
                 }
             } catch (Exception mailEx) {
                 // Log-only; do not interrupt the successful purchase flow
