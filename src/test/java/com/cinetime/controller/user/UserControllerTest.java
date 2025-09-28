@@ -1,7 +1,6 @@
 package com.cinetime.controller.user;
 
 import com.cinetime.payload.messages.SuccessMessages;
-import com.cinetime.payload.request.user.UserCreateRequest;
 import com.cinetime.payload.request.user.UserRegisterRequest;
 import com.cinetime.payload.request.user.UserUpdateRequest;
 import com.cinetime.payload.response.business.ResponseMessage;
@@ -46,7 +45,7 @@ class UserControllerTest {
         UserUpdateRequest request = new UserUpdateRequest();
         UserResponse mockResponse = new UserResponse();
         mockResponse.setId(1L);
-        mockResponse.setUsername("updatedUser");
+        mockResponse.setName("updatedUser");
 
         when(userService.updateAuthenticatedUser(any(UserUpdateRequest.class))).thenReturn(mockResponse);
 
@@ -75,14 +74,22 @@ class UserControllerTest {
     void searchUsers_ShouldReturnPagedUsers() {
         Pageable pageable = PageRequest.of(0, 20);
         List<UserResponse> userList = Arrays.asList(new UserResponse(), new UserResponse());
-        Page<UserResponse> mockPage = new PageImpl<>(userList);
+        Page<UserResponse> mockPage = new PageImpl<>(userList, pageable, userList.size());
 
-        when(userService.searchUsers(anyString(), any(Pageable.class))).thenReturn(mockPage);
+        ResponseMessage<Page<UserResponse>> mockResponse =
+                ResponseMessage.<Page<UserResponse>>builder()
+                        .httpStatus(HttpStatus.OK)
+                        .message("success")
+                        .returnBody(mockPage)
+                        .build();
 
-        ResponseEntity<Page<UserResponse>> response = userController.searchUsers("test", 0, 20, "id", "asc");
+        when(userService.searchUsers(anyString(), any(Pageable.class))).thenReturn(mockResponse);
+
+        ResponseEntity<ResponseMessage<Page<UserResponse>>> response =
+                userController.searchUsers("test", pageable);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockPage, response.getBody());
+        assertEquals(mockPage, response.getBody().getReturnBody());
         verify(userService, times(1)).searchUsers(anyString(), any(Pageable.class));
     }
 
@@ -92,7 +99,7 @@ class UserControllerTest {
         UserRegisterRequest request = new UserRegisterRequest();
         UserResponse mockResponse = new UserResponse();
         mockResponse.setId(1L);
-        mockResponse.setUsername("newUser");
+        mockResponse.setName("newUser");
 
         when(userService.saveUser(any(UserRegisterRequest.class))).thenReturn(mockResponse);
 
@@ -103,7 +110,7 @@ class UserControllerTest {
         verify(userService, times(1)).saveUser(request);
     }
 
-    // U09 - Get all users (ADMIN/EMPLOYEE)
+    // U09 - Get all users
     @Test
     void getAllUsers_ShouldReturnUserList() {
         List<UserResponse> mockList = Arrays.asList(new UserResponse(), new UserResponse());
@@ -121,16 +128,24 @@ class UserControllerTest {
     void updateUserByAdminOrEmployee_ShouldReturnUpdatedUser() {
         Long userId = 1L;
         UserUpdateRequest request = new UserUpdateRequest();
-        UserResponse mockResponse = new UserResponse();
-        mockResponse.setId(userId);
-        mockResponse.setUsername("updatedByAdmin");
+        UserResponse mockUser = new UserResponse();
+        mockUser.setId(userId);
+        mockUser.setName("updatedByAdmin");
+
+        ResponseMessage<UserResponse> mockResponse =
+                ResponseMessage.<UserResponse>builder()
+                        .httpStatus(HttpStatus.OK)
+                        .message(SuccessMessages.USER_UPDATED)
+                        .returnBody(mockUser)
+                        .build();
 
         when(userService.updateUserByAdminOrEmployee(eq(userId), any(UserUpdateRequest.class))).thenReturn(mockResponse);
 
-        ResponseEntity<UserResponse> response = userController.updateUserByAdminOrEmployee(userId, request);
+        ResponseEntity<ResponseMessage<UserResponse>> response =
+                userController.updateUserByAdminOrEmployee(userId, request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockResponse, response.getBody());
+        assertEquals(mockUser, response.getBody().getReturnBody());
         verify(userService, times(1)).updateUserByAdminOrEmployee(userId, request);
     }
 
@@ -138,16 +153,24 @@ class UserControllerTest {
     @Test
     void deleteUserByAdminOrEmployee_ShouldReturnDeletedUser() {
         Long userId = 1L;
-        UserResponse mockResponse = new UserResponse();
-        mockResponse.setId(userId);
-        mockResponse.setUsername("deletedByAdmin");
+        UserResponse mockUser = new UserResponse();
+        mockUser.setId(userId);
+        mockUser.setName("deletedByAdmin");
+
+        ResponseMessage<UserResponse> mockResponse =
+                ResponseMessage.<UserResponse>builder()
+                        .httpStatus(HttpStatus.OK)
+                        .message(SuccessMessages.USER_DELETED)
+                        .returnBody(mockUser)
+                        .build();
 
         when(userService.deleteUserByAdminOrEmployee(userId)).thenReturn(mockResponse);
 
-        ResponseEntity<UserResponse> response = userController.deleteUserByAdminOrEmployee(userId);
+        ResponseEntity<ResponseMessage<UserResponse>> response =
+                userController.deleteUserByAdminOrEmployee(userId);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockResponse, response.getBody());
+        assertEquals(mockUser, response.getBody().getReturnBody());
         verify(userService, times(1)).deleteUserByAdminOrEmployee(userId);
     }
 }
