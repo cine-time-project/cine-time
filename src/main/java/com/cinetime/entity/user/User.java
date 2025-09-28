@@ -12,9 +12,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Getter
@@ -88,13 +86,15 @@ public class User {
   @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private Set<Ticket> tickets = new HashSet<>();
 
-  @JsonIgnore
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<Payment> payments = new HashSet<>();
 
   @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private Set<Favorite> favorites = new HashSet<>();
+
+  @JsonIgnore
+  @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+  @OrderBy("paymentDate DESC")
+  private List<Payment> payments = new ArrayList<>();
 
 
   // --- Life Cycle ---

@@ -52,8 +52,8 @@ public class Payment {
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "payment" , cascade = CascadeType.ALL)
     private List<Ticket> tickets;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY,optional = false)
+    @JoinColumn(name = "user_id",nullable = false)
     private User user;
 
     // -------------------- LIFECYCLE --------------------
