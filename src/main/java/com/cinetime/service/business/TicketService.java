@@ -195,6 +195,18 @@ public class TicketService {
             throw new IllegalArgumentException("seatInformation must be a non-empty array of seats");
         }
 
+       int requestedSeatCount= buyTicketRequest.getSeatInformation().size();
+        int cinemaHallSeatCapacity = showtime.getHall().getSeatCapacity();
+        long takenSeats = ticketRepository.countByShowtime_IdAndStatusIn(showtime.getId(),List.of(TicketStatus.PAID,TicketStatus.RESERVED));
+
+        long remainingEmptySeats= (long) cinemaHallSeatCapacity-takenSeats;
+        if (remainingEmptySeats<=0){
+            throw new ConflictException("Cinema hall is already full for this showtime.");
+        }
+        if (remainingEmptySeats<requestedSeatCount){
+            throw new ConflictException("Only " + remainingEmptySeats + "seat  left for this showtime.");
+        }
+
         // 4) Build tickets (one per seat) with status = PAID after checking availability
 
 

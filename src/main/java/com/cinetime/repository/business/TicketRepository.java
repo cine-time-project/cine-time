@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -22,6 +23,8 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
     boolean existsByShowtime_IdAndSeatLetterAndSeatNumber(Long showtimeId, String seatLetter, int seatNumber);
 
     List<Ticket> findAllByPaymentId(Long id);
+
+    long countByShowtime_IdAndStatusIn(Long showtimeId, Collection<TicketStatus> statuses);
 
 
     @Query("""
