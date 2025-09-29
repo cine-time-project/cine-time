@@ -24,22 +24,6 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
     List<Ticket> findAllByPaymentId(Long id);
 
 
-
-    // Current (future) tickets for a user
-//    @Query("""
-//              select t from Ticket t
-//              where t.user.id = :userId
-//                and (t.status in :statuses)
-//                and (
-//                      t.showtime.date > CURRENT_DATE
-//                   or (t.showtime.date = CURRENT_DATE and t.showtime.startTime >= CURRENT_TIME)
-//                )
-//              order by t.showtime.date asc, t.showtime.startTime asc
-//            """)
-//    Page<Ticket> findCurrentForUser(@Param("userId") Long userId,
-//                                    @Param("statuses") List<TicketStatus> statuses,
-//                                    Pageable pageable);
-
     @Query("""
            select t
            from Ticket t
