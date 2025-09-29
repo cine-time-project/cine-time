@@ -62,7 +62,7 @@ public class UserController {
     }
     // U09 - Get users (ADMIN or EMPLOYEE)
     @GetMapping("/users/4/admin")
-    @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
