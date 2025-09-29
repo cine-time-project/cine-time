@@ -27,7 +27,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -46,8 +45,6 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final RoleService roleService;
-
-
     private final JavaMailSender mailSender;
     private final MailHelper mailHelper;
     private final SecurityHelper securityHelper;
@@ -60,8 +57,7 @@ public class UserService {
     public UserResponse updateAuthenticatedUser(UserUpdateRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        User user = (User) userRepository.findByEmail(username)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
+        User user = securityHelper.loadByLoginProperty(username);
 
         if (Boolean.TRUE.equals(user.getBuiltIn())) {
             throw new ConflictException(ErrorMessages.BUILT_IN_USER_UPDATE_NOT_ALLOWED);
@@ -77,8 +73,7 @@ public class UserService {
     public String deleteAuthenticatedUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        User user = (User) userRepository.findByEmail(username)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
+        User user = securityHelper.loadByLoginProperty(username);
 
         if (Boolean.TRUE.equals(user.getBuiltIn())) {
             throw new ConflictException(ErrorMessages.BUILT_IN_USER_DELETE_NOT_ALLOWED);
@@ -108,7 +103,6 @@ public class UserService {
 
 
     // U09 - Get users (ADMIN or EMPLOYEE)
-
     public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAll();
         return users.stream()
@@ -256,8 +250,7 @@ public class UserService {
         // If principal holds email/phone/ID, adapt this logic accordingly.
         // Example assumes username = email:
         String username = auth.getName();
-        return userRepository.findByEmail(username)
-                .orElseThrow(() -> new BadRequestException(ErrorMessages.USER_NOT_FOUND));
+        return securityHelper.loadByLoginProperty(username);
     }
 
     //U03 Forgot-Reset Password Email
