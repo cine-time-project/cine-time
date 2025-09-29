@@ -52,6 +52,7 @@ public class ErrorMessages {
     public static final String MOVIE_ALREADY_HAS_POSTER = "This movie already has a poster.";
     public static final String MOVIE_ALREADY_HAS_DIFFERENT_POSTER = "This movie already has a different poster.";
 
+
     //Hall
     public static final String HALL_NOT_FOUND_ID = "Hall not found with id: %d";
     public static final String HALLS_NOT_FOUND = "Halls not found";
@@ -60,10 +61,11 @@ public class ErrorMessages {
     public static final String SHOWTIME_NOT_FOUND_ID = "Showtime not found with id: %d";
     public static final String SHOWTIMES_NOT_FOUND = "Showtimes not found";
 
-    //Ticket
-    //409 - Conflict
-    public static final String SHOWTIME_HAS_PASSED= "Movie time can not be in the past.";
 
+
+
+
+    public static final String SHOWTIME_HAS_PASSED= "Movie time can not be in the past.";
 }
 
 

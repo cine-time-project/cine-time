@@ -1,3 +1,4 @@
+
 package com.cinetime.controller.user;
 
 import com.cinetime.payload.messages.SuccessMessages;
@@ -174,3 +175,4 @@ class UserControllerTest {
         verify(userService, times(1)).deleteUserByAdminOrEmployee(userId);
     }
 }
+

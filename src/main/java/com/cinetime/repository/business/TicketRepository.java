@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -21,23 +22,10 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
 
     boolean existsByShowtime_IdAndSeatLetterAndSeatNumber(Long showtimeId, String seatLetter, int seatNumber);
 
+    List<Ticket> findAllByPaymentId(Long id);
 
+    long countByShowtime_IdAndStatusIn(Long showtimeId, Collection<TicketStatus> statuses);
 
-
-    // Current (future) tickets for a user
-//    @Query("""
-//              select t from Ticket t
-//              where t.user.id = :userId
-//                and (t.status in :statuses)
-//                and (
-//                      t.showtime.date > CURRENT_DATE
-//                   or (t.showtime.date = CURRENT_DATE and t.showtime.startTime >= CURRENT_TIME)
-//                )
-//              order by t.showtime.date asc, t.showtime.startTime asc
-//            """)
-//    Page<Ticket> findCurrentForUser(@Param("userId") Long userId,
-//                                    @Param("statuses") List<TicketStatus> statuses,
-//                                    Pageable pageable);
 
     @Query("""
            select t

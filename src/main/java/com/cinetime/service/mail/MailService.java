@@ -1,5 +1,7 @@
 package com.cinetime.service.mail;
 
+import com.cinetime.entity.business.Payment;
+import com.cinetime.entity.business.Ticket;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +50,7 @@ public class MailService {
 
 
     /**
-     *  HTML e-posta gönderimi (with plain-text fallback).
+     * HTML e-posta gönderimi (with plain-text fallback).
      */
     public void sendHtml(String to, String subject, String htmlBody, String plainTextBody) {
         try {
@@ -90,4 +92,9 @@ public class MailService {
                 .replace("&nbsp;", " ")
                 .trim();
     }
+
+
+
+
+
 }

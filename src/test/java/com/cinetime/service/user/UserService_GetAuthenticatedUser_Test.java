@@ -1,3 +1,4 @@
+
 package com.cinetime.service.user;
 
 import com.cinetime.entity.user.User;
@@ -83,3 +84,4 @@ public class UserService_GetAuthenticatedUser_Test {
 
     }
 }
+

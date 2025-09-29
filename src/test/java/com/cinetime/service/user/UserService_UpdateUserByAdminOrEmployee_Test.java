@@ -1,3 +1,4 @@
+
 package com.cinetime.service.user;
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.ConflictException;
@@ -64,3 +65,4 @@ public class UserService_UpdateUserByAdminOrEmployee_Test {
         assertThrows(ConflictException.class, () -> userService.updateUserByAdminOrEmployee(userId, request));
     }
 }
+
