@@ -108,7 +108,7 @@ public class UserService {
 
 
     // U09 - Get users (ADMIN or EMPLOYEE)
-    @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
+
     public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAll();
         return users.stream()
