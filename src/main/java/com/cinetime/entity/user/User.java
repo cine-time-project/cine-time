@@ -4,12 +4,12 @@ import com.cinetime.entity.business.Favorite;
 import com.cinetime.entity.business.Payment;
 import com.cinetime.entity.business.Role;
 import com.cinetime.entity.business.Ticket;
+import com.cinetime.entity.enums.AuthProvider;
 import com.cinetime.entity.enums.Gender;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -19,113 +19,90 @@ import java.util.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@SuperBuilder
 @Table(name = "users")
+@Inheritance(strategy = InheritanceType.JOINED) // GoogleUser will extend from here
 public class User {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private long id;
+    @Column(nullable = false, length = 20)
+    private String name;
 
-  @NotBlank
-  @NotNull
-  @Size(min = 3, max = 20)
-  private String name;
+    @Column(nullable = false, length = 25)
+    private String surname;
 
-  @NotBlank
-  @Size(min = 3, max = 25)
-  private String surname;
+    @JsonIgnore
+    @Column(nullable = true) // for GoogleUser it may be null.
+    private String password;
 
-  @NotNull
-  @JsonIgnore
-  private String password;
+    @Column(nullable = false, unique = true)
+    private String email;
 
-  @Email
-  @NotBlank
-  private String email;
+    @Column(nullable = true) // for GoogleUser it may be null.
+    private String phoneNumber;
 
-  @NotNull
-  @Pattern(regexp = "^\\(\\d{3}\\) \\d{3}-\\d{4}$")
-  private String phoneNumber;
+    @Column(nullable = true) // for GoogleUser it may be null.
+    private LocalDate birthDate;
 
-  @Past
-  @NotNull
-  private LocalDate birthDate;
+    @Column(nullable = true) // for GoogleUser it may be null.
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 
-  @NotNull
-  @Enumerated(EnumType.STRING)
-  private Gender gender;
+    @Column(nullable = false)
+    private Boolean builtIn = false;
 
-  private Boolean builtIn = false;
+    @Column(nullable = true)
+    @JsonIgnore
+    private String resetPasswordCode;
 
-  @NotNull
-  @Column(nullable = false)
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
-  private LocalDateTime createdAt;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AuthProvider provider;
 
-  @NotNull
-  @Column(nullable = false)
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
-  private LocalDateTime updatedAt;
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
 
-  @Column(nullable = true)
-  @JsonIgnore
-  private String resetPasswordCode;
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "userrole",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
 
-  @ManyToMany(fetch = FetchType.EAGER)
-  @JoinTable(
-      name = "userrole",
-      joinColumns = @JoinColumn(name = "user_id"),
-      inverseJoinColumns = @JoinColumn(name = "role_id")
-  )
-  private Set<Role> roles = new HashSet<>();
-
-  @JsonIgnore
-  @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
-  private Set<Ticket> tickets = new HashSet<>();
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private Set<Ticket> tickets = new HashSet<>();
 
 
-  @JsonIgnore
-  @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
-  private Set<Favorite> favorites = new HashSet<>();
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private Set<Favorite> favorites = new HashSet<>();
 
-  @JsonIgnore
-  @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-  @OrderBy("paymentDate DESC")
-  private List<Payment> payments = new ArrayList<>();
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OrderBy("paymentDate DESC")
+    private List<Payment> payments = new ArrayList<>();
 
-
-  // --- Life Cycle ---
-  @PrePersist
-  protected void onCreate() {
-    this.createdAt = LocalDateTime.now();
-    this.updatedAt = LocalDateTime.now();
-  }
-
-  @PreUpdate
-  protected void onUpdate() {
-    this.updatedAt = LocalDateTime.now();
-
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    // --- Life Cycle ---
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        if (this.provider == null) {
+            this.provider = AuthProvider.LOCAL;
+        }
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
-    User user = (User) o;
-    return Objects.equals(id, user.id);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(id);
-  }
-
 
 }
