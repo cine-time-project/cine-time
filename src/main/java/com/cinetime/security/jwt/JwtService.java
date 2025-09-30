@@ -38,7 +38,7 @@ public class JwtService {
     return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
   }
 
-  private String buildTokenFromLoginProp(String propValue) {
+  public String buildTokenFromLoginProp(String propValue) {
     return Jwts.builder()
         .setSubject(propValue)
         .setIssuedAt(new Date())

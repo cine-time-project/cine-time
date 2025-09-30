@@ -1,13 +1,10 @@
 package com.cinetime.payload.messages;
 
 public class ErrorMessages {
-    private ErrorMessages() {
-    }
 
     //cinema
     public static final String CINEMA_NOT_FOUND = "Cinema not found by id: %s";
     public static final String CITY_NOT_FOUND = "City not found by id: %s";
-
 
     //user
     public static final String NOT_FOUND_USER_MESSAGE_UNIQUE_FIELD = "Error: User not found with %s";
@@ -25,7 +22,6 @@ public class ErrorMessages {
     public static final String RESET_CODE_REQUIRED = "Reset code is required.";
     public static final String INVALID_RESET_CODE = "Invalid reset code.";
     public static final String ACCESS_DANIED = "Employees can operate only on MEMBER users.";
-
 
 
     //movie
@@ -61,11 +57,10 @@ public class ErrorMessages {
     public static final String SHOWTIME_NOT_FOUND_ID = "Showtime not found with id: %d";
     public static final String SHOWTIMES_NOT_FOUND = "Showtimes not found";
 
+    public static final String SHOWTIME_HAS_PASSED = "Movie time can not be in the past.";
 
-
-
-
-    public static final String SHOWTIME_HAS_PASSED= "Movie time can not be in the past.";
+    //Google
+    public static final String INVALID_TOKEN_ID = "Invalid Google Token ID";
 }
 
 
