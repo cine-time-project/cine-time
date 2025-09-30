@@ -15,6 +15,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -78,6 +80,13 @@ public class SecurityConfig {
         };
     }
 
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        return NimbusJwtDecoder
+                .withJwkSetUri("https://www.googleapis.com/oauth2/v3/certs")
+                .build();
+    }
+
     private static final String[] AUTH_WHITELIST = {
             "/v3/api-docs",
             "/v3/api-docs/**",
@@ -96,6 +105,7 @@ public class SecurityConfig {
             "/css/**",
             "/js/**",
             "/api/login",
+            "/api/google",
             "/api/cinemas",
             "/api/cinemas/**",
             "/api/movies",

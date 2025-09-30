@@ -1,7 +1,9 @@
 package com.cinetime.service.user;
 
 import com.cinetime.entity.business.Role;
+import com.cinetime.entity.enums.AuthProvider;
 import com.cinetime.entity.enums.RoleName;
+import com.cinetime.entity.user.GoogleUser;
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.BadRequestException;
 import com.cinetime.exception.ConflictException;
@@ -13,6 +15,7 @@ import com.cinetime.payload.request.user.*;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.user.UserCreateResponse;
 import com.cinetime.payload.response.user.UserResponse;
+import com.cinetime.repository.user.GoogleUserRepository;
 import com.cinetime.repository.user.RoleRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.business.RoleService;
@@ -40,6 +43,7 @@ import java.util.Set;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final GoogleUserRepository googleUserRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder encoder;
     private final UserMapper userMapper;
@@ -48,9 +52,12 @@ public class UserService {
     private final JavaMailSender mailSender;
     private final MailHelper mailHelper;
     private final SecurityHelper securityHelper;
-    @Value("${app.mail.from}") private String mailForm;
-    @Value("${app.mail.reset.subject}") private String resetSubject;
-    @Value("${app.mail.reset.template}") private String resetTemplateHtml;
+    @Value("${app.mail.from}")
+    private String mailForm;
+    @Value("${app.mail.reset.subject}")
+    private String resetSubject;
+    @Value("${app.mail.reset.template}")
+    private String resetTemplateHtml;
 
 
     // U06 - Update Authenticated User
@@ -111,6 +118,7 @@ public class UserService {
     }
 
     // U02 - User Register
+    @Transactional
     public UserResponse saveUser(UserRegisterRequest req) {
 
         // 1) unique
@@ -135,6 +143,23 @@ public class UserService {
         // 5) save + map to response (STATIC mapper)
         User saved = userRepository.save(user);
         return UserMapper.toResponse(saved);               // <<< static call while mapper is not component
+    }
+
+    @Transactional
+    public GoogleUser saveGoogleUser(GoogleUserRequest googleRequest) {
+        // get MEMBER role as default from DB
+        Role memberRole = roleRepository.findByRoleName(RoleName.MEMBER)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.MEMBER_ROLE_MISSING));
+
+        GoogleUser newUser = GoogleUser.builder()
+                .email(googleRequest.getEmail())
+                .name(googleRequest.getName())
+                .googleId(googleRequest.getGoogleId())
+                .provider(AuthProvider.GOOGLE)
+                .roles(Set.of(memberRole)) // MEMBER role given by default.
+                .build();
+
+        return googleUserRepository.save(newUser);
     }
 
     //U10-Update user by ADMIN or EMPLOYEE
@@ -166,28 +191,27 @@ public class UserService {
     // U11 – Delete User by Admin or Employee
     @Transactional
     public ResponseMessage<UserResponse> deleteUserByAdminOrEmployee(Long userId) {
-       User user = userRepository.findById(userId)
-               .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
 
-       if (Boolean.TRUE.equals(user.getBuiltIn())) {
-           throw new ConflictException(ErrorMessages.BUILT_IN_USER_DELETE_NOT_ALLOWED);
-       }
+        if (Boolean.TRUE.equals(user.getBuiltIn())) {
+            throw new ConflictException(ErrorMessages.BUILT_IN_USER_DELETE_NOT_ALLOWED);
+        }
 
-       Authentication caller = SecurityContextHolder.getContext().getAuthentication();
+        Authentication caller = SecurityContextHolder.getContext().getAuthentication();
 
-       if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(user, RoleName.MEMBER)) {
-           throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
-       }
+        if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(user, RoleName.MEMBER)) {
+            throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
+        }
         UserResponse body = UserMapper.toResponse(user);
-       userRepository.delete(user);
+        userRepository.delete(user);
 
         return ResponseMessage.<UserResponse>builder()
                 .message(SuccessMessages.USER_DELETED)
                 .httpStatus(HttpStatus.OK)
                 .returnBody(body)
                 .build();
-   }
-
+    }
 
 
     public ResponseMessage<UserCreateResponse> createUser(UserCreateRequest request) {
@@ -276,7 +300,7 @@ public class UserService {
 
     public String resetPassword(ResetPasswordRequestEmail req) {
         final String email = req.getEmail().trim().toLowerCase();
-        final String code  = req.getCode().trim();
+        final String code = req.getCode().trim();
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));

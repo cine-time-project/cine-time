@@ -1,8 +1,6 @@
 package com.cinetime.payload.messages;
 
 public class SuccessMessages {
-    private SuccessMessages() {
-    }
 
     //cinema
     public static final String CINEMAS_LISTED = "Cinemas listed successfully.";
@@ -67,6 +65,9 @@ public class SuccessMessages {
     public static final String PASSED_TICKETS_LISTED = "Passed tickets listed successfully.";
     public static final String TICKET_RESERVED = "Ticket reserved successfully.";
     public static final String TICKET_BOUGHT = "Ticket bought successfully.";
+
+    //Google
+    public static final String USER_LOGGED_IN = "Google User logged in successfully";
 
 
 }
