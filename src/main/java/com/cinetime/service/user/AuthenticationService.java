@@ -1,7 +1,6 @@
 package com.cinetime.service.user;
 
 import com.cinetime.entity.user.GoogleUser;
-import com.cinetime.entity.user.User;
 import com.cinetime.exception.BadRequestException;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
@@ -10,7 +9,6 @@ import com.cinetime.payload.request.authentication.LoginRequest;
 import com.cinetime.payload.response.authentication.AuthenticationResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.repository.user.GoogleUserRepository;
-import com.cinetime.repository.user.UserRepository;
 import com.cinetime.security.jwt.JwtService;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;

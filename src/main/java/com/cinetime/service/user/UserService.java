@@ -154,7 +154,9 @@ public class UserService {
         GoogleUser newUser = GoogleUser.builder()
                 .email(googleRequest.getEmail())
                 .name(googleRequest.getName())
+                .surname(googleRequest.getFamilyName())
                 .googleId(googleRequest.getGoogleId())
+                .picture(googleRequest.getPicture())
                 .provider(AuthProvider.GOOGLE)
                 .roles(Set.of(memberRole)) // MEMBER role given by default.
                 .build();

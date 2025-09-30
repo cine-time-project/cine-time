@@ -28,17 +28,17 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = true, length = 20)
     private String name;
 
-    @Column(nullable = false, length = 25)
+    @Column(nullable = true, length = 25)
     private String surname;
 
     @JsonIgnore
     @Column(nullable = true) // for GoogleUser it may be null.
     private String password;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = true, unique = true)
     private String email;
 
     @Column(nullable = true) // for GoogleUser it may be null.
@@ -51,6 +51,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean builtIn = false;
 
