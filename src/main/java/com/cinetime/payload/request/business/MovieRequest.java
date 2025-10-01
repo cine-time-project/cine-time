@@ -12,7 +12,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-// eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbkBjaW5ldGltZS5sb2NhbCIsImlhdCI6MTc1ODQyNDM3MCwiZXhwIjoxNzU4NTEwNzcwfQ.X217O-eDdOxg-QezMUdwX3Nc0iTXbzIqFRmi9h5k2TyWC7rvlTvc2o0BeWggikT46JpV-NO_AJqunwU-28-NTA
 
 @Getter
 @Setter
