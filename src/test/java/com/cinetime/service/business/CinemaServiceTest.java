@@ -19,6 +19,7 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import com.cinetime.repository.business.ShowtimeRepository.HallMovieTimeRow;
+import org.springframework.test.util.ReflectionTestUtils;
 
 
 import java.time.LocalDate;
@@ -28,6 +29,8 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.*;
+import java.util.HashSet;
 
 @ExtendWith(MockitoExtension.class)
 class CinemaServiceTest {
@@ -313,10 +316,20 @@ class CinemaServiceTest {
     }
 
     // ---------- delete ----------
+
     @Test
     void delete_ok_cascadePath() {
         Long id = 9L;
-        Cinema c = Cinema.builder().id(id).name("Del").slug("del").build();
+
+        Cinema c = Cinema.builder()
+                .id(id)
+                .name("Del")
+                .slug("del")
+                // ÖNEMLİ: Serviste clear() çağrılan set'leri builder’da boş ver
+                .movies(new LinkedHashSet<>())
+                .cities(new LinkedHashSet<>())
+                .build();
+
         when(cinemaRepository.findById(id)).thenReturn(Optional.of(c));
 
         ResponseMessage<Void> resp = cinemaService.delete(id);
@@ -326,6 +339,7 @@ class CinemaServiceTest {
         assertThat(resp.getMessage()).isEqualTo(String.format(SuccessMessages.CINEMA_DELETED, id));
         assertThat(resp.getReturnBody()).isNull();
     }
+
 
     @Test
     void delete_notFound_throws() {
