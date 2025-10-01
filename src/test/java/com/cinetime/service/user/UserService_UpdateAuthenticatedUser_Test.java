@@ -1,29 +1,26 @@
-
 package com.cinetime.service.user;
 
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.ConflictException;
-import com.cinetime.exception.ResourceNotFoundException;
-import com.cinetime.payload.mappers.UserMapper;
+import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.user.UserUpdateRequest;
 import com.cinetime.payload.response.user.UserResponse;
+import com.cinetime.repository.user.RoleRepository;
 import com.cinetime.repository.user.UserRepository;
+import com.cinetime.service.helper.MailHelper;
+import com.cinetime.service.helper.SecurityHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-
-import org.springframework.data.domain.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class UserService_UpdateAuthenticatedUser_Test {
@@ -32,54 +29,70 @@ class UserService_UpdateAuthenticatedUser_Test {
     private UserRepository userRepository;
 
     @Mock
+    private RoleRepository roleRepository;
+
+    @Mock
     private PasswordEncoder encoder;
+
+    @Mock
+    private SecurityHelper securityHelper;
+
+    @Mock
+    private MailHelper mailHelper;
 
     @InjectMocks
     private UserService userService;
 
+    private User testUser;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+
+        testUser = new User();
+        testUser.setId(1L);
+        testUser.setEmail("test@cinetime.com");
+        testUser.setPassword("encodedPass");
+        testUser.setBuiltIn(false);
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new TestingAuthenticationToken("test@cinetime.com", "password")
+        );
     }
 
-    // ---------------- U06 - Update Authenticated User ----------------
+
+    // U06 - updateAuthenticatedUser
     @Test
-    void updateAuthenticatedUser_ShouldReturnUpdatedUser() {
+    void updateAuthenticatedUser_ShouldUpdateAndReturnResponse() {
         UserUpdateRequest request = new UserUpdateRequest();
-        User mockUser = new User();
-        mockUser.setBuiltIn(false);
-        mockUser.setEmail("test@test.com");
+        request.setName("UpdatedName");
 
-        Authentication auth = mock(Authentication.class);
-        when(auth.getName()).thenReturn("test@test.com");
-        SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(auth);
-        SecurityContextHolder.setContext(securityContext);
-
-        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(mockUser));
-        when(userRepository.save(any(User.class))).thenReturn(mockUser);
+        when(securityHelper.loadByLoginProperty(anyString())).thenReturn(testUser);
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         UserResponse response = userService.updateAuthenticatedUser(request);
 
         assertNotNull(response);
-        verify(userRepository).save(mockUser);
+        verify(userRepository, times(1)).save(testUser);
     }
 
     @Test
-    void updateAuthenticatedUser_BuiltInUser_ShouldThrowConflict() {
-        UserUpdateRequest request = new UserUpdateRequest();
-        User mockUser = new User();
-        mockUser.setBuiltIn(true);
-        mockUser.setEmail("test@test.com");
+    void updateAuthenticatedUser_ShouldThrow_WhenBuiltInUser() {
+        testUser.setBuiltIn(true);
+        when(securityHelper.loadByLoginProperty(anyString())).thenReturn(testUser);
 
-        Authentication auth = mock(Authentication.class);
-        when(auth.getName()).thenReturn("test@test.com");
-        SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(auth);
-        SecurityContextHolder.setContext(securityContext);
+        assertThrows(ConflictException.class,
+                () -> userService.updateAuthenticatedUser(new UserUpdateRequest()));
+    }
 
-        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(mockUser));
+    // U07 - deleteAuthenticatedUser
+    @Test
+    void deleteAuthenticatedUser_ShouldDeleteAndReturnMessage() {
+        when(securityHelper.loadByLoginProperty(anyString())).thenReturn(testUser);
 
-        assertThrows(ConflictException.class, () -> userService.updateAuthenticatedUser(request));
+        String result = userService.deleteAuthenticatedUser();
+
+        assertEquals(SuccessMessages.USER_DELETED, result);
+        verify(userRepository).delete(testUser);
     }
 }
