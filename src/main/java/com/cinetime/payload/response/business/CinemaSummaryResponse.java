@@ -10,5 +10,5 @@ import java.util.Set;
 public class CinemaSummaryResponse {
     private Long id;
     private String name;
-    private Set<CityMiniResponse> cities;
+    private CityMiniResponse city;
 }

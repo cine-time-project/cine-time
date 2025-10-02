@@ -167,32 +167,32 @@ public class CinemaService {
     @Transactional
     public ResponseMessage<CinemaSummaryResponse> createCinema(@Valid CinemaCreateRequest request) {
         final String name = request.getName().trim();
-        String baseSlug = (request.getSlug()==null || request.getSlug().isBlank())
+        String baseSlug = (request.getSlug() == null || request.getSlug().isBlank())
                 ? cinemasHelper.slugify(name)
                 : cinemasHelper.slugify(request.getSlug());
         String uniqueSlug = cinemasHelper.ensureUniqueSlug(baseSlug);
+        Long cityId = request.getCityId();
+        if (cityId == null) {
+            throw new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND);
+        }
+            City city = cityRepository.findById(cityId)
+                    .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND + " " + cityId));
 
-        Cinema cinema = Cinema.builder().name(name).slug(uniqueSlug).build();
+            Cinema cinema = Cinema.builder()
+                    .name(name)
+                    .slug(uniqueSlug)
+                    .city(city)
+                    .build();
 
-        var ids = request.getCityIds();
-        if (ids != null && !ids.isEmpty()) {
-            var cities = new LinkedHashSet<>(cityRepository.findAllById(ids));
-            var foundIds = cities.stream().map(City::getId).collect(java.util.stream.Collectors.toSet());
-            var missing = new LinkedHashSet<>(ids);
-            missing.removeAll(foundIds);
-            if (!missing.isEmpty()) {
-                throw new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND + missing);
-            }
-            cinema.setCities(cities);
+
+            var dto = cinemaMapper.toSummary(cinemaRepository.save(cinema));
+            return ResponseMessage.<CinemaSummaryResponse>builder()
+                    .httpStatus(HttpStatus.CREATED)
+                    .message(SuccessMessages.CINEMA_CREATED)
+                    .returnBody(dto)
+                    .build();
         }
 
-        var dto = cinemaMapper.toSummary(cinemaRepository.save(cinema));
-        return ResponseMessage.<CinemaSummaryResponse>builder()
-                .httpStatus(HttpStatus.CREATED)
-                .message(SuccessMessages.CINEMA_CREATED)
-                .returnBody(dto)
-                .build();
-    }
 
     //C07: Cinema Update
     @Transactional
@@ -225,22 +225,12 @@ public class CinemaService {
             cinema.setSlug(unique);
         }
 
-        // 3) Cities
-        if (req.getCityIds() != null) {
-            if (req.getCityIds().isEmpty()) {
-                if (cinema.getCities() != null) cinema.getCities().clear();
-                else cinema.setCities(new java.util.LinkedHashSet<>());
-            } else {
-                var wanted  = new java.util.LinkedHashSet<>(req.getCityIds());
-                var found   = new java.util.LinkedHashSet<>(cityRepository.findAllById(wanted));
-                var foundIds = found.stream().map(City::getId).collect(java.util.stream.Collectors.toSet());
-
-                wanted.removeAll(foundIds);
-                if (!wanted.isEmpty()) {
-                    throw new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND + wanted);
-                }
-                cinema.setCities(found);
-            }
+        // 3) City (single, required model)
+        if (req.getCityId() != null) {
+            Long newCityId = req.getCityId();
+            City newCity = cityRepository.findById(newCityId)
+                    .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND + " " + newCityId));
+            cinema.setCity(newCity);
         }
 
         var saved = cinemaRepository.save(cinema);
@@ -263,7 +253,6 @@ public class CinemaService {
 
         // 2) Relation clear
         cinema.getMovies().clear();
-        cinema.getCities().clear();
 
 
         // 3) Tek satır: cascade zinciri halleder

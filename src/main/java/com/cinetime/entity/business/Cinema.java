@@ -11,7 +11,13 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "cinemas")
+@Table(
+        name = "cinemas",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_cinema_city_name",
+                columnNames = {"city_id", "name"}
+        )
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,13 +38,11 @@ public class Cinema {
   private String slug;
 
   // Cinema <-> City (ManyToMany): City bağımsız referans veri, cascade vermiyoruz
-  @ManyToMany(fetch = FetchType.LAZY)
-  @JoinTable(
-          name = "cinema_city",
-          joinColumns = @JoinColumn(name = "cinema_id"),
-          inverseJoinColumns = @JoinColumn(name = "city_id")
-  )
-  private Set<City> cities = new LinkedHashSet<>();
+  // Cinema -> City (ManyToOne REQUIRED): each cinema (location) belongs to exactly one city
+  @NotNull
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "city_id", nullable = false, foreignKey = @ForeignKey(name = "fk_cinema_city"))
+  private City city;
 
   // Cinema -> Hall (OneToMany): Cinema silinirse Hall'lar da silinsin
   @JsonIgnore

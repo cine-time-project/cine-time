@@ -11,22 +11,21 @@ import java.util.stream.Collectors;
 @Component
 public class CinemaMapper {
 
-    public CinemaSummaryResponse toSummary(Cinema cinema){
+    public CinemaSummaryResponse toSummary(Cinema cinema) {
         if (cinema == null) return null;
 
-        var cities = cinema.getCities() == null
-                ? new LinkedHashSet<CityMiniResponse>()
-                : cinema.getCities().stream()
-                .map(c -> CityMiniResponse.builder()
-                        .id(c.getId())
-                        .name(c.getName())
-                        .build())
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-
+        CityMiniResponse cityMiniResponse = null;
+        if (cinema.getCity() != null) {
+            cityMiniResponse = CityMiniResponse.builder()
+                    .id(cinema.getCity().getId())
+                    .name(cinema.getCity().getName())
+                    .build();
+        }
         return CinemaSummaryResponse.builder()
                 .id(cinema.getId())
                 .name(cinema.getName())
-                .cities(cities)
+                .city(cityMiniResponse)
                 .build();
+
     }
 }

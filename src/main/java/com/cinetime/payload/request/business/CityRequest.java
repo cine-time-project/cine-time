@@ -1,23 +1,22 @@
 package com.cinetime.payload.request.business;
-
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CinemaCreateRequest {
-
+public class CityRequest {
     @NotBlank
+    @Size(max = 30)
     private String name;
 
-    private String slug; //optional
+    @NotNull
+    private Long countryId;
 
-    private Long cityId;
 }
