@@ -3,18 +3,27 @@ package com.cinetime.payload.mappers;
 import com.cinetime.entity.business.Movie;
 import com.cinetime.payload.request.business.MovieRequest;
 import com.cinetime.payload.response.business.CinemaMovieResponse;
+import com.cinetime.payload.response.business.ImageResponse;
 import com.cinetime.payload.response.business.MovieResponse;
-import com.cinetime.service.helper.MovieServiceHelper;
 import lombok.Data;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
+import java.util.List;
 
 @Component
 @Data
 public class MovieMapper {
 
+    private final ImageMapper imageMapper;
+
     public MovieResponse mapMovieToMovieResponse(Movie movie) {
         if (movie == null) return null;
+
+        List<ImageResponse> imageResponses = movie.getImages()
+                .stream()
+                .map(imageMapper::toResponse)
+                .toList();
+
         return MovieResponse.builder()
                 .id(movie.getId())
                 .title(movie.getTitle())
@@ -28,6 +37,7 @@ public class MovieMapper {
                 .formats(movie.getFormats())
                 .genre(movie.getGenre())
                 .status(movie.getStatus())
+                .images(imageResponses)
                 .createdAt(movie.getCreatedAt())
                 .updatedAt(movie.getUpdatedAt())
                 .build();

@@ -31,6 +31,7 @@ public class MovieController {
     //M01
     @PreAuthorize("permitAll()")
     @GetMapping("/search")
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseMessage<Page<MovieResponse>>> searchMovies(
             @RequestParam(required = false) String q,
             @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC)
