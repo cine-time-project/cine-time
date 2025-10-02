@@ -17,12 +17,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
@@ -100,8 +98,16 @@ class SearchAuthorizedMoviesTest {
     void shouldReturnNotFound_whenNoMoviesFound() {
         when(movieRepository.findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(
                 "matrix", "matrix", pageable)).thenReturn(Page.empty(pageable));
+
+        ResponseMessage<Page<MovieResponse>> emptyResponse =
+                ResponseMessage.<Page<MovieResponse>>builder()
+                        .httpStatus(HttpStatus.NOT_FOUND)
+                        .message(ErrorMessages.MOVIES_NOT_FOUND)
+                        .returnBody(Page.empty(pageable))
+                        .build();
+
         when(movieServiceHelper.buildEmptyPageResponse(pageable, ErrorMessages.MOVIES_NOT_FOUND, HttpStatus.NOT_FOUND))
-                .thenCallRealMethod();
+                .thenReturn((ResponseMessage) emptyResponse);
 
         ResponseMessage<Page<MovieResponse>> response =
                 movieService.searchAuthorizedMovies("matrix", pageable);
@@ -132,8 +138,16 @@ class SearchAuthorizedMoviesTest {
     @DisplayName("Should return NOT_FOUND when no query provided and repository is empty")
     void shouldReturnNotFound_whenNoQueryProvidedAndNoMovies() {
         when(movieRepository.findAll(pageable)).thenReturn(Page.empty(pageable));
+
+        ResponseMessage<Page<MovieResponse>> emptyResponse =
+                ResponseMessage.<Page<MovieResponse>>builder()
+                        .httpStatus(HttpStatus.NOT_FOUND)
+                        .message(ErrorMessages.MOVIES_NOT_FOUND)
+                        .returnBody(Page.empty(pageable))
+                        .build();
+
         when(movieServiceHelper.buildEmptyPageResponse(pageable, ErrorMessages.MOVIES_NOT_FOUND, HttpStatus.NOT_FOUND))
-                .thenCallRealMethod();
+                .thenReturn((ResponseMessage) emptyResponse);
 
         ResponseMessage<Page<MovieResponse>> response =
                 movieService.searchAuthorizedMovies(null, pageable);

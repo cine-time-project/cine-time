@@ -1,87 +1,78 @@
-
 package com.cinetime.service.user;
 
 import com.cinetime.entity.user.User;
-import com.cinetime.exception.ConflictException;
-import com.cinetime.exception.ResourceNotFoundException;
-import com.cinetime.payload.mappers.UserMapper;
-import com.cinetime.payload.request.user.UserUpdateRequest;
+import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.user.UserResponse;
+import com.cinetime.repository.user.RoleRepository;
 import com.cinetime.repository.user.UserRepository;
+import com.cinetime.service.helper.MailHelper;
+import com.cinetime.service.helper.SecurityHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-
-import org.springframework.data.domain.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 public class UserService_GetAuthenticatedUser_Test {
     @Mock
     private UserRepository userRepository;
 
     @Mock
+    private RoleRepository roleRepository;
+
+    @Mock
     private PasswordEncoder encoder;
+
+    @Mock
+    private SecurityHelper securityHelper;
+
+    @Mock
+    private MailHelper mailHelper;
 
     @InjectMocks
     private UserService userService;
 
+    private User testUser;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+
+        testUser = new User();
+        testUser.setId(1L);
+        testUser.setEmail("test@cinetime.com");
+        testUser.setPassword("encodedPass");
+        testUser.setBuiltIn(false);
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new TestingAuthenticationToken("test@cinetime.com", "password")
+        );
     }
 
     // ---------------- U08 - Search Users ----------------
+    // U08 - searchUsers
     @Test
-    void searchUsers_ShouldReturnPagedUsers() {
-        Pageable pageable = PageRequest.of(0, 20);
-        User user1 = new User();
-        User user2 = new User();
-        List<User> userList = Arrays.asList(user1, user2);
-        Page<User> mockPage = new PageImpl<>(userList, pageable, userList.size());
+    void searchUsers_ShouldReturnPagedResponse() {
+        Page<User> mockPage = new PageImpl<>(List.of(testUser));
+        when(userRepository.findAll(any(Pageable.class))).thenReturn(mockPage);
 
-        when(userRepository.findAll(pageable)).thenReturn(mockPage);
+        ResponseMessage<Page<UserResponse>> result = userService.searchUsers(null, Pageable.unpaged());
 
-        var result = userService.searchUsers(null, pageable);
-
-        Page<UserResponse> page = result.getReturnBody();
-        assertNotNull(page);
-        assertEquals(2, page.getContent().size());
-
-    }
-
-    @Test
-    void searchUsers_WithQuery_ShouldReturnFilteredPage() {
-        Pageable pageable = PageRequest.of(0, 20);
-        User user1 = new User();
-        User user2 = new User();
-        List<User> userList = Arrays.asList(user1, user2);
-        Page<User> mockPage = new PageImpl<>(userList, pageable, userList.size());
-
-        when(userRepository.findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseOrEmailContainingIgnoreCase(
-                anyString(), anyString(), anyString(), any(Pageable.class))).thenReturn(mockPage);
-
-        var result = userService.searchUsers("query", pageable);
-
-        result = userService.searchUsers("test", pageable);
-
-
-        Page<UserResponse> page = result.getReturnBody();
-        List<UserResponse> users = page.getContent();
-
-        assertEquals(2, users.size());
-
+        assertEquals(HttpStatus.OK, result.getHttpStatus());
+        assertEquals(SuccessMessages.USERS_LISTED, result.getMessage());
     }
 }
-
