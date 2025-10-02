@@ -1,18 +1,16 @@
 package com.cinetime.entity.business;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Data
@@ -34,4 +32,7 @@ public class District {
   @JoinColumn(name = "city_id")
   private City city;
 
+  @JsonIgnore
+  @OneToMany(mappedBy = "district", cascade = CascadeType.REMOVE, orphanRemoval = true)
+  private Set<Country> countries = new HashSet<>();
 }

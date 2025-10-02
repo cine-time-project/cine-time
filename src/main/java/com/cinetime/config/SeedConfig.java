@@ -140,110 +140,178 @@ public class SeedConfig {
         }
     }
     private void seedCineTimeData(JdbcTemplate jdbc) {
-        // -- 1) Country
-        jdbc.update("""
-            INSERT INTO country (name)
-            VALUES ('USA')
-            ON CONFLICT (name) DO NOTHING
-        """);
+        // =========================
+        // BASE GEO (idempotent)
+        // =========================
 
-        // -- 2) City (Miami) under USA
+        // 1) District (must exist before Country because country.district_id is NOT NULL)
         jdbc.update("""
-            INSERT INTO city (name, country_id)
-            SELECT 'Miami', c.id
-            FROM country c
-            WHERE c.name = 'USA'
-            ON CONFLICT (name) DO NOTHING
-        """);
+        INSERT INTO district (name)
+        VALUES ('Default District')
+        ON CONFLICT (name) DO NOTHING
+    """);
 
-        // -- 3) Cinema (note: quoted mixed-case columns if your schema really has them)
+        // 2) Country: USA under Default District
         jdbc.update("""
-            INSERT INTO cinemas (name, slug, "created_at", "updated_at")
-            SELECT 'CineTime Downtown', 'cinetime-downtown', NOW(), NOW()
-            WHERE NOT EXISTS (
-              SELECT 1 FROM cinemas WHERE name = 'CineTime Downtown'
-            )
-        """);
+        INSERT INTO country (name, district_id)
+        SELECT 'USA', d.id
+        FROM district d
+        WHERE d.name = 'Default District'
+        ON CONFLICT (name) DO UPDATE
+        SET district_id = EXCLUDED.district_id
+        WHERE country.district_id IS DISTINCT FROM EXCLUDED.district_id
+    """);
 
-        // -- 4) Hall 1 @ CineTime Downtown
+        // 3) Cities under USA
         jdbc.update("""
-            INSERT INTO halls (name, seat_capacity, is_special, cinema_id, created_at, updated_at)
-            SELECT 'Hall 1', 100, FALSE, ci.id, NOW(), NOW()
-            FROM cinemas ci
-            WHERE ci.name = 'CineTime Downtown'
-              AND NOT EXISTS (
-                SELECT 1 FROM halls h WHERE h.name = 'Hall 1' AND h.cinema_id = ci.id
-              )
-        """);
+        INSERT INTO city (name, country_id)
+        SELECT cty, c.id
+        FROM (VALUES ('Miami'),('Los Angeles'),('New York'),('Philadelphia')) v(cty)
+        JOIN country c ON c.name = 'USA'
+        ON CONFLICT (name) DO NOTHING
+    """);
 
-        // -- 5) Movie: Fight Club
+        // =========================
+        // CINEMAS (idempotent; each tied to a city_id)
+        // (You can change which city each cinema belongs to)
+        // =========================
+
+        // CineTime Downtown @ Miami
         jdbc.update("""
-            INSERT INTO movies (
-              created_at,
-              title,
-              director,
-              duration,
-              rating,
-              release_date,
-              slug,
-              special_halls,
-              status,
-              summary,
-              updated_at
-            )
-            SELECT
-              NOW(),
-              'Fight Club',
-              'David Fincher',
-              139,
-              8.8,
-              DATE '1999-10-15',
-              'fight-club',
-              'Standard',
-              'COMING_SOON',
-              'An insomniac office worker and a soap maker form an underground fight club that evolves into something much more.',
-              NOW()
-            WHERE NOT EXISTS (
-              SELECT 1 FROM movies WHERE slug = 'fight-club'
-            )
-        """);
+        INSERT INTO cinemas (name, slug, city_id, created_at, updated_at)
+        SELECT 'CineTime Downtown', 'cinetime-downtown', ci.id, NOW(), NOW()
+        FROM city ci
+        WHERE ci.name = 'Miami'
+          AND NOT EXISTS (
+            SELECT 1 FROM cinemas c WHERE c.name = 'CineTime Downtown' AND c.city_id = ci.id
+          )
+    """);
 
-        // -- 6) Showtime for Fight Club @ Hall 1 (CTE insert; safe if already present)
+        // CineTime Midtown @ New York
         jdbc.update("""
-            WITH movie_cte AS (
-              SELECT id AS movie_id, duration
-              FROM movies
-              WHERE slug = 'fight-club' OR title = 'Fight Club'
-              LIMIT 1
-            ),
-            hall_cte AS (
-              SELECT h.id AS hall_id
-              FROM halls h
-              JOIN cinemas c ON c.id = h.cinema_id
-              WHERE c.name = 'CineTime Downtown' AND h.name = 'Hall 1'
-              LIMIT 1
-            ),
-            times AS (
-              SELECT
-                DATE '2025-09-25' AS show_date,
-                TIME '19:30:00'   AS start_time,
-                (TIME '19:30:00' + make_interval(mins => COALESCE(m.duration, 120))) AS end_time,
-                m.movie_id,
-                h.hall_id
-              FROM movie_cte m
-              CROSS JOIN hall_cte h
-            )
-            INSERT INTO showtimes (created_at, date, end_time, hall_id, movie_id, start_time, updated_at)
-            SELECT NOW(), t.show_date, t.end_time, t.hall_id, t.movie_id, t.start_time, NOW()
-            FROM times t
-            WHERE NOT EXISTS (
-              SELECT 1 FROM showtimes s
-              WHERE s.movie_id   = t.movie_id
-                AND s.hall_id    = t.hall_id
-                AND s.date       = t.show_date
-                AND s.start_time = t.start_time
-            )
-        """);
+        INSERT INTO cinemas (name, slug, city_id, created_at, updated_at)
+        SELECT 'CineTime Midtown', 'cinetime-midtown', ci.id, NOW(), NOW()
+        FROM city ci
+        WHERE ci.name = 'New York'
+          AND NOT EXISTS (
+            SELECT 1 FROM cinemas c WHERE c.name = 'CineTime Midtown' AND c.city_id = ci.id
+          )
+    """);
 
-    }
-}
+        // CineTime Beachside @ Los Angeles
+        jdbc.update("""
+        INSERT INTO cinemas (name, slug, city_id, created_at, updated_at)
+        SELECT 'CineTime Beachside', 'cinetime-beachside', ci.id, NOW(), NOW()
+        FROM city ci
+        WHERE ci.name = 'Los Angeles'
+          AND NOT EXISTS (
+            SELECT 1 FROM cinemas c WHERE c.name = 'CineTime Beachside' AND c.city_id = ci.id
+          )
+    """);
+
+        // =========================
+        // HALLS (Halls 1–4 for each cinema, idempotent)
+        // =========================
+        jdbc.update("""
+        WITH halls_to_add(cinema_name, hall_name, seat_capacity, is_special) AS (
+          VALUES
+          ('CineTime Downtown','Hall 1',100,false),
+          ('CineTime Downtown','Hall 2',120,false),
+          ('CineTime Downtown','Hall 3',80,false),
+          ('CineTime Downtown','Hall 4',150,true),
+          ('CineTime Midtown','Hall 1',110,false),
+          ('CineTime Midtown','Hall 2',130,false),
+          ('CineTime Midtown','Hall 3',90,false),
+          ('CineTime Midtown','Hall 4',140,true),
+          ('CineTime Beachside','Hall 1',100,false),
+          ('CineTime Beachside','Hall 2',120,false),
+          ('CineTime Beachside','Hall 3',85,false),
+          ('CineTime Beachside','Hall 4',160,true)
+        )
+        INSERT INTO halls (name, seat_capacity, is_special, cinema_id, created_at, updated_at)
+        SELECT hta.hall_name, hta.seat_capacity, hta.is_special, ci.id, NOW(), NOW()
+        FROM halls_to_add hta
+        JOIN cinemas ci ON ci.name = hta.cinema_name
+        WHERE NOT EXISTS (
+          SELECT 1 FROM halls h WHERE h.name = hta.hall_name AND h.cinema_id = ci.id
+        )
+    """);
+
+        // =========================
+        // MOVIES: upsert 10 titles; force status = IN_THEATERS (idempotent)
+        // =========================
+        jdbc.update("""
+        WITH new_movies(title, director, duration, rating, release_date, slug, special_halls, status, summary) AS (
+          VALUES
+          ('Fight Club','David Fincher',139,8.8,DATE '1999-10-15','fight-club','Standard','IN_THEATERS','An insomniac office worker and a soap maker form an underground fight club.'),
+          ('Inception','Christopher Nolan',148,8.8,DATE '2010-07-16','inception','Standard','IN_THEATERS','A thief must plant an idea inside a CEO''s mind.'),
+          ('The Matrix','The Wachowskis',136,8.7,DATE '1999-03-31','the-matrix','Standard','IN_THEATERS','A hacker learns the truth about reality.'),
+          ('Interstellar','Christopher Nolan',169,8.6,DATE '2014-11-07','interstellar','Standard','IN_THEATERS','Explorers travel through a wormhole to save humanity.'),
+          ('The Dark Knight','Christopher Nolan',152,9.0,DATE '2008-07-18','the-dark-knight','Standard','IN_THEATERS','Batman faces the Joker''s chaos in Gotham.'),
+          ('Pulp Fiction','Quentin Tarantino',154,8.9,DATE '1994-10-14','pulp-fiction','Standard','IN_THEATERS','Interwoven tales of crime and redemption.'),
+          ('The Shawshank Redemption','Frank Darabont',142,9.3,DATE '1994-09-23','shawshank-redemption','Standard','IN_THEATERS','Two imprisoned men bond and find redemption.'),
+          ('The Godfather','Francis Ford Coppola',175,9.2,DATE '1972-03-24','the-godfather','Standard','IN_THEATERS','A crime dynasty transfers power to a reluctant son.'),
+          ('Parasite','Bong Joon-ho',132,8.6,DATE '2019-05-30','parasite','Standard','IN_THEATERS','A poor family infiltrates a wealthy household.'),
+          ('Spirited Away','Hayao Miyazaki',125,8.6,DATE '2001-07-20','spirited-away','Standard','IN_THEATERS','A girl enters a spirit world to save her parents.')
+        )
+        INSERT INTO movies (
+          created_at, title, director, duration, rating, release_date,
+          slug, special_halls, status, summary, updated_at
+        )
+        SELECT NOW(), nm.title, nm.director, nm.duration, nm.rating, nm.release_date,
+               nm.slug, nm.special_halls, nm.status, nm.summary, NOW()
+        FROM new_movies nm
+        ON CONFLICT (slug) DO UPDATE
+        SET status = 'IN_THEATERS',
+            updated_at = EXCLUDED.updated_at
+    """);
+
+        // =========================
+        // SHOWTIMES (future dates, different cinemas/halls, idempotent)
+        // =========================
+        jdbc.update("""
+        WITH mapping(slug, cinema_name, hall_name, show_date, start_time) AS (
+          VALUES
+          ('fight-club',           'CineTime Downtown',  'Hall 1', DATE '2025-10-02', TIME '19:30:00'),
+          ('inception',            'CineTime Midtown',   'Hall 2', DATE '2025-10-03', TIME '21:30:00'),
+          ('the-matrix',           'CineTime Beachside', 'Hall 3', DATE '2025-10-04', TIME '16:00:00'),
+          ('interstellar',         'CineTime Downtown',  'Hall 4', DATE '2025-10-05', TIME '19:30:00'),
+          ('the-dark-knight',      'CineTime Midtown',   'Hall 1', DATE '2025-10-06', TIME '13:00:00'),
+          ('pulp-fiction',         'CineTime Beachside', 'Hall 2', DATE '2025-10-07', TIME '19:30:00'),
+          ('shawshank-redemption', 'CineTime Downtown',  'Hall 3', DATE '2025-10-08', TIME '16:00:00'),
+          ('the-godfather',        'CineTime Midtown',   'Hall 4', DATE '2025-10-09', TIME '19:30:00'),
+          ('parasite',             'CineTime Beachside', 'Hall 1', DATE '2025-10-10', TIME '18:00:00'),
+          ('spirited-away',        'CineTime Downtown',  'Hall 2', DATE '2025-10-11', TIME '14:00:00')
+        ),
+        resolved AS (
+          SELECT
+            mv.id AS movie_id,
+            h.id  AS hall_id,
+            mp.show_date,
+            mp.start_time,
+            (mp.start_time + make_interval(mins => COALESCE(mv.duration, 120)))::time AS end_time
+          FROM mapping mp
+          JOIN movies  mv ON mv.slug = mp.slug
+          JOIN cinemas c  ON c.name = mp.cinema_name
+          JOIN halls   h  ON h.cinema_id = c.id AND h.name = mp.hall_name
+        )
+        INSERT INTO showtimes (created_at, date, end_time, hall_id, movie_id, start_time, updated_at)
+        SELECT NOW(), r.show_date, r.end_time, r.hall_id, r.movie_id, r.start_time, NOW()
+        FROM resolved r
+        WHERE NOT EXISTS (
+          SELECT 1 FROM showtimes s
+          WHERE s.movie_id   = r.movie_id
+            AND s.hall_id    = r.hall_id
+            AND s.date       = r.show_date
+            AND s.start_time = r.start_time
+        )
+    """);
+
+        // (Optional) Verify rows exist (use in SQL console, not in code)
+        // SELECT s.id, m.title, c.name AS cinema, h.name AS hall, s.date, s.start_time, s.end_time
+        // FROM showtimes s
+        // JOIN movies  m ON m.id = s.movie_id
+        // JOIN halls   h ON h.id = s.hall_id
+        // JOIN cinemas c ON c.id = h.cinema_id
+        // ORDER BY s.date, s.start_time;
+    }}

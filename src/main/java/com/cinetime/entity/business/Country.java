@@ -1,13 +1,7 @@
 package com.cinetime.entity.business;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.HashSet;
@@ -34,10 +28,11 @@ public class Country {
   private String name;
 
   @JsonIgnore
-  @OneToMany(
-      mappedBy = "country",
-      cascade = CascadeType.ALL, //All operation including REMOVE will be applied to the cities.
-      orphanRemoval = true)
+  @OneToMany(mappedBy = "country", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private Set<City> cities = new HashSet<>();
 
+  @NotNull
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "district_id", nullable = false, foreignKey = @ForeignKey(name = "fk_country_district"))
+  private District district;
 }

@@ -15,31 +15,22 @@ import java.util.Set;
 public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
     // --- Search: sadece City filtresi ---
-    @EntityGraph(attributePaths = {"cities"})
-    @Query(
-            value = """
-            select distinct c
-            from Cinema c
-            left join c.cities ct
-            where (:cityId is null or ct.id = :cityId)
-            """,
-            countQuery = """
-            select count(distinct c)
-            from Cinema c
-            left join c.cities ct
-            where (:cityId is null or ct.id = :cityId)
-            """
-    )
+    @EntityGraph(attributePaths = {"city"})
+    @Query("""
+      select c
+      from Cinema c
+      where (:cityId is null or c.city.id = :cityId)
+      order by c.name asc
+    """)
     Page<Cinema> search(@Param("cityId") Long cityId, Pageable pageable);
 
     // --- Search: City + Hall.isSpecial filtresi ---
-    @EntityGraph(attributePaths = {"cities"})
+    @EntityGraph(attributePaths = {"city"})
     @Query(
-            value = """
-            select distinct c
+        value = """
+            select c
             from Cinema c
-            left join c.cities ct
-            where (:cityId is null or ct.id = :cityId)
+            where (:cityId is null or c.city.id = :cityId)
               and (
                     :specialHall is null
                     or exists (
@@ -48,12 +39,12 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
                         where h.cinema = c and h.isSpecial = :specialHall
                     )
                   )
+            order by c.name asc
             """,
-            countQuery = """
-            select count(distinct c)
+        countQuery = """
+            select count(c)
             from Cinema c
-            left join c.cities ct
-            where (:cityId is null or ct.id = :cityId)
+            where (:cityId is null or c.city.id = :cityId)
               and (
                     :specialHall is null
                     or exists (
@@ -70,7 +61,7 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
     // --- Auth kullanıcının favori sinemaları ---
 // Auth kullanıcının favori sinemaları – kök: Cinema
-    @EntityGraph(attributePaths = {"cities"})
+    @EntityGraph(attributePaths = {"city"})
     @Query(
             value = """
         select distinct c
@@ -89,7 +80,7 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
 
     // --- Detay: City'lerle birlikte getir ---
-    @EntityGraph(attributePaths = {"cities"})
+    @EntityGraph(attributePaths = {"city"})
     Optional<Cinema> findById(Long id);
 
     @Query("select u.id from User u where u.email = :email")
@@ -103,8 +94,5 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
     boolean existsBySlugIgnoreCaseAndIdNot(String slug, Long id);
 
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query(value = "DELETE FROM cinema_city WHERE cinema_id = :cinemaId", nativeQuery = true)
-    void deleteCityLinks(@Param("cinemaId") Long cinemaId);
 
 }
