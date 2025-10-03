@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 public interface MovieRepository extends JpaRepository<Movie,Long> {
@@ -37,4 +38,23 @@ public interface MovieRepository extends JpaRepository<Movie,Long> {
     boolean existsBySlugIgnoreCase(String candidate);
 
     boolean existsBySlugIgnoreCaseAndIdNot(String candidate, Long movieId);
+
+    @Query("""
+        select distinct m
+        from Movie m
+        where exists (
+          select 1
+          from Showtime s
+          join s.hall h
+          join h.cinema c
+          where s.movie = m
+            and c.id = :cinemaId
+            and s.date = :date
+        )
+        order by m.title asc
+    """)
+    List<Movie> findByCinemaAndDate(@Param("cinemaId") Long cinemaId,
+                                    @Param("date") LocalDate date);
 }
+
+

@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 
 @RestController
@@ -27,6 +28,18 @@ import java.time.LocalDate;
 public class MovieController {
 
     private final MovieService movieService;
+
+    @PreAuthorize("permitAll()")
+    @GetMapping("/by-cinema-date")
+    public ResponseEntity<ResponseMessage<List<MovieResponse>>> getMoviesByCinemaAndDate(
+            @RequestParam Long cinemaId,
+            @RequestParam @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+            java.time.LocalDate date
+    ) {
+        ResponseMessage<List<MovieResponse>> response = movieService.findByCinemaAndDate(cinemaId, date);
+        return ResponseEntity.status(response.getHttpStatus()).body(response);
+    }
+
 
     //M01
     @PreAuthorize("permitAll()")
