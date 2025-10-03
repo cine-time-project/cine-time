@@ -2,6 +2,7 @@ package com.cinetime.controller.business;
 
 import com.cinetime.payload.response.business.CityMiniResponse;
 import com.cinetime.service.business.CityService;
+import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,7 +19,7 @@ import java.util.List;
 public class CityController {
     private final CityService cityService;
 
-    @PreAuthorize("permitAll()")
+    @PermitAll
     @GetMapping()
     public ResponseEntity<List<CityMiniResponse>> listCities(){
         return ResponseEntity.ok(cityService.listCities());

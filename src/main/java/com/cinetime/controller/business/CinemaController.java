@@ -26,7 +26,8 @@ public class CinemaController {
     private final PageableHelper pageableHelper;
 
     //C01: Cinemas based on city and sipecialHalls
-
+    @PreAuthorize("permitAll()")
+    @GetMapping("/cinemas")
     public ResponseMessage<Page<CinemaSummaryResponse>> listCinemas(
             @RequestParam(required = false) Long cityId,
             @RequestParam(required = false) Boolean specialHall,

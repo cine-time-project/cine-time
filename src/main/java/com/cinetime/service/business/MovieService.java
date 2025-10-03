@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +31,17 @@ public class MovieService {
     private final CinemaService cinemaService;
     private final ImageService imageService;
     private final MovieServiceHelper movieServiceHelper;
+@Transactional(readOnly = true)
+    public ResponseMessage<List<MovieResponse>> findByCinemaAndDate(Long cinemaId, LocalDate date) {
+        List<Movie> movies = movieRepository.findByCinemaAndDate(cinemaId,date);
+        List<MovieResponse>  movieResponses= movies.stream()
+                .map(movieMapper::mapMovieToMovieResponse).toList();
+        return ResponseMessage.<List<MovieResponse>> builder()
+                .httpStatus(HttpStatus.OK)
+                .message("Movies listed")
+                .returnBody(movieResponses)
+                .build();
+    }
 
 
     //M01

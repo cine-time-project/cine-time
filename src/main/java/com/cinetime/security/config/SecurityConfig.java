@@ -108,6 +108,8 @@ public class SecurityConfig {
             "/api/google",
             "/api/cinemas",
             "/api/cinemas/**",
+            "/api/cities",
+            "/api/cities/**",
             "/api/movies",
             "/api/movies/**",
             "/api/special-halls",
