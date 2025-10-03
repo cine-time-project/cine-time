@@ -29,6 +29,7 @@ public class MovieResponse {
     private List<String> formats;
     private List<String> genre;
     private MovieStatus status;
+    private List<ImageResponse> images;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
