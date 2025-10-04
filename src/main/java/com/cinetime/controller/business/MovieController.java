@@ -114,6 +114,20 @@ public class MovieController {
         return ResponseEntity.status(response.getHttpStatus()).body(response);
     }
 
+    @PreAuthorize("permitAll()")
+    @GetMapping("/status")
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseMessage<Page<MovieResponse>>> fetchMoviesByStatus(
+            @RequestParam(required = true) String status,
+            @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC)
+            Pageable pageable) {
+
+        ResponseMessage<Page<MovieResponse>> response = movieService.getMoviesByStatus(status, pageable);
+        return ResponseEntity.status(response.getHttpStatus()).body(response);
+    }
+
+
+
 
     //M08
     @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
