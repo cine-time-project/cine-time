@@ -19,10 +19,12 @@ public class MovieMapper {
     public MovieResponse mapMovieToMovieResponse(Movie movie) {
         if (movie == null) return null;
 
-        List<ImageResponse> imageResponses = movie.getImages()
+        List<ImageResponse> imageResponses = (movie.getImages() != null) ?
+                movie.getImages()
                 .stream()
                 .map(imageMapper::toResponse)
-                .toList();
+                .toList()
+                : null;
 
         return MovieResponse.builder()
                 .id(movie.getId())
