@@ -407,12 +407,10 @@ public class MovieService {
 
         Page<Movie> movies = movieRepository.findByStatus(movieStatus, pageable);
 
-        if (movies.isEmpty()) throw new ResourceNotFoundException(ErrorMessages.MOVIES_NOT_FOUND);
-
         return ResponseMessage.<Page<MovieResponse>>builder()
                 .httpStatus(HttpStatus.OK)
-                .message(SuccessMessages.MOVIES_FOUND)
-                .returnBody(movieMapper.mapToResponsePage(movies))
+                .message((movies.isEmpty()) ? ErrorMessages.MOVIES_NOT_FOUND : SuccessMessages.MOVIES_FOUND)
+                .returnBody((movies.isEmpty()) ? Page.empty() : movieMapper.mapToResponsePage(movies))
                 .build();
     }
 
