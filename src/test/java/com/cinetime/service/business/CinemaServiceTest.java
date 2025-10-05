@@ -11,6 +11,7 @@ import com.cinetime.payload.request.business.CinemaCreateRequest;
 import com.cinetime.payload.response.business.*;
 import com.cinetime.repository.business.*;
 import com.cinetime.repository.user.UserRepository;
+import com.cinetime.repository.business.ShowtimeRepository.HallMovieTimeRow;
 import com.cinetime.service.helper.CinemasHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,19 +19,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
-import com.cinetime.repository.business.ShowtimeRepository.HallMovieTimeRow;
-import org.springframework.test.util.ReflectionTestUtils;
-
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.*;
-import java.util.HashSet;
 
 @ExtendWith(MockitoExtension.class)
 class CinemaServiceTest {
@@ -46,7 +41,7 @@ class CinemaServiceTest {
     @Mock private HallRepository hallRepository;
     @Mock private HallMapper hallMapper;
     @Mock private CityRepository cityRepository;
-    @Mock private TicketRepository ticketRepository; // service ctor'unda var
+    @Mock private TicketRepository ticketRepository;
 
     private Pageable pageable;
 
@@ -69,7 +64,6 @@ class CinemaServiceTest {
 
         CinemaSummaryResponse dto1 = CinemaSummaryResponse.builder().id(10L).name("A").build();
         CinemaSummaryResponse dto2 = CinemaSummaryResponse.builder().id(11L).name("B").build();
-
         when(cinemaMapper.toSummary(c1)).thenReturn(dto1);
         when(cinemaMapper.toSummary(c2)).thenReturn(dto2);
 
@@ -194,7 +188,6 @@ class CinemaServiceTest {
                 .hasMessageContaining(String.format(ErrorMessages.CINEMA_NOT_FOUND, 404L));
     }
 
-
     // ---------- getAllSpecialHalls ----------
     @Test
     void getAllSpecialHalls_ok() {
@@ -215,23 +208,27 @@ class CinemaServiceTest {
         assertThat(resp.getReturnBody()).containsExactly(r1, r2);
     }
 
-    // ---------- createCinema ----------
+    // ---------- createCinema (tek şehir) ----------
     @Test
-    void createCinema_ok_withCities() {
+    void createCinema_ok_singleCity() {
         CinemaCreateRequest req = new CinemaCreateRequest();
         req.setName("Zorlu");
         req.setSlug(null);
-        req.setCityIds(Set.of(10L, 20L));
+        req.setCityId(10L);
 
         when(cinemasHelper.slugify("Zorlu")).thenReturn("zorlu");
         when(cinemasHelper.ensureUniqueSlug("zorlu")).thenReturn("zorlu");
 
         City city10 = City.builder().id(10L).name("Istanbul").build();
-        City city20 = City.builder().id(20L).name("Ankara").build();
-        when(cityRepository.findAllById(Set.of(10L, 20L))).thenReturn(List.of(city10, city20));
+        when(cityRepository.findById(10L)).thenReturn(Optional.of(city10));
 
-        Cinema saved = Cinema.builder().id(1L).name("Zorlu").slug("zorlu")
-                .cities(new LinkedHashSet<>(List.of(city10, city20))).build();
+        Cinema saved = Cinema.builder()
+                .id(1L)
+                .name("Zorlu")
+                .slug("zorlu")
+                .city(city10)
+                .build();
+
         when(cinemaRepository.save(any(Cinema.class))).thenReturn(saved);
 
         CinemaSummaryResponse dto = CinemaSummaryResponse.builder().id(1L).name("Zorlu").build();
@@ -245,20 +242,20 @@ class CinemaServiceTest {
 
         ArgumentCaptor<Cinema> cap = ArgumentCaptor.forClass(Cinema.class);
         verify(cinemaRepository).save(cap.capture());
-        assertThat(cap.getValue().getCities()).extracting(City::getId).containsExactlyInAnyOrder(10L, 20L);
+        assertThat(cap.getValue().getName()).isEqualTo("Zorlu");
+        assertThat(cap.getValue().getSlug()).isEqualTo("zorlu");
+        assertThat(cap.getValue().getCity().getId()).isEqualTo(10L);
     }
 
     @Test
     void createCinema_missingCity_throws() {
         CinemaCreateRequest req = new CinemaCreateRequest();
         req.setName("Zorlu");
-        req.setCityIds(Set.of(10L, 99L));
+        req.setCityId(99L);
 
         when(cinemasHelper.slugify("Zorlu")).thenReturn("zorlu");
         when(cinemasHelper.ensureUniqueSlug("zorlu")).thenReturn("zorlu");
-
-        City city10 = City.builder().id(10L).name("Istanbul").build();
-        when(cityRepository.findAllById(Set.of(10L, 99L))).thenReturn(List.of(city10));
+        when(cityRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> cinemaService.createCinema(req))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -295,28 +292,7 @@ class CinemaServiceTest {
         assertThat(existing.getName()).isEqualTo("New Name");
     }
 
-    @Test
-    void update_clearCitiesWhenEmptySetProvided() {
-        Long id = 6L;
-        Set<City> current = new LinkedHashSet<>(List.of(City.builder().id(1L).name("X").build()));
-        Cinema existing = Cinema.builder().id(id).name("C").slug("c").cities(current).build();
-        when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
-
-        CinemaCreateRequest req = new CinemaCreateRequest();
-        req.setCityIds(Collections.emptySet());
-
-        when(cinemaRepository.save(existing)).thenReturn(existing);
-        when(cinemaMapper.toSummary(existing))
-                .thenReturn(CinemaSummaryResponse.builder().id(id).name("C").build());
-
-        ResponseMessage<CinemaSummaryResponse> resp = cinemaService.update(id, req);
-
-        assertThat(existing.getCities()).isEmpty();
-        assertThat(resp.getHttpStatus()).isEqualTo(org.springframework.http.HttpStatus.OK);
-    }
-
     // ---------- delete ----------
-
     @Test
     void delete_ok_cascadePath() {
         Long id = 9L;
@@ -325,9 +301,9 @@ class CinemaServiceTest {
                 .id(id)
                 .name("Del")
                 .slug("del")
-                // ÖNEMLİ: Serviste clear() çağrılan set'leri builder’da boş ver
                 .movies(new LinkedHashSet<>())
-                .cities(new LinkedHashSet<>())
+                .halls(new LinkedHashSet<>())
+                .favorites(new LinkedHashSet<>())
                 .build();
 
         when(cinemaRepository.findById(id)).thenReturn(Optional.of(c));
@@ -340,7 +316,6 @@ class CinemaServiceTest {
         assertThat(resp.getReturnBody()).isNull();
     }
 
-
     @Test
     void delete_notFound_throws() {
         when(cinemaRepository.findById(77L)).thenReturn(Optional.empty());
@@ -350,7 +325,7 @@ class CinemaServiceTest {
                 .hasMessageContaining(String.format(ErrorMessages.CINEMA_NOT_FOUND, 77L));
     }
 
-    // ---------- helpers ----------
+    // --------- helper for showtime rows ---------
     private static HallMovieTimeRow row(
             Long hallId, String hallName, int seatCapacity, boolean isSpecial,
             Long movieId, String movieTitle,
