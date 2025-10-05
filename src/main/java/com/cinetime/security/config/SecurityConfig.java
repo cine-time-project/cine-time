@@ -122,6 +122,7 @@ public class SecurityConfig {
             "/api/show-times/**",
             "/api/forgot-password",
             "/api/reset-password-code",
+            "/api/contactmessages",
             "/error"
     };
 

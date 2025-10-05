@@ -69,5 +69,8 @@ public class SuccessMessages {
     //Google
     public static final String USER_LOGGED_IN = "Google User logged in successfully";
 
+    //Contact
+    public static final String MESSAGE_TAKEN = "Mesajınız alındı. En kısa sürede size dönüş sağlanacaktır.";
+
 
 }
