@@ -24,6 +24,16 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
 
     List<Ticket> findAllByPaymentId(Long id);
 
+    @Query("""
+        select concat(t.seatLetter, t.seatNumber)
+        from Ticket t
+        where t.showtime.id = :showtimeId
+          and t.status in (com.cinetime.entity.enums.TicketStatus.PAID,
+                           com.cinetime.entity.enums.TicketStatus.RESERVED)
+    """)
+    List<String> findTakenSeatIds(@Param("showtimeId") Long showtimeId);
+
+
     long countByShowtime_IdAndStatusIn(Long showtimeId, Collection<TicketStatus> statuses);
 
 
