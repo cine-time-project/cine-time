@@ -5,16 +5,20 @@ import com.cinetime.payload.response.business.HallWithShowtimesResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.business.ShowtimeResponse;
 import com.cinetime.service.business.ShowtimeService;
+import com.cinetime.service.business.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -23,6 +27,7 @@ import java.util.List;
 public class ShowtimeController {
 
     private final ShowtimeService showTimeService;
+    private final TicketService ticketService;
 
     @PostMapping
     @Transactional
@@ -30,6 +35,19 @@ public class ShowtimeController {
     public ResponseMessage<ShowtimeResponse> saveShowtime(
             @RequestBody @Valid ShowtimeRequest showtimeRequest) {
         return showTimeService.saveShowtime(showtimeRequest);
+    }
+
+    // ShowtimesController.java
+    @GetMapping("/unavailable-seats")
+    @PreAuthorize("permitAll()")
+    public List<String> unavailableSeatsByFields(
+            @RequestParam String movieName,
+            @RequestParam String hall,
+            @RequestParam String cinema,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime showtime
+    ) {
+        return ticketService.getTakenSeatsByFields(movieName, hall, cinema, date, showtime);
     }
 
     @DeleteMapping("/{id}")

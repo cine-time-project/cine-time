@@ -64,6 +64,19 @@ public class TicketService {
         return result.map(ticketMapper::mapTicketToTicketResponse);
     }
 
+    @Transactional(readOnly = true)
+    public List<String> getTakenSeatsByFields(String movieName, String hall, String cinema,
+                                              LocalDate date, LocalTime startTime) {
+
+        Showtime showtime = showtimeRepository
+                .findByMovie_TitleIgnoreCaseAndHall_NameIgnoreCaseAndHall_Cinema_NameIgnoreCaseAndDateAndStartTime(
+                        movieName, hall, cinema, date, startTime
+                )
+                .orElseThrow(() -> new ResourceNotFoundException("Showtime not found"));
+
+        return ticketRepository.findTakenSeatIds(showtime.getId()); // ["A1","A2",...]
+    }
+
 
     @Transactional(readOnly = true)
     public Page<TicketResponse> getPassedTickets(Long userId, Integer page, Integer size, String sort, String type) {
