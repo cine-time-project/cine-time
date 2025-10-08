@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -45,6 +46,15 @@ public class ShowtimeService {
                 .httpStatus(HttpStatus.CREATED)
                 .message(SuccessMessages.SHOWTIME_CREATED)
                 .returnBody(showtimeMapper.mapShowtimeToResponse(savedShowtime))
+                .build();
+    }
+
+    public ResponseMessage<List<CityMiniResponse>> getCitiesWithShowtimes(LocalDate onOrAfter, Long movieId) {
+        List<CityMiniResponse> body = showtimeRepository.findCitiesWithShowtimes(onOrAfter, movieId);
+        return ResponseMessage.<List<CityMiniResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("Cities with showtimes")
+                .returnBody(body)
                 .build();
     }
 
