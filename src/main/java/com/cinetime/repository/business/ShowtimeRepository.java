@@ -4,6 +4,7 @@ import com.cinetime.entity.business.Movie;
 import com.cinetime.entity.business.Showtime;
 
 
+import com.cinetime.payload.response.business.CityMiniResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -131,7 +132,23 @@ public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
 
 
     Page<Showtime> findAllByMovie(Movie movie, Pageable pageable);
+
+    @Query("""
+        select distinct new com.cinetime.payload.response.business.CityMiniResponse(ct.id, ct.name)
+        from Showtime s
+          join s.hall h
+          join h.cinema cn
+          join cn.city ct
+        where (:movieId is null or s.movie.id = :movieId)
+          and (:onOrAfter is null or s.date >= :onOrAfter)
+    """)
+    List<CityMiniResponse> findCitiesWithShowtimes(
+            @Param("onOrAfter") LocalDate onOrAfter,
+            @Param("movieId") Long movieId
+    );
 }
+
+
 
 
 

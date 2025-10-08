@@ -1,6 +1,7 @@
 package com.cinetime.controller.business;
 
 import com.cinetime.payload.request.business.ShowtimeRequest;
+import com.cinetime.payload.response.business.CityMiniResponse;
 import com.cinetime.payload.response.business.HallWithShowtimesResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.business.ShowtimeResponse;
@@ -84,6 +85,16 @@ public class ShowtimeController {
     @PreAuthorize("permitAll()")
     public ResponseMessage<List<HallWithShowtimesResponse>> getShowtimesByCinemaId(@PathVariable Long cinemaId) {
         return showTimeService.getShowtimesByCinemaId(cinemaId);
+    }
+
+    @GetMapping("/cities-with-showtimes")
+    @PreAuthorize("permitAll()")
+    public ResponseMessage<List<CityMiniResponse>> getCitiesWithShowtimes(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate onOrAfter,
+            @RequestParam(required = false) Long movieId
+    ) {
+        return showTimeService.getCitiesWithShowtimes(onOrAfter, movieId);
     }
 
 
