@@ -109,6 +109,9 @@ public class Movie {
             fetch = FetchType.LAZY)
     private Set<Image> images = new LinkedHashSet<>();
 
+    @Column(name = "trailer_url", length = 255)
+    private String trailerUrl;
+
     @PrePersist
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now();

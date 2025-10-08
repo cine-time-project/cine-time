@@ -33,5 +33,6 @@ public class MovieResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private String trailerUrl;
 
 }

@@ -42,6 +42,7 @@ public class MovieMapper {
                 .images(imageResponses)
                 .createdAt(movie.getCreatedAt())
                 .updatedAt(movie.getUpdatedAt())
+                .trailerUrl(movie.getTrailerUrl())
                 .build();
     }
     public Page<MovieResponse> mapToResponsePage(Page<Movie> movies) {
