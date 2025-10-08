@@ -38,7 +38,9 @@ public class CinemaService {
     private final CityRepository cityRepository;
     private final TicketRepository ticketRepository;
 
-
+    public List<CinemaSummaryResponse> cinemasWithShowtimes() {
+        return cinemaRepository.findCinemasWithUpcomingShowtimes();
+    }
     public Page<CinemaSummaryResponse> searchCinemas(Long cityId, Pageable pageable) {
         cinemasHelper.validateCityIfProvided(cityId);
         return cinemaRepository.search(cityId, pageable)

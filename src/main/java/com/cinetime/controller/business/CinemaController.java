@@ -36,6 +36,21 @@ public class CinemaController {
      return cinemaService.listCinemas(cityId, specialHall, pageable);
 
     }
+    @PreAuthorize("permitAll()")
+    @GetMapping("/cinemas/with-showtimes")
+    public ResponseEntity<?> cinemasWithShowtimes() {
+        List<CinemaSummaryResponse> data = cinemaService.cinemasWithShowtimes();
+        // If you already wrap with your ResponseMessage, adapt below:
+        // return ResponseEntity.ok(new ResponseMessage<>(data, "Cinemas with showtimes", HttpStatus.OK));
+        return ResponseEntity.ok(
+                new java.util.HashMap<>() {{
+                    put("returnBody", data);
+                    put("message", "Cinemas with showtimes");
+                    put("httpStatus", "OK");
+                }}
+        );
+    }
+
 
     //C02: Get Users Favorites
     @PreAuthorize("hasAuthority('MEMBER')")     //<= ***changed***
