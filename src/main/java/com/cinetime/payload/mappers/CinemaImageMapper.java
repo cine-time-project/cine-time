@@ -11,7 +11,7 @@ public class CinemaImageMapper{
 
     public CinemaImageResponse cinemaImageToResponse(CinemaImage cinemaImage){
         String url = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/images/")
+                .path("/api/cinemaimages/") // was /api/images/
                 .path(String.valueOf(cinemaImage.getId()))
                 .toUriString();
 

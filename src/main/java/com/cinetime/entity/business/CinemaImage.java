@@ -24,8 +24,7 @@ public class CinemaImage {
 
     @Lob
     @Basic(fetch = FetchType.LAZY)
-    @NotNull
-    @Column(name = "data", nullable = false)
+    @Column(name = "data", nullable = true)
     private byte[] data;
 
     @NotBlank
@@ -48,5 +47,10 @@ public class CinemaImage {
     @JsonIgnore
     private Cinema cinema;
 
-
+    @Column(name = "url", length = 1024, nullable = true)
+    private String url;
+    @jakarta.validation.constraints.AssertTrue(message = "Either data or url must be present")
+    private boolean isEitherDataOrUrlPresent() {
+        return (data != null && data.length > 0) || (url != null && !url.isBlank());
+    }
 }

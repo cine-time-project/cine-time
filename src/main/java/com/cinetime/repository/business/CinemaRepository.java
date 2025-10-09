@@ -111,21 +111,25 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
     List<com.cinetime.payload.response.business.CinemaSummaryResponse>
     findCinemasWithUpcomingShowtimes();
 
+    // CinemaRepository.java
     @Query("""
-    SELECT DISTINCT new com.cinetime.payload.response.business.CinemaSummaryResponse(
-        c.id,
-        c.name,
-        new com.cinetime.payload.response.business.CityMiniResponse(city.id, city.name)
-    )
-    FROM Cinema c
-    JOIN c.city city
-    JOIN c.halls h
-    JOIN h.showtimes s
-    WHERE EXISTS (
-        SELECT 1 FROM CinemaImage ci WHERE ci.cinema.id = c.id
-    )
-    ORDER BY c.name ASC
+select distinct new com.cinetime.payload.response.business.CinemaSummaryResponse(
+  c.id,
+  c.name,
+  new com.cinetime.payload.response.business.CityMiniResponse(ct.id, ct.name),
+  coalesce(ci.url, concat(:apiBase, '/api/cinemaimages/', cast(c.id as string)))
+)
+from Cinema c
+join c.city ct
+left join c.cinemaImage ci
+where exists (
+  select 1 from Hall h join h.showtimes s
+  where h.cinema = c and s.date >= current_date
+)
+and ci is not null
+order by ct.name, c.name
 """)
-    List<CinemaSummaryResponse> findCinemasWithShowtimesAndImages();
+    List<CinemaSummaryResponse> findCinemasWithShowtimesAndImages(
+            @org.springframework.data.repository.query.Param("apiBase") String apiBase);
 
 }

@@ -74,4 +74,25 @@ public class CinemaImageController {
                 .body(created);
     }
 
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PutMapping(path = "/{cinemaId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<CinemaImageResponse> replaceByUrl(
+            @PathVariable Long cinemaId,
+            @RequestBody java.util.Map<String, String> body) {
+
+        String url = body == null ? null : body.get("url");
+        CinemaImageResponse updated = cinemaImageService.replaceWithUrl(cinemaId, url);
+        return ResponseEntity.ok()
+                .header("X-Success-Message", SuccessMessages.IMAGE_UPLOADED)
+                .body(updated);
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @DeleteMapping("/{cinemaId}")
+    public ResponseEntity<Void> deleteCinemaImage(@PathVariable Long cinemaId) {
+        cinemaImageService.delete(cinemaId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

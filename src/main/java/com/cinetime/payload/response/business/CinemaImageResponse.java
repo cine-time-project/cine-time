@@ -14,8 +14,8 @@ public class CinemaImageResponse {
     private String name;
     private String type;     //
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt; private
-    Long cinemaId;
+    private LocalDateTime updatedAt;
+    private Long cinemaId;
     private String url;
 
 }

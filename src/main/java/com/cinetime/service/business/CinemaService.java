@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import com.cinetime.entity.user.User;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -44,8 +45,11 @@ public class CinemaService {
 
 
 
+
     public List<CinemaSummaryResponse> cinemasWithShowtimesAndImages() {
-        return cinemaRepository.findCinemasWithShowtimesAndImages();
+        String base = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .toUriString().replaceAll("/$", ""); // no trailing slash
+        return cinemaRepository.findCinemasWithShowtimesAndImages(base);
     }
 
 
