@@ -111,6 +111,21 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
     List<com.cinetime.payload.response.business.CinemaSummaryResponse>
     findCinemasWithUpcomingShowtimes();
 
-
+    @Query("""
+    SELECT DISTINCT new com.cinetime.payload.response.business.CinemaSummaryResponse(
+        c.id,
+        c.name,
+        new com.cinetime.payload.response.business.CityMiniResponse(city.id, city.name)
+    )
+    FROM Cinema c
+    JOIN c.city city
+    JOIN c.halls h
+    JOIN h.showtimes s
+    WHERE EXISTS (
+        SELECT 1 FROM CinemaImage ci WHERE ci.cinema.id = c.id
+    )
+    ORDER BY c.name ASC
+""")
+    List<CinemaSummaryResponse> findCinemasWithShowtimesAndImages();
 
 }

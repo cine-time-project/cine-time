@@ -73,6 +73,10 @@ public class Cinema {
   )
   private Set<Movie> movies = new LinkedHashSet<>();
 
+  @OneToOne(mappedBy = "cinema", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+  private  CinemaImage cinemaImage;
+
+
   @NotNull
   @Column(name = "createdAt", nullable = false, updatable = false)
   private LocalDateTime createdAt;

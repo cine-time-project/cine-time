@@ -51,6 +51,17 @@ public class CinemaController {
         );
     }
 
+    @PreAuthorize("permitAll()")
+    @GetMapping("/cinemas/with-showtimes-and-images")
+    public ResponseEntity<List<CinemaSummaryResponse>> cinemasWithShowtimesAndImages() {
+        List<CinemaSummaryResponse> data = cinemaService.cinemasWithShowtimesAndImages();
+
+        // Return only cinemas that have both showtimes and associated images
+        return ResponseEntity.ok(data);
+    }
+
+
+
 
     //C02: Get Users Favorites
     @PreAuthorize("hasAuthority('MEMBER')")     //<= ***changed***

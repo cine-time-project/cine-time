@@ -41,6 +41,14 @@ public class CinemaService {
     public List<CinemaSummaryResponse> cinemasWithShowtimes() {
         return cinemaRepository.findCinemasWithUpcomingShowtimes();
     }
+
+
+
+    public List<CinemaSummaryResponse> cinemasWithShowtimesAndImages() {
+        return cinemaRepository.findCinemasWithShowtimesAndImages();
+    }
+
+
     public Page<CinemaSummaryResponse> searchCinemas(Long cityId, Pageable pageable) {
         cinemasHelper.validateCityIfProvided(cityId);
         return cinemaRepository.search(cityId, pageable)
