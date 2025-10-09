@@ -115,7 +115,7 @@ public class Movie {
 
 
 
-    
+
 
     @Column(name = "trailer_url", length = 255)
     private String trailerUrl;
@@ -136,4 +136,5 @@ public class Movie {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+    
 }
