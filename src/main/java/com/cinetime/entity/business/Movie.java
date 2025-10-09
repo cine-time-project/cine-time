@@ -112,6 +112,15 @@ public class Movie {
 
 
 
+
+
+
+    
+
+    @Column(name = "trailer_url", length = 255)
+    private String trailerUrl;
+
+
     @PrePersist
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now();
