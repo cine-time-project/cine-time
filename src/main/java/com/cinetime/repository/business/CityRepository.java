@@ -1,6 +1,7 @@
 package com.cinetime.repository.business;
 
 import com.cinetime.entity.business.City;
+import com.cinetime.payload.response.business.CinemaSummaryResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -17,4 +18,8 @@ public interface CityRepository extends JpaRepository<City, Long> {
         order by c.name asc
     """)
     List<City> findCitiesWithCinemas();
+
+
+
+
 }

@@ -123,7 +123,10 @@ public class SecurityConfig {
             "/api/forgot-password",
             "/api/reset-password-code",
             "/api/contactmessages",
-            "/error"
+            "/error",
+            "/api/cinemaimages",
+            "/api/cinemaimages/**"
+
     };
 
 }

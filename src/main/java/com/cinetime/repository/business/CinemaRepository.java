@@ -1,6 +1,7 @@
 package com.cinetime.repository.business;
 
 import com.cinetime.entity.business.Cinema;
+import com.cinetime.payload.response.business.CinemaSummaryResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -93,6 +95,41 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
     boolean existsBySlugIgnoreCaseAndIdNot(String slug, Long id);
 
+    @Query("""
+        select distinct new com.cinetime.payload.response.business.CinemaSummaryResponse(
+            c.id,
+            c.name,
+            new com.cinetime.payload.response.business.CityMiniResponse(ci.id, ci.name)
+        )
+        from Cinema c
+        join c.city ci
+        join c.halls h
+        join h.showtimes s
+        where s.date >= CURRENT_DATE
+        order by ci.name, c.name
+    """)
+    List<com.cinetime.payload.response.business.CinemaSummaryResponse>
+    findCinemasWithUpcomingShowtimes();
 
+    // CinemaRepository.java
+    @Query("""
+select distinct new com.cinetime.payload.response.business.CinemaSummaryResponse(
+  c.id,
+  c.name,
+  new com.cinetime.payload.response.business.CityMiniResponse(ct.id, ct.name),
+  coalesce(ci.url, concat(:apiBase, '/api/cinemaimages/', cast(c.id as string)))
+)
+from Cinema c
+join c.city ct
+left join c.cinemaImage ci
+where exists (
+  select 1 from Hall h join h.showtimes s
+  where h.cinema = c and s.date >= current_date
+)
+and ci is not null
+order by ct.name, c.name
+""")
+    List<CinemaSummaryResponse> findCinemasWithShowtimesAndImages(
+            @org.springframework.data.repository.query.Param("apiBase") String apiBase);
 
 }
