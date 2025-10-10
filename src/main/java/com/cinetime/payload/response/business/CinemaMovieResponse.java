@@ -27,4 +27,9 @@ public class CinemaMovieResponse {
     private List<String> genre;
     private MovieStatus status;
 
+    private List<ImageResponse> images; // poster/gallery for UI
+    private String trailerUrl;
+    // add one field; keep existing 'images' list untouched
+    private String posterUrl;
+
 }

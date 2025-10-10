@@ -52,21 +52,31 @@ public class MovieMapper {
 
     public CinemaMovieResponse mapMovieToCinemaMovieResponse(Movie movie) {
         if (movie == null) return null;
-        return new CinemaMovieResponse(
-                movie.getId(),
-                movie.getTitle(),
-                movie.getSlug(),
-                movie.getSummary(),
-                movie.getReleaseDate(),
-                movie.getDuration(),
-                movie.getRating(),
-                movie.getDirector(),
-                movie.getCast(),
-                movie.getFormats(),
-                movie.getGenre(),
-                movie.getStatus()
-        );
+
+        List<ImageResponse> imageResponses = (movie.getImages() != null)
+                ? movie.getImages().stream().map(imageMapper::toResponse).toList()
+                : null;
+
+        return CinemaMovieResponse.builder()
+                .id(movie.getId())
+                .title(movie.getTitle())
+                .slug(movie.getSlug())
+                .summary(movie.getSummary())
+                .releaseDate(movie.getReleaseDate())
+                .duration(movie.getDuration())
+                .rating(movie.getRating())
+                .director(movie.getDirector())
+                .cast(movie.getCast())
+                .formats(movie.getFormats())
+                .genre(movie.getGenre())
+                .status(movie.getStatus())
+                .images(imageResponses)
+                .trailerUrl(movie.getTrailerUrl())
+                .posterUrl(movie.getPosterUrl())
+                .build();
     }
+
+
     public Page<CinemaMovieResponse> mapToCinemaResponsePage(Page<Movie> movies) {
         return movies.map(this::mapMovieToCinemaMovieResponse);
     }

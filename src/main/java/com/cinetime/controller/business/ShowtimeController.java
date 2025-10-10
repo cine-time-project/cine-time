@@ -1,10 +1,7 @@
 package com.cinetime.controller.business;
 
 import com.cinetime.payload.request.business.ShowtimeRequest;
-import com.cinetime.payload.response.business.CityMiniResponse;
-import com.cinetime.payload.response.business.HallWithShowtimesResponse;
-import com.cinetime.payload.response.business.ResponseMessage;
-import com.cinetime.payload.response.business.ShowtimeResponse;
+import com.cinetime.payload.response.business.*;
 import com.cinetime.service.business.ShowtimeService;
 import com.cinetime.service.business.TicketService;
 import jakarta.validation.Valid;
@@ -95,6 +92,18 @@ public class ShowtimeController {
             @RequestParam(required = false) Long movieId
     ) {
         return showTimeService.getCitiesWithShowtimes(onOrAfter, movieId);
+    }
+
+
+
+    @GetMapping("/countries-with-showtimes")
+    @PreAuthorize("permitAll()")
+    public ResponseMessage<List<CountryMiniResponse>> getCountriesWithShowtimes(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate onOrAfter,
+            @RequestParam(required = false) Long movieId
+    ) {
+        return showTimeService.getCountriesWithShowtimes(onOrAfter, movieId);
     }
 
 
