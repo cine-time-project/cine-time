@@ -12,7 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
-public interface MovieRepository extends JpaRepository<Movie,Long> {
+public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     Page<Movie> findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(String title, String summary, Pageable pageable);
 
@@ -40,19 +40,19 @@ public interface MovieRepository extends JpaRepository<Movie,Long> {
     boolean existsBySlugIgnoreCaseAndIdNot(String candidate, Long movieId);
 
     @Query("""
-        select distinct m
-        from Movie m
-        where exists (
-          select 1
-          from Showtime s
-          join s.hall h
-          join h.cinema c
-          where s.movie = m
-            and c.id = :cinemaId
-            and s.date = :date
-        )
-        order by m.title asc
-    """)
+                select distinct m
+                from Movie m
+                where exists (
+                  select 1
+                  from Showtime s
+                  join s.hall h
+                  join h.cinema c
+                  where s.movie = m
+                    and c.id = :cinemaId
+                    and s.date = :date
+                )
+                order by m.title asc
+            """)
     List<Movie> findByCinemaAndDate(@Param("cinemaId") Long cinemaId,
                                     @Param("date") LocalDate date);
 
@@ -60,22 +60,24 @@ public interface MovieRepository extends JpaRepository<Movie,Long> {
     List<String> findAllGenres();
 
     @Query("""
-    SELECT m FROM Movie m
-    LEFT JOIN m.genre g
-    WHERE (:status IS NULL OR m.status = :status)
-      AND (:minRating IS NULL OR m.rating >= :minRating)
-      AND (:releaseDate IS NULL OR m.releaseDate >= :releaseDate)
-      AND (:specialHallsPattern IS NULL OR m.specialHalls LIKE :specialHallsPattern)
-      AND (:genre IS NULL OR :genreSize = 0 OR g IN :genre)
-    GROUP BY m
-    HAVING (:genre IS NULL OR :genreSize = 0 OR COUNT(DISTINCT g) = :genreSize)
-    ORDER BY m.releaseDate DESC, m.title
-""")
+                SELECT m FROM Movie m
+                LEFT JOIN m.genre g
+                WHERE (:status IS NULL OR m.status = :status)
+                 AND (:minRating IS NULL OR (m.rating IS NOT NULL AND m.rating >= :minRating))
+                  AND (:maxRating IS NULL OR (m.rating IS NOT NULL AND m.rating <= :maxRating))
+                  AND (:releaseDate IS NULL OR m.releaseDate >= :releaseDate)
+                  AND (:specialHallsPattern IS NULL OR m.specialHalls LIKE :specialHallsPattern)
+                  AND (:genre IS NULL OR :genreSize = 0 OR g IN :genre)
+                GROUP BY m
+                HAVING (:genre IS NULL OR :genreSize = 0 OR COUNT(DISTINCT g) = :genreSize)
+                ORDER BY m.releaseDate DESC, m.title
+            """)
     Page<Movie> filterMovies(
             @Param("genre") List<String> genre,
             @Param("genreSize") Long genreSize,
             @Param("status") MovieStatus status,
             @Param("minRating") Double minRating,
+            @Param("maxRating") Double maxRating,
             @Param("releaseDate") LocalDate releaseDate,
             @Param("specialHallsPattern") String specialHallsPattern,
             Pageable pageable

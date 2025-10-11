@@ -2,7 +2,6 @@ package com.cinetime.service.business;
 
 import com.cinetime.entity.business.Movie;
 import com.cinetime.entity.enums.MovieStatus;
-import com.cinetime.exception.BadRequestException;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.MovieMapper;
 import com.cinetime.payload.messages.ErrorMessages;
@@ -419,6 +418,7 @@ public class MovieService {
             List<String> genre,
             String status,
             Double minRating,
+            Double maxRating,
             LocalDate releaseDate,
             String specialHalls,
             Pageable pageable) {
@@ -437,6 +437,7 @@ public class MovieService {
                 genreSize, // eksik virgül ve parametre düzeltildi
                 movieMapper.movieStatusMapper(status),
                 minRating,
+                maxRating,
                 releaseDate,
                 normalizedSpecialHalls,
                 pageable

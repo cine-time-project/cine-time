@@ -207,11 +207,12 @@ public class MovieController {
             @RequestParam(required = false) List<String> genre,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) Double maxRating,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate releaseDate,
             @RequestParam(required = false) String specialHalls,
             @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return movieService.filterMovies(genre, status, minRating, releaseDate, specialHalls,pageable);
+        return movieService.filterMovies(genre, status, minRating, maxRating, releaseDate, specialHalls,pageable);
     }
 
 
