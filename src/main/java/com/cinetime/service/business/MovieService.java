@@ -405,6 +405,12 @@ public class MovieService {
     }
 
 
+    /**
+     * Retrieves all distinct genres from the database.
+     *
+     * @return ResponseMessage containing a list of all unique movie genres.
+     * The HTTP status will be 200 OK.
+     */
     public ResponseMessage<List<String>> getGenres() {
         List<String> allGenres = movieRepository.findAllGenres();
 
@@ -414,6 +420,23 @@ public class MovieService {
                 .build();
     }
 
+    /**
+     * Filters movies based on multiple criteria such as genre, status, rating range,
+     * release date, and special halls. Supports pagination via the Pageable parameter.
+     *
+     * @param genre List of genres to filter by. Only movies containing ALL specified genres will be returned.
+     *              If null or empty, genre filtering is ignored.
+     * @param status MovieStatus as String. Mapped to the MovieStatus enum. If null, status filtering is ignored.
+     * @param minRating Minimum rating filter. If null, no minimum rating restriction is applied.
+     * @param maxRating Maximum rating filter. If null, no maximum rating restriction is applied.
+     * @param releaseDate Filter for movies released on or after this date. If null, no release date restriction is applied.
+     * @param specialHalls Filter for movies containing this substring in their special halls. Case-sensitive.
+     *                     If null or blank, this filter is ignored.
+     * @param pageable Pageable object to handle pagination and sorting.
+     *
+     * @return ResponseMessage containing a Page of MovieResponse objects that match the filters.
+     *         If no movies match, an empty Page is returned. HTTP status is 200 OK.
+     */
     public ResponseMessage<Page<MovieResponse>> filterMovies(
             List<String> genre,
             String status,
@@ -423,18 +446,18 @@ public class MovieService {
             String specialHalls,
             Pageable pageable) {
 
-        // specialHalls için PostgreSQL uyumlu pattern
+        // Prepare specialHalls filter for PostgreSQL LIKE query
         String normalizedSpecialHalls =
                 (specialHalls == null || specialHalls.isBlank()) ? null : "%" + specialHalls + "%";
 
-        // Genre listesi null veya boş ise filtre devre dışı
+        // Normalize genre list; if empty or null, filtering will be ignored
         List<String> normalizedGenre = (genre == null || genre.isEmpty()) ? null : genre;
         Long genreSize = (normalizedGenre == null) ? 0L : (long) normalizedGenre.size();
 
-        // Repository çağrısı
+        // Call repository method with all normalized parameters
         Page<Movie> filteredMovies = movieRepository.filterMovies(
                 normalizedGenre,
-                genreSize, // eksik virgül ve parametre düzeltildi
+                genreSize,
                 movieMapper.movieStatusMapper(status),
                 minRating,
                 maxRating,
@@ -443,11 +466,12 @@ public class MovieService {
                 pageable
         );
 
-        // Response oluşturma
+        // Build response with empty page fallback
         return ResponseMessage.<Page<MovieResponse>>builder()
                 .httpStatus(HttpStatus.OK)
                 .returnBody(filteredMovies.isEmpty() ? Page.empty() : movieMapper.mapToResponsePage(filteredMovies))
                 .build();
     }
+
 
 }
