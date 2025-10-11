@@ -1,6 +1,7 @@
 package com.cinetime.payload.mappers;
 
 import com.cinetime.entity.business.Movie;
+import com.cinetime.entity.enums.MovieStatus;
 import com.cinetime.payload.request.business.MovieRequest;
 import com.cinetime.payload.response.business.CinemaMovieResponse;
 import com.cinetime.payload.response.business.ImageResponse;
@@ -9,6 +10,7 @@ import lombok.Data;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import java.util.List;
+
 
 @Component
 @Data
@@ -104,5 +106,21 @@ public class MovieMapper {
         movie.setGenre(request.getGenre());
         movie.setStatus(request.getStatus());
         // cinemas ve images servis tarafında set edilecek
+    }
+
+    public MovieStatus movieStatusMapper(String status){
+        if (status == null || status.isBlank()) return null;
+
+        MovieStatus movieStatus = null;
+
+        if (status.trim().equalsIgnoreCase(MovieStatus.IN_THEATERS.toString())) {
+            movieStatus = MovieStatus.IN_THEATERS;
+        } else if (status.trim().equalsIgnoreCase(MovieStatus.COMING_SOON.toString())) {
+            movieStatus = MovieStatus.COMING_SOON;
+        } else if (status.trim().equalsIgnoreCase(MovieStatus.PRESALE.toString())) {
+            movieStatus = MovieStatus.PRESALE;
+        }
+
+        return movieStatus;
     }
 }

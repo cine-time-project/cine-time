@@ -383,6 +383,7 @@ public class MovieService {
                 .build();
     }
 
+
     /**
      * Fetch movies by their status (IN_THEATERS, COMING_SOON, PRESALE).
      * Throws BadRequestException for invalid status.
@@ -393,17 +394,7 @@ public class MovieService {
      */
     @Transactional
     public ResponseMessage<Page<MovieResponse>> getMoviesByStatus(String status, Pageable pageable) {
-        MovieStatus movieStatus;
-
-        if (status.equalsIgnoreCase(MovieStatus.IN_THEATERS.toString())) {
-            movieStatus = MovieStatus.IN_THEATERS;
-        } else if (status.equalsIgnoreCase(MovieStatus.COMING_SOON.toString())) {
-            movieStatus = MovieStatus.COMING_SOON;
-        } else if (status.equalsIgnoreCase(MovieStatus.PRESALE.toString())) {
-            movieStatus = MovieStatus.PRESALE;
-        } else {
-            throw new BadRequestException(String.format(ErrorMessages.INVALID_STATUS, status));
-        }
+        MovieStatus movieStatus = movieMapper.movieStatusMapper(status);
 
         Page<Movie> movies = movieRepository.findByStatus(movieStatus, pageable);
 
@@ -414,5 +405,48 @@ public class MovieService {
                 .build();
     }
 
+
+    public ResponseMessage<List<String>> getGenres() {
+        List<String> allGenres = movieRepository.findAllGenres();
+
+        return ResponseMessage.<List<String>>builder()
+                .httpStatus(HttpStatus.OK)
+                .returnBody(allGenres)
+                .build();
+    }
+
+    public ResponseMessage<Page<MovieResponse>> filterMovies(
+            List<String> genre,
+            String status,
+            Double minRating,
+            LocalDate releaseDate,
+            String specialHalls,
+            Pageable pageable) {
+
+        // specialHalls için PostgreSQL uyumlu pattern
+        String normalizedSpecialHalls =
+                (specialHalls == null || specialHalls.isBlank()) ? null : "%" + specialHalls + "%";
+
+        // Genre listesi null veya boş ise filtre devre dışı
+        List<String> normalizedGenre = (genre == null || genre.isEmpty()) ? null : genre;
+        Long genreSize = (normalizedGenre == null) ? 0L : (long) normalizedGenre.size();
+
+        // Repository çağrısı
+        Page<Movie> filteredMovies = movieRepository.filterMovies(
+                normalizedGenre,
+                genreSize, // eksik virgül ve parametre düzeltildi
+                movieMapper.movieStatusMapper(status),
+                minRating,
+                releaseDate,
+                normalizedSpecialHalls,
+                pageable
+        );
+
+        // Response oluşturma
+        return ResponseMessage.<Page<MovieResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .returnBody(filteredMovies.isEmpty() ? Page.empty() : movieMapper.mapToResponsePage(filteredMovies))
+                .build();
+    }
 
 }

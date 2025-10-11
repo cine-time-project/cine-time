@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/movies")
@@ -190,6 +191,27 @@ public class MovieController {
             @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC) Pageable pageable) {
 
         return movieService.getMovieByGenre(genre, pageable);
+    }
+
+    @PreAuthorize("permitAll()")
+    @GetMapping("/genre-list")
+    @Transactional(readOnly = true)
+    public ResponseMessage<List<String>> getMoviesGenres() {
+        return movieService.getGenres();
+    }
+
+    @PreAuthorize("permitAll()")
+    @GetMapping("/filter")
+    @Transactional(readOnly = true)
+    public ResponseMessage<Page<MovieResponse>> filterMovies(
+            @RequestParam(required = false) List<String> genre,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate releaseDate,
+            @RequestParam(required = false) String specialHalls,
+            @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        return movieService.filterMovies(genre, status, minRating, releaseDate, specialHalls,pageable);
     }
 
 

@@ -55,6 +55,32 @@ public interface MovieRepository extends JpaRepository<Movie,Long> {
     """)
     List<Movie> findByCinemaAndDate(@Param("cinemaId") Long cinemaId,
                                     @Param("date") LocalDate date);
+
+    @Query(value = "SELECT DISTINCT genre FROM movie_genre ORDER BY genre ASC", nativeQuery = true)
+    List<String> findAllGenres();
+
+    @Query("""
+    SELECT m FROM Movie m
+    LEFT JOIN m.genre g
+    WHERE (:status IS NULL OR m.status = :status)
+      AND (:minRating IS NULL OR m.rating >= :minRating)
+      AND (:releaseDate IS NULL OR m.releaseDate >= :releaseDate)
+      AND (:specialHallsPattern IS NULL OR m.specialHalls LIKE :specialHallsPattern)
+      AND (:genre IS NULL OR :genreSize = 0 OR g IN :genre)
+    GROUP BY m
+    HAVING (:genre IS NULL OR :genreSize = 0 OR COUNT(DISTINCT g) = :genreSize)
+    ORDER BY m.releaseDate DESC, m.title
+""")
+    Page<Movie> filterMovies(
+            @Param("genre") List<String> genre,
+            @Param("genreSize") Long genreSize,
+            @Param("status") MovieStatus status,
+            @Param("minRating") Double minRating,
+            @Param("releaseDate") LocalDate releaseDate,
+            @Param("specialHallsPattern") String specialHallsPattern,
+            Pageable pageable
+    );
+
 }
 
 
