@@ -65,7 +65,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
                 WHERE (:status IS NULL OR m.status = :status)
                  AND (:minRating IS NULL OR (m.rating IS NOT NULL AND m.rating >= :minRating))
                   AND (:maxRating IS NULL OR (m.rating IS NOT NULL AND m.rating <= :maxRating))
-                  AND (:releaseDate IS NULL OR m.releaseDate >= :releaseDate)
+                  AND (CAST(:releaseDate AS date) IS NULL OR m.releaseDate >= :releaseDate)
                   AND (:specialHallsPattern IS NULL OR m.specialHalls LIKE :specialHallsPattern)
                   AND (:genre IS NULL OR :genreSize = 0 OR g IN :genre)
                 GROUP BY m
