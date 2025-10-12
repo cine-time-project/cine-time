@@ -22,7 +22,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/movies")
@@ -128,8 +127,6 @@ public class MovieController {
     }
 
 
-
-
     //M08
     @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
     @GetMapping("/admin")
@@ -208,11 +205,11 @@ public class MovieController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Double minRating,
             @RequestParam(required = false) Double maxRating,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate releaseDate,
+            @RequestParam(required = false) String releaseDate,
             @RequestParam(required = false) String specialHalls,
             @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        return movieService.filterMovies(genre, status, minRating, maxRating, releaseDate, specialHalls,pageable);
+        return movieService.filterMovies(genre, status, minRating, maxRating, releaseDate, specialHalls, pageable);
     }
 
 

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -442,7 +443,7 @@ public class MovieService {
             String status,
             Double minRating,
             Double maxRating,
-            LocalDate releaseDate,
+            String releaseDate,
             String specialHalls,
             Pageable pageable) {
 
@@ -454,6 +455,16 @@ public class MovieService {
         List<String> normalizedGenre = (genre == null || genre.isEmpty()) ? null : genre;
         Long genreSize = (normalizedGenre == null) ? 0L : (long) normalizedGenre.size();
 
+
+        LocalDate normalizedReleaseDate = null;
+        try {
+            normalizedReleaseDate = LocalDate.parse(releaseDate, DateTimeFormatter.ISO_DATE);
+        } catch (Exception e) {
+            System.err.println(e.toString());
+        }
+
+
+
         // Call repository method with all normalized parameters
         Page<Movie> filteredMovies = movieRepository.filterMovies(
                 normalizedGenre,
@@ -461,7 +472,7 @@ public class MovieService {
                 movieMapper.movieStatusMapper(status),
                 minRating,
                 maxRating,
-                releaseDate,
+                normalizedReleaseDate,
                 normalizedSpecialHalls,
                 pageable
         );
