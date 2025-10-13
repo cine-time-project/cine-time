@@ -96,7 +96,7 @@ public class ShowtimeController {
 
 
 
-    
+
 
     @GetMapping("/countries-with-showtimes")
     @PreAuthorize("permitAll()")
