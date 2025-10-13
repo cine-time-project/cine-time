@@ -211,5 +211,16 @@ public class MovieController {
         return movieService.filterMovies(genre, status, minRating, maxRating, releaseDate, specialHalls, pageable);
     }
 
+    // M10 - Get Movie By Slug (tekil film)
+    @PreAuthorize("permitAll()")
+    @GetMapping("/slug/movie/{slug}")
+    @Transactional(readOnly = true)
+    public ResponseMessage<MovieResponse> getMovieBySlug(
+            @PathVariable String slug
+    ) {
+        return movieService.getMovieBySlug(slug);
+    }
+
+
 
 }
