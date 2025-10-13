@@ -126,8 +126,6 @@ public class MovieController {
     }
 
 
-
-
     //M08
     @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
     @GetMapping("/admin")
@@ -189,6 +187,28 @@ public class MovieController {
             @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC) Pageable pageable) {
 
         return movieService.getMovieByGenre(genre, pageable);
+    }
+
+    @PreAuthorize("permitAll()")
+    @GetMapping("/genre-list")
+    @Transactional(readOnly = true)
+    public ResponseMessage<List<String>> getMoviesGenres() {
+        return movieService.getGenres();
+    }
+
+    @PreAuthorize("permitAll()")
+    @GetMapping("/filter")
+    @Transactional(readOnly = true)
+    public ResponseMessage<Page<MovieResponse>> filterMovies(
+            @RequestParam(required = false) List<String> genre,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) Double maxRating,
+            @RequestParam(required = false) String releaseDate,
+            @RequestParam(required = false) String specialHalls,
+            @PageableDefault(page = 0, size = 10, sort = "title", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        return movieService.filterMovies(genre, status, minRating, maxRating, releaseDate, specialHalls, pageable);
     }
 
 

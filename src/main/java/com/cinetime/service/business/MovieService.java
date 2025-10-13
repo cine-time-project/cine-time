@@ -2,7 +2,6 @@ package com.cinetime.service.business;
 
 import com.cinetime.entity.business.Movie;
 import com.cinetime.entity.enums.MovieStatus;
-import com.cinetime.exception.BadRequestException;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.MovieMapper;
 import com.cinetime.payload.messages.ErrorMessages;
@@ -21,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -391,6 +391,7 @@ public class MovieService {
                 .build();
     }
 
+
     /**
      * Fetch movies by their status (IN_THEATERS, COMING_SOON, PRESALE).
      * Throws BadRequestException for invalid status.
@@ -401,17 +402,7 @@ public class MovieService {
      */
     @Transactional
     public ResponseMessage<Page<MovieResponse>> getMoviesByStatus(String status, Pageable pageable) {
-        MovieStatus movieStatus;
-
-        if (status.equalsIgnoreCase(MovieStatus.IN_THEATERS.toString())) {
-            movieStatus = MovieStatus.IN_THEATERS;
-        } else if (status.equalsIgnoreCase(MovieStatus.COMING_SOON.toString())) {
-            movieStatus = MovieStatus.COMING_SOON;
-        } else if (status.equalsIgnoreCase(MovieStatus.PRESALE.toString())) {
-            movieStatus = MovieStatus.PRESALE;
-        } else {
-            throw new BadRequestException(String.format(ErrorMessages.INVALID_STATUS, status));
-        }
+        MovieStatus movieStatus = movieMapper.movieStatusMapper(status);
 
         Page<Movie> movies = movieRepository.findByStatus(movieStatus, pageable);
 
@@ -419,6 +410,85 @@ public class MovieService {
                 .httpStatus(HttpStatus.OK)
                 .message((movies.isEmpty()) ? ErrorMessages.MOVIES_NOT_FOUND : SuccessMessages.MOVIES_FOUND)
                 .returnBody((movies.isEmpty()) ? Page.empty() : movieMapper.mapToResponsePage(movies))
+                .build();
+    }
+
+
+    /**
+     * Retrieves all distinct genres from the database.
+     *
+     * @return ResponseMessage containing a list of all unique movie genres.
+     * The HTTP status will be 200 OK.
+     */
+    public ResponseMessage<List<String>> getGenres() {
+        List<String> allGenres = movieRepository.findAllGenres();
+
+        return ResponseMessage.<List<String>>builder()
+                .httpStatus(HttpStatus.OK)
+                .returnBody(allGenres)
+                .build();
+    }
+
+    /**
+     * Filters movies based on multiple criteria such as genre, status, rating range,
+     * release date, and special halls. Supports pagination via the Pageable parameter.
+     *
+     * @param genre List of genres to filter by. Only movies containing ALL specified genres will be returned.
+     *              If null or empty, genre filtering is ignored.
+     * @param status MovieStatus as String. Mapped to the MovieStatus enum. If null, status filtering is ignored.
+     * @param minRating Minimum rating filter. If null, no minimum rating restriction is applied.
+     * @param maxRating Maximum rating filter. If null, no maximum rating restriction is applied.
+     * @param releaseDate Filter for movies released on or after this date. If null, no release date restriction is applied.
+     * @param specialHalls Filter for movies containing this substring in their special halls. Case-sensitive.
+     *                     If null or blank, this filter is ignored.
+     * @param pageable Pageable object to handle pagination and sorting.
+     *
+     * @return ResponseMessage containing a Page of MovieResponse objects that match the filters.
+     *         If no movies match, an empty Page is returned. HTTP status is 200 OK.
+     */
+    public ResponseMessage<Page<MovieResponse>> filterMovies(
+            List<String> genre,
+            String status,
+            Double minRating,
+            Double maxRating,
+            String releaseDate,
+            String specialHalls,
+            Pageable pageable) {
+
+        // Prepare specialHalls filter for PostgreSQL LIKE query
+        String normalizedSpecialHalls =
+                (specialHalls == null || specialHalls.isBlank()) ? null : "%" + specialHalls + "%";
+
+        // Normalize genre list; if empty or null, filtering will be ignored
+        List<String> normalizedGenre = (genre == null || genre.isEmpty()) ? null : genre;
+        Long genreSize = (normalizedGenre == null) ? 0L : (long) normalizedGenre.size();
+
+
+        LocalDate normalizedReleaseDate = null;
+        try {
+            normalizedReleaseDate = LocalDate.parse(releaseDate, DateTimeFormatter.ISO_DATE);
+        } catch (Exception e) {
+            System.err.println(e.toString());
+        }
+
+
+
+        // Call repository method with all normalized parameters
+        Page<Movie> filteredMovies = movieRepository.filterMovies(
+                normalizedGenre,
+                genreSize,
+                movieMapper.movieStatusMapper(status),
+                minRating,
+                maxRating,
+                normalizedReleaseDate,
+                normalizedSpecialHalls,
+                pageable
+        );
+
+        // Build response with empty page fallback
+        return ResponseMessage.<Page<MovieResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .returnBody(filteredMovies.isEmpty() ? Page.empty() : movieMapper.mapToResponsePage(filteredMovies))
                 .build();
     }
 
