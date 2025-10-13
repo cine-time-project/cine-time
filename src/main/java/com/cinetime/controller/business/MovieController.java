@@ -85,8 +85,8 @@ public class MovieController {
 
     //M04
     @PreAuthorize("permitAll()")
-    @GetMapping("/in-theatres")
-    public ResponseEntity<ResponseMessage<Page<MovieResponse>>> getMoviesInTheatres(
+    @GetMapping("/in-theaters")
+    public ResponseEntity<ResponseMessage<Page<MovieResponse>>> getMoviesInTheaters(
             @Parameter(description = "Optional search date (yyyy-MM-dd)")
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -94,7 +94,7 @@ public class MovieController {
             Pageable pageable
     ) {
         ResponseMessage<Page<MovieResponse>> response =
-                movieService.getMoviesInTheatres(date, pageable);
+                movieService.getMoviesInTheaters(date, pageable);
         return ResponseEntity.status(response.getHttpStatus()).body(response);
     }
 
@@ -103,16 +103,15 @@ public class MovieController {
     @PreAuthorize("permitAll()")
     @GetMapping("/coming-soon")
     public ResponseEntity<ResponseMessage<Page<MovieResponse>>> getComingSoonMovies(
-            @Parameter(description = "Optional release date (yyyy-MM-dd) to filter")
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @PageableDefault(page = 0, size = 10, sort = "releaseDate", direction = Sort.Direction.ASC)
+            @PageableDefault(page = 0, size = 12, sort = "releaseDate", direction = Sort.Direction.ASC)
             Pageable pageable
     ) {
-        ResponseMessage<Page<MovieResponse>> response =
-                movieService.getComingSoonMovies(date, pageable);
+        var response = movieService.getComingSoonMovies(date, pageable);
         return ResponseEntity.status(response.getHttpStatus()).body(response);
     }
+
 
     @PreAuthorize("permitAll()")
     @GetMapping("/status")

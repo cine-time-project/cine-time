@@ -51,11 +51,11 @@ class GetMoviesInTheatresTest {
 
     @Test
     @DisplayName("Should delegate to helper.getCurrentlyInTheatres when date is null")
-    void shouldCallHelperForCurrentlyInTheatres_whenDateIsNull() {
+    void shouldCallHelperForCurrentlyInTheaters_whenDateIsNull() {
         when(movieServiceHelper.getCurrentlyInTheatres(pageable)).thenReturn(responseWithMovie);
 
         ResponseMessage<Page<MovieResponse>> result =
-                movieService.getMoviesInTheatres(null, pageable);
+                movieService.getMoviesInTheaters(null, pageable);
 
         assertThat(result.getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(result.getReturnBody().getContent()).hasSize(1);
@@ -72,7 +72,7 @@ class GetMoviesInTheatresTest {
         when(movieServiceHelper.getMoviesByDate(date, pageable)).thenReturn(responseWithMovie);
 
         ResponseMessage<Page<MovieResponse>> result =
-                movieService.getMoviesInTheatres(date, pageable);
+                movieService.getMoviesInTheaters(date, pageable);
 
         assertThat(result.getHttpStatus()).isEqualTo(HttpStatus.OK);
         assertThat(result.getReturnBody().getContent().get(0).getTitle()).isEqualTo("Inception");

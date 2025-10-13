@@ -186,5 +186,14 @@ public class ShowtimeService {
                 .collect(Collectors.toList());
     }
 
+    public ResponseMessage<List<CountryMiniResponse>> getCountriesWithShowtimes(LocalDate onOrAfter, Long movieId) {
+        List<CountryMiniResponse> body = showtimeRepository.findCountriesWithShowtimes(onOrAfter, movieId);
+        return ResponseMessage.<List<CountryMiniResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("Countries with showtimes")
+                .returnBody(body)
+                .build();
+    }
+
 
 }

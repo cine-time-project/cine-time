@@ -4,6 +4,7 @@ import com.cinetime.entity.business.Movie;
 import com.cinetime.entity.enums.MovieStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,6 +25,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     Page<Movie> findAllByHallIgnoreCase(@Param("hallName") String hallName, Pageable pageable);
 
     Page<Movie> findByStatus(MovieStatus status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"images"})
+    Page<Movie> findByStatusAndReleaseDateGreaterThanEqual(MovieStatus status, LocalDate from, Pageable pageable);
 
     Page<Movie> findByStatusAndReleaseDateAfter(MovieStatus status, LocalDate date, Pageable pageable);
 
