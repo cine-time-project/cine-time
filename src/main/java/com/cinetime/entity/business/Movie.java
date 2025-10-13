@@ -110,7 +110,9 @@ public class Movie {
     private Set<Image> images = new LinkedHashSet<>();
 
 
-
+    // in com.cinetime.entity.business.Movie
+    @Column(name = "poster_url")
+    private String posterUrl;  // getter/setter via Lombok
 
 
 

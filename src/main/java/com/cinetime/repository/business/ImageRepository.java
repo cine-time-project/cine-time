@@ -4,8 +4,10 @@ package com.cinetime.repository.business;
 import com.cinetime.entity.business.Image;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public interface ImageRepository extends JpaRepository<Image, Long> {
@@ -25,4 +27,9 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
     List<Image> findByMovie_IdOrderByCreatedAtDesc(Long movieId);
 
     Set<Image> findAllByIdIn(Set<Long> ids);
+
+    @Query("select i.id from Image i where i.movie.id = :movieId and i.isPoster = true")
+    Optional<Long> findPosterImageIdByMovieId(@Param("movieId") Long movieId);
+
+
 }

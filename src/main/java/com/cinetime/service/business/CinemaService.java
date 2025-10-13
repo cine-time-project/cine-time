@@ -2,9 +2,12 @@ package com.cinetime.service.business;
 
 import com.cinetime.entity.business.Cinema;
 import com.cinetime.entity.business.City;
+import com.cinetime.entity.business.Movie;
+import com.cinetime.entity.business.Showtime;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaMapper;
 import com.cinetime.payload.mappers.HallMapper;
+import com.cinetime.payload.mappers.MovieMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.business.CinemaCreateRequest;
@@ -12,7 +15,7 @@ import com.cinetime.payload.response.business.*;
 import com.cinetime.repository.business.*;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.CinemasHelper;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,8 +25,10 @@ import org.springframework.stereotype.Service;
 import com.cinetime.entity.user.User;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +43,8 @@ public class CinemaService {
     private final HallMapper hallMapper;
     private final CityRepository cityRepository;
     private final TicketRepository ticketRepository;
+    private final MovieMapper movieMapper;
+    private final MovieRepository movieRepository;
 
     public List<CinemaSummaryResponse> cinemasWithShowtimes() {
         return cinemaRepository.findCinemasWithUpcomingShowtimes();
@@ -279,6 +286,47 @@ public class CinemaService {
                 .returnBody(null)
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public List<MovieWithShowtimesResponse> getMoviesWithShowtimesByCinema(Long cinemaId, LocalDate fromDate) {
+        // 1️⃣ Fetch showtimes grouped by cinema
+        List<ShowtimeRepository.HallMovieTimeRow> rows = showtimeRepository.findShowtimesByCinemaId(cinemaId);
+
+        // 2️⃣ Optionally filter by date if fromDate is provided
+        if (fromDate != null) {
+            rows = rows.stream()
+                    .filter(r -> !r.getDate().isBefore(fromDate))
+                    .toList();
+        }
+
+        // 3️⃣ Group rows by movieId
+        Map<Long, List<ShowtimeRepository.HallMovieTimeRow>> groupedByMovie =
+                rows.stream().collect(Collectors.groupingBy(ShowtimeRepository.HallMovieTimeRow::getMovieId));
+
+        // 4️⃣ Build response list
+        return groupedByMovie.entrySet().stream()
+                .map(entry -> {
+                    Long movieId = entry.getKey();
+
+                    // Fetch full movie details once per movie
+                    Movie movie = movieRepository.findById(movieId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + movieId));
+
+                    return MovieWithShowtimesResponse.builder()
+                            .movie(movieMapper.mapMovieToCinemaMovieResponse(movie))
+                            .showtimes(entry.getValue().stream()
+                                    .map(r -> ShowtimeSimpleResponse.builder()
+                                            .id(null) // not in your projection
+                                            .date(r.getDate())
+                                            .startTime(r.getStartTime())
+                                            .endTime(null) // also not in projection
+                                            .build())
+                                    .toList())
+                            .build();
+                })
+                .toList();
+    }
+
 
 
 }

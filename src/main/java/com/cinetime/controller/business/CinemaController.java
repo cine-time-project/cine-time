@@ -9,11 +9,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -117,5 +119,21 @@ public class CinemaController {
     public ResponseEntity<ResponseMessage<Void>> delete(@PathVariable Long id) {
         return ResponseEntity.ok(cinemaService.delete(id));
     }
+
+    @PreAuthorize("permitAll()")
+    @GetMapping("/cinemas/{cinemaId}/movies")
+    public ResponseEntity<List<MovieWithShowtimesResponse>> getMoviesWithShowtimesByCinema(
+            @PathVariable Long cinemaId,
+            @RequestParam(name = "fromDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate
+    ) {
+        List<MovieWithShowtimesResponse> response = cinemaService.getMoviesWithShowtimesByCinema(cinemaId, fromDate);
+        return ResponseEntity.ok(response);
+    }
+
+
+
+
+
 
 }
