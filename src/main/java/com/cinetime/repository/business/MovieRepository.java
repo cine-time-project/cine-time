@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public interface MovieRepository extends JpaRepository<Movie, Long> {
@@ -86,7 +87,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             @Param("specialHallsPattern") String specialHallsPattern,
             Pageable pageable
     );
-
+    Optional<Movie> findBySlugIgnoreCase(String slug);
 }
 
 
