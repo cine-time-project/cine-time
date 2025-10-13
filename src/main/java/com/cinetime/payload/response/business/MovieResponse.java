@@ -1,6 +1,6 @@
 package com.cinetime.payload.response.business;
 
-import com.cinetime.entity.business.Image;
+
 import com.cinetime.entity.enums.MovieStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,5 +34,8 @@ public class MovieResponse {
     private LocalDateTime updatedAt;
 
     private String trailerUrl;
+
+    private Long posterId;
+    private Long heroId;
 
 }

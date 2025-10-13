@@ -143,7 +143,7 @@ public class MovieService {
      * @param pageable pagination info
      * @return ResponseMessage with a page of MovieResponse
      */
-    public ResponseMessage<Page<MovieResponse>> getMoviesInTheatres(LocalDate date, Pageable pageable) {
+    public ResponseMessage<Page<MovieResponse>> getMoviesInTheaters(LocalDate date, Pageable pageable) {
         if (date != null) {
             return movieServiceHelper.getMoviesByDate(date, pageable);
         }
@@ -151,19 +151,27 @@ public class MovieService {
     }
 
 
-    /**
-     * M05 - Get movies coming soon.
-     * Can filter by date or get all coming soon movies if date is null.
-     *
-     * @param date     optional release date filter
-     * @param pageable pagination info
-     * @return ResponseMessage with a page of MovieResponse
-     */
-    public ResponseMessage<Page<MovieResponse>> getComingSoonMovies(LocalDate date, Pageable pageable) {
-        if (date != null) {
-            return movieServiceHelper.getComingSoonByDate(date, pageable);
-        }
-        return movieServiceHelper.getAllComingSoon(pageable);
+    //M05 - Get movies coming soon.
+
+    @Transactional(readOnly = true)
+    public ResponseMessage<Page<MovieResponse>> getComingSoonMovies(Pageable pageable) {
+        // Pageable-only çağrılar buraya gelecek
+        return getComingSoonMovies(null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseMessage<Page<MovieResponse>> getComingSoonMovies(LocalDate from, Pageable pageable) {
+        Page<Movie> page = (from == null)
+                ? movieRepository.findByStatus(MovieStatus.COMING_SOON, pageable)
+                : movieRepository.findByStatusAndReleaseDateGreaterThanEqual(MovieStatus.COMING_SOON, from, pageable);
+
+        Page<MovieResponse> body = movieMapper.mapToResponsePage(page);
+
+        return ResponseMessage.<Page<MovieResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(page.isEmpty() ? "No movies" : "Movies found")
+                .returnBody(body)
+                .build();
     }
 
 
