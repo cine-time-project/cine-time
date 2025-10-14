@@ -29,35 +29,35 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthenticationService {
 
-  private final AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
     private final GoogleIdTokenService googleIdTokenService;
     private final JwtService jwtService;
     private final GoogleUserRepository googleUserRepository;
     private final UserService userService;
 
-  public AuthenticationResponse authenticate(LoginRequest loginRequest) {
-    String username = loginRequest.getUsername(); // email veya phone
-    String password = loginRequest.getPassword();
+    public AuthenticationResponse authenticate(LoginRequest loginRequest) {
+        String username = loginRequest.getUsername(); // email veya phone
+        String password = loginRequest.getPassword();
 
-    Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(username, password));
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password));
 
-    SecurityContextHolder.getContext().setAuthentication(authentication);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-    String token = jwtService.generateToken(authentication);
+        String token = jwtService.generateToken(authentication);
 
-    UserDetails principal = (UserDetails) authentication.getPrincipal();
+        UserDetails principal = (UserDetails) authentication.getPrincipal();
 
-    List<String> userRoles = principal.getAuthorities().stream()
-            .map(GrantedAuthority::getAuthority)
-            .toList();
+        List<String> userRoles = principal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
 
-    return AuthenticationResponse.builder()
-            .token(token)
-            .roles(userRoles)
-            .username(principal.getUsername()) // email/phone
-            .build();
-  }
+        return AuthenticationResponse.builder()
+                .token(token)
+                .roles(userRoles)
+                .username(principal.getUsername()) // email/phone
+                .build();
+    }
 
     public ResponseMessage<AuthenticationResponse> loginOrRegisterWithGoogle(@Valid GoogleLoginRequest request) {
         var payloadOpt = googleIdTokenService.verify(request.getIdToken());
@@ -77,25 +77,30 @@ public class AuthenticationService {
         // JWT Generation
         String jwt = jwtService.buildTokenFromLoginProp(googleUser.getGoogleId());
 
-        //Role list in String
-        List<String> UserRoles =
-                googleUser.getRoles()
-                        .stream()
-                        .map(t-> t.getRoleName().name())
-                        .toList();
+        // Role list in String
+        List<String> userRoles = googleUser.getRoles()
+                .stream()
+                .map(t -> t.getRoleName().name())
+                .toList();
 
+        // Build AuthenticationResponse
         AuthenticationResponse authenticationResponse = AuthenticationResponse.builder()
                 .name(googleUser.getName())
                 .username(googleUser.getEmail())
                 .token(jwt)
-                .roles(UserRoles)
+                .roles(userRoles)
                 .build();
 
         return ResponseMessage.<AuthenticationResponse>builder()
                 .httpStatus(HttpStatus.OK)
-                .message( newRegistration.get() ? SuccessMessages.USER_CREATE : SuccessMessages.USER_LOGGED_IN)
+                .message(
+                        newRegistration.get()
+                                ? SuccessMessages.USER_CREATE
+                                : SuccessMessages.USER_LOGGED_IN
+                )
                 .returnBody(authenticationResponse)
                 .build();
     }
+
 }
 

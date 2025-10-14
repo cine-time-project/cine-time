@@ -493,4 +493,19 @@ public class MovieService {
     }
 
 
+    @Transactional(readOnly = true)
+    public ResponseMessage<MovieResponse> getMovieBySlug(String slug) {
+        return movieRepository.findBySlugIgnoreCase(slug)
+                .map(movie -> ResponseMessage.<MovieResponse>builder()
+                        .httpStatus(HttpStatus.OK)
+                        .message("Movie fetched by slug")
+                        .returnBody(movieMapper.mapMovieToMovieResponse(movie))
+                        .build()
+                )
+                .orElseGet(() -> ResponseMessage.<MovieResponse>builder()
+                        .httpStatus(HttpStatus.NOT_FOUND)
+                        .message("Movie not found for slug: " + slug)
+                        .build()
+                );
+    }
 }
