@@ -36,7 +36,7 @@ public class AuthenticationService {
     private final UserService userService;
 
     public AuthenticationResponse authenticate(LoginRequest loginRequest) {
-        String username = loginRequest.getUsername(); // email veya phone
+        String username = loginRequest.getPhoneOrEmail(); // email veya phone
         String password = loginRequest.getPassword();
 
         Authentication authentication = authenticationManager.authenticate(
