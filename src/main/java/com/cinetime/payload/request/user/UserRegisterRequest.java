@@ -18,10 +18,7 @@ public class UserRegisterRequest {
     @Size(min = 2, max = 40)
     private String lastName;
 
-    // (XXX) XXX-XXXX
     @NotBlank
-    @Pattern(regexp = "^\\(\\d{3}\\)\\s\\d{3}-\\d{4}$",
-            message = "Phone must be in form of (XXX) XXX-XXXX")
     private String phone;
 
     @NotBlank

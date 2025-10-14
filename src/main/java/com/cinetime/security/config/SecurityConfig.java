@@ -92,6 +92,7 @@ public class SecurityConfig {
     }
 
     private static final String[] AUTH_WHITELIST = {
+            "/api/auth/**",
             "/v3/api-docs",
             "/v3/api-docs/**",
             "/api-docs",
@@ -110,6 +111,8 @@ public class SecurityConfig {
             "/js/**",
             "/api/login",
             "/api/google",
+            "/api/auth/google",
+            "/api/v1/auth/google",
             "/api/cinemas",
             "/api/cinemas/**",
             "/api/cities",
@@ -123,6 +126,7 @@ public class SecurityConfig {
             "/api/forgot-password",
             "/api/reset-password-code",
             "/api/contactmessages",
+            "/api/contactmessages/**",
             "/error",
             "/api/cinemaimages",
             "/api/cinemaimages/**"

@@ -22,6 +22,7 @@ import com.cinetime.service.business.RoleService;
 import com.cinetime.service.helper.MailHelper;
 import com.cinetime.service.helper.SecurityHelper;
 
+import com.cinetime.util.PhoneUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Set;
@@ -59,6 +62,8 @@ public class UserService {
     @Value("${app.mail.reset.template}")
     private String resetTemplateHtml;
 
+    @Value("${cinetime.default-region:TR}")
+    private String defaultRegion;
 
     // U06 - Update Authenticated User
     public UserResponse updateAuthenticatedUser(UserUpdateRequest request) {
@@ -69,6 +74,15 @@ public class UserService {
         if (Boolean.TRUE.equals(user.getBuiltIn())) {
             throw new ConflictException(ErrorMessages.BUILT_IN_USER_UPDATE_NOT_ALLOWED);
         }
+
+        if (StringUtils.hasText(request.getPhone())) {
+            try {
+                user.setPhoneNumber(PhoneUtils.toE164(request.getPhone(), defaultRegion)); // <--- BURASI
+            } catch (IllegalArgumentException ex) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
+            }
+        }
+
 
         UserMapper.updateEntityFromRequest(request, user);
         userRepository.save(user);
@@ -139,6 +153,14 @@ public class UserService {
         Role member = roleRepository.findByRoleName(RoleName.MEMBER)
                 .orElseThrow(() -> new IllegalStateException(ErrorMessages.MEMBER_ROLE_MISSING));
         user.setRoles(Set.of(member));
+
+        try {
+            String normalizedPhone = PhoneUtils.toE164(req.getPhone(), defaultRegion); // <--- BURASI
+            user.setPhoneNumber(normalizedPhone);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
+        }
+
 
         // 5) save + map to response (STATIC mapper)
         User saved = userRepository.save(user);
@@ -239,6 +261,13 @@ public class UserService {
             user.setBuiltIn(false);
             role = roleService.getRole(RoleName.MEMBER);
         }
+
+        try {
+            user.setPhoneNumber(PhoneUtils.toE164(request.getPhoneNumber(), defaultRegion)); // <--- BURASI
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
+        }
+
         user.setRoles(Set.of(role));
         userRepository.save(user);
         UserCreateResponse response = userMapper.mapUserToUserCreateResponse(user);
