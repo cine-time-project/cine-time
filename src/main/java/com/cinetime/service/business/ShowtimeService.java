@@ -102,6 +102,7 @@ public class ShowtimeService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public ResponseMessage<Page<ShowtimeResponse>> getShowtimesByMovieId(Long movieId, Pageable pageable) {
         Movie movie = movieService.findMovieById(movieId);
         Page<Showtime> showtimes = showtimeRepository.findAllByMovie(movie, pageable);
