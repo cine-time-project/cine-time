@@ -36,6 +36,12 @@ public class ShowtimeService {
     private final ShowtimeMapper showtimeMapper;
     private final CinemaRepository cinemaRepository;
 
+    @Transactional(readOnly = true)
+    public List<ShowtimeResponse> getSlotsByCinemaMovieDate(Long cinemaId, Long movieId, LocalDate date) {
+        return showtimeRepository.findByCinemaMovieAndDate(cinemaId, movieId, date)
+                .stream().map(showtimeMapper::mapShowtimeToResponse).toList();
+    }
+
     @Transactional
     public ResponseMessage<ShowtimeResponse> saveShowtime(@Valid ShowtimeRequest showtimeRequest) {
         Hall hall = hallService.findHallById(showtimeRequest.getHallId());
