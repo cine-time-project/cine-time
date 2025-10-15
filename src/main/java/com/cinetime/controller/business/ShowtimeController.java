@@ -27,15 +27,6 @@ public class ShowtimeController {
     private final ShowtimeService showTimeService;
     private final TicketService ticketService;
 
-    @GetMapping("/slots")
-    public List<ShowtimeResponse> getSlots(
-            @RequestParam Long cinemaId,
-            @RequestParam Long movieId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
-    ) {
-        return showTimeService.getSlotsByCinemaMovieDate(cinemaId, movieId, date);
-    }
-
     @PostMapping
     @Transactional
     @PreAuthorize("hasAnyAuthority('ADMIN')")
@@ -93,16 +84,20 @@ public class ShowtimeController {
         return showTimeService.getShowtimesByCinemaId(cinemaId);
     }
 
+    // /api/show-times/cities-with-showtimes?onOrAfter=YYYY-MM-DD&movieId=..&countryId=..
     @GetMapping("/cities-with-showtimes")
     @PreAuthorize("permitAll()")
     public ResponseMessage<List<CityMiniResponse>> getCitiesWithShowtimes(
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate onOrAfter,
-            @RequestParam(required = false) Long movieId
+            @RequestParam(required = false) Long movieId,
+            @RequestParam(required = false, name = "countryId") Long countryId
     ) {
+        if (countryId != null) {
+            return showTimeService.getCitiesWithShowtimesByCountry(onOrAfter, movieId, countryId);
+        }
         return showTimeService.getCitiesWithShowtimes(onOrAfter, movieId);
     }
-
 
 
 
