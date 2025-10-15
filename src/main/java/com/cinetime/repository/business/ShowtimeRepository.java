@@ -163,6 +163,19 @@ public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
             @Param("onOrAfter") LocalDate onOrAfter,
             @Param("movieId")   Long movieId
     );
+
+
+    @Query("""
+  select s
+  from Showtime s
+  join s.hall h
+  where h.cinema.id = :cinemaId
+    and s.movie.id  = :movieId
+    and s.date      = :date
+  order by s.startTime
+""")
+    List<Showtime> findByCinemaMovieAndDate(Long cinemaId, Long movieId, LocalDate date);
+
 }
 
 

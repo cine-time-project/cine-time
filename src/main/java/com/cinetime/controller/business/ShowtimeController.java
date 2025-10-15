@@ -27,6 +27,15 @@ public class ShowtimeController {
     private final ShowtimeService showTimeService;
     private final TicketService ticketService;
 
+    @GetMapping("/slots")
+    public List<ShowtimeResponse> getSlots(
+            @RequestParam Long cinemaId,
+            @RequestParam Long movieId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return showTimeService.getSlotsByCinemaMovieDate(cinemaId, movieId, date);
+    }
+
     @PostMapping
     @Transactional
     @PreAuthorize("hasAnyAuthority('ADMIN')")
