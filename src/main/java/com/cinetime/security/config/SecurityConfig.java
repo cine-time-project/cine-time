@@ -129,7 +129,8 @@ public class SecurityConfig {
             "/api/contactmessages/**",
             "/error",
             "/api/cinemaimages",
-            "/api/cinemaimages/**"
+            "/api/cinemaimages/**",
+            "/api/favorites/"
 
     };
 
