@@ -1,5 +1,6 @@
 package com.cinetime.repository.business;
 
+import com.cinetime.entity.business.City;
 import com.cinetime.entity.business.Movie;
 import com.cinetime.entity.business.Showtime;
 
@@ -16,6 +17,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -163,6 +165,92 @@ public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
             @Param("onOrAfter") LocalDate onOrAfter,
             @Param("movieId")   Long movieId
     );
+
+
+    @Query("""
+  select s
+  from Showtime s
+  join s.hall h
+  where h.cinema.id = :cinemaId
+    and s.movie.id  = :movieId
+    and s.date      = :date
+  order by s.startTime
+""")
+    List<Showtime> findByCinemaMovieAndDate(Long cinemaId, Long movieId, LocalDate date);
+
+
+    @Query("""
+    SELECT DISTINCT city
+    FROM City city
+      JOIN city.country ctry
+      JOIN city.cinemas cin
+      JOIN cin.halls hall
+      JOIN hall.showtimes st
+    WHERE (:countryId IS NULL OR ctry.id = :countryId)
+      AND (:movieId IS NULL OR st.movie.id = :movieId)
+      AND (:onOrAfterStart IS NULL OR st.startTime >= :onOrAfterStart)
+""")
+    List<City> findCitiesWithShowtimesFiltered(@Param("onOrAfterStart") LocalDateTime onOrAfterStart,
+                                               @Param("movieId") Long movieId,
+                                               @Param("countryId") Long countryId);
+
+
+    @Query("""
+    SELECT DISTINCT new com.cinetime.payload.response.business.CityMiniResponse(c.id, c.name)
+    FROM City c
+      JOIN c.country co
+      JOIN c.cinemas ci
+      JOIN ci.halls h
+      JOIN h.showtimes st
+    WHERE (:countryId IS NULL OR co.id = :countryId)
+      AND (:movieId IS NULL OR st.movie.id = :movieId)
+      AND (:onOrAfter IS NULL OR st.startTime >= :onOrAfter)
+""")
+    List<CityMiniResponse> findCitiesWithShowtimes(
+            @Param("onOrAfter") LocalDate onOrAfter,
+            @Param("movieId") Long movieId,
+            @Param("countryId") Long countryId
+    );
+
+
+    @Query("""
+    SELECT DISTINCT new com.cinetime.payload.response.business.CityMiniResponse(c.id, c.name)
+    FROM City c
+      JOIN c.country co
+      JOIN c.cinemas ci
+      JOIN ci.halls h
+      JOIN h.showtimes st
+    WHERE (:countryId IS NULL OR co.id = :countryId)
+      AND (:movieId   IS NULL OR st.movie.id = :movieId)
+      AND (:onOrAfter IS NULL OR st.startTime >= :onOrAfter)
+""")
+    List<CityMiniResponse> findCitiesWithShowtimesByCountry(
+            @Param("onOrAfter") LocalDate onOrAfter,
+            @Param("movieId")   Long movieId,
+            @Param("countryId") Long countryId
+    );
+
+// import com.cinetime.entity.business.City;
+
+    @Query("""
+    SELECT DISTINCT c
+    FROM City c
+      JOIN c.country co
+      JOIN c.cinemas ci
+      JOIN ci.halls h
+      JOIN h.showtimes st
+    WHERE (:countryId IS NULL OR co.id = :countryId)
+      AND (:movieId   IS NULL OR st.movie.id = :movieId)
+      AND (:onOrAfter IS NULL OR st.date >= :onOrAfter)
+""")
+    List<com.cinetime.entity.business.City> findCitiesWithShowtimesByCountryTic(
+            @Param("onOrAfter") LocalDate onOrAfter,
+            @Param("movieId")   Long movieId,
+            @Param("countryId") Long countryId
+    );
+
+
+
 }
 
 

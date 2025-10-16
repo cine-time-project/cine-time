@@ -130,7 +130,9 @@ public class SecurityConfig {
             "/error",
             "/api/cinemaimages",
             "/api/cinemaimages/**",
-            "/api/favorites/"
+            "/api/favorites/",
+            "/api/tickets/buy-ticket"
+
 
     };
 

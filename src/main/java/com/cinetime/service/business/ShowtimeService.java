@@ -1,9 +1,11 @@
 package com.cinetime.service.business;
 
+import com.cinetime.entity.business.City;
 import com.cinetime.entity.business.Hall;
 import com.cinetime.entity.business.Movie;
 import com.cinetime.entity.business.Showtime;
 import com.cinetime.exception.ResourceNotFoundException;
+import com.cinetime.payload.mappers.CityMapper;
 import com.cinetime.payload.mappers.ShowtimeMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
@@ -35,6 +37,7 @@ public class ShowtimeService {
     private final MovieService movieService;
     private final ShowtimeMapper showtimeMapper;
     private final CinemaRepository cinemaRepository;
+    private final CityMapper cityMapper;
 
     @Transactional
     public ResponseMessage<ShowtimeResponse> saveShowtime(@Valid ShowtimeRequest showtimeRequest) {
@@ -192,6 +195,25 @@ public class ShowtimeService {
         return ResponseMessage.<List<CountryMiniResponse>>builder()
                 .httpStatus(HttpStatus.OK)
                 .message("Countries with showtimes")
+                .returnBody(body)
+                .build();
+    }
+
+
+    // BUNU TUT (entity -> mapper)
+    public ResponseMessage<List<CityMiniResponse>> getCitiesWithShowtimesByCountry(
+            LocalDate onOrAfter, Long movieId, Long countryId) {
+
+        List<City> cities = showtimeRepository
+                .findCitiesWithShowtimesByCountryTic(onOrAfter, movieId, countryId);
+
+        List<CityMiniResponse> body = cities.stream()
+                .map(cityMapper::cityToCityMiniResponse)
+                .toList();
+
+        return ResponseMessage.<List<CityMiniResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("Cities fetched")
                 .returnBody(body)
                 .build();
     }
