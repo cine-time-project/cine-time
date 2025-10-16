@@ -25,6 +25,7 @@ import com.cinetime.service.helper.SecurityHelper;
 import com.cinetime.util.PhoneUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +42,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -317,7 +319,13 @@ public class UserService {
             user.setResetPasswordCode(code);
             userRepository.save(user);
 
-            mailHelper.sendResetCodeEmail(user.getEmail(), code); // <—
+            try {
+                // Kodlu e-posta gönderimi
+                mailHelper.sendResetCodeEmail(user.getEmail(), code);
+            } catch (Exception e) {
+                log.error("E-posta gönderimi başarısız: {}", e.getMessage());
+                //throw new BadRequestException("E-posta gönderimi başarısız oldu, lütfen tekrar deneyin.");
+            }
         });
 
         return SuccessMessages.FORGOT_PASSWORD_EMAIL_SENT;
@@ -333,7 +341,7 @@ public class UserService {
         final String email = req.getEmail().trim().toLowerCase();
         final String code = req.getCode().trim();
 
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByLoginProperty(email)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
 
         String savedCode = user.getResetPasswordCode();
@@ -348,6 +356,12 @@ public class UserService {
         userRepository.save(user);
 
         return SuccessMessages.PASSWORD_RESET_SUCCESS;
+    }
+
+    public boolean verifyResetCode(String email, String code) {
+        return userRepository.findByLoginProperty(email)
+                .map(user -> code.equals(user.getResetPasswordCode()))
+                .orElse(false);
     }
 
 

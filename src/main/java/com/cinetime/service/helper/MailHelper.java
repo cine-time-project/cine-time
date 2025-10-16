@@ -7,15 +7,17 @@ import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.service.mail.MailService;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class MailHelper {
-private final MailService mailService;
+    private final MailService mailService;
     private final JavaMailSender mailSender;
 
     @Value("${app.mail.from}")           private String mailFrom;
@@ -29,12 +31,18 @@ private final MailService mailService;
             helper.setFrom(mailFrom);
             helper.setTo(to);
             helper.setSubject(resetSubject);
-            helper.setText(String.format(resetTemplateHtml, code), true); // HTML body
+
+            String body = String.format(resetTemplateHtml, code);
+            helper.setText(body, true); // HTML
+
             mailSender.send(mime);
+            log.info("Şifre sıfırlama e-postası gönderildi: {}", to);
         } catch (Exception e) {
+            log.error("E-posta gönderimi başarısız: {}", e.getMessage(), e);
             throw new IllegalStateException(ErrorMessages.EMAIL_SENDING_FAILED);
         }
     }
+
 
     /**
      * Sends a purchase confirmation email with payment details and ticket list.

@@ -114,11 +114,20 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", msg));
     }
 
+    @PostMapping("/verify-reset-code")
+    public ResponseEntity<?> verifyResetCode(@Valid @RequestBody VerifyResetCodeRequest req) {
+        boolean valid = userService.verifyResetCode(req.getEmail(), req.getCode());
+        if (!valid)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "Kod hatalı veya süresi dolmuş"));
+        return ResponseEntity.ok(Map.of("message", "Kod doğrulandı"));
+    }
+
     //Reset Password with Email code
     @PostMapping("/reset-password-code")
-    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequestEmail req) {
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequestEmail req) {
         String msg = userService.resetPassword(req);
-        return ResponseEntity.ok(msg);
+        return ResponseEntity.ok(Map.of("message", msg));
     }
 
 

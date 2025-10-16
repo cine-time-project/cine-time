@@ -124,6 +124,7 @@ public class SecurityConfig {
             "/api/show-times",
             "/api/show-times/**",
             "/api/forgot-password",
+            "/api/verify-reset-code",
             "/api/reset-password-code",
             "/api/contactmessages",
             "/api/contactmessages/**",
