@@ -81,13 +81,22 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
     Page<Cinema> findFavoriteCinemasByUserId(@Param("userId") Long userId, Pageable pageable);
 
 
-    // --- Detay: City'lerle birlikte getir ---
-    @EntityGraph(attributePaths = {"city"})
+    @EntityGraph(attributePaths = {
+            "city",
+            "city.country",
+            "cinemaImage"
+    })
     Optional<Cinema> findById(Long id);
 
     @Query("select u.id from User u where u.email = :email")
     Optional<Long> findIdByUsername(@Param("email") String email);
 
+
+    @EntityGraph(attributePaths = {
+            "city",
+            "city.country",
+            "cinemaImage"
+    })
     Set<Cinema> findAllByIdIn(Set<Long> ids);
 
 
@@ -99,10 +108,13 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
         select distinct new com.cinetime.payload.response.business.CinemaSummaryResponse(
             c.id,
             c.name,
-            new com.cinetime.payload.response.business.CityMiniResponse(ci.id, ci.name)
+            new com.cinetime.payload.response.business.CityMiniResponse(ci.id, ci.name),
+            new com.cinetime.payload.response.business.CountryMiniResponse(co.id, co.name),
+            null
         )
         from Cinema c
         join c.city ci
+        join ci.country co
         join c.halls h
         join h.showtimes s
         where s.date >= CURRENT_DATE
@@ -117,16 +129,17 @@ select distinct new com.cinetime.payload.response.business.CinemaSummaryResponse
   c.id,
   c.name,
   new com.cinetime.payload.response.business.CityMiniResponse(ct.id, ct.name),
+  new com.cinetime.payload.response.business.CountryMiniResponse(co.id, co.name),
   coalesce(ci.url, concat(:apiBase, '/api/cinemaimages/', cast(c.id as string)))
 )
 from Cinema c
 join c.city ct
+join ct.country co
 left join c.cinemaImage ci
 where exists (
   select 1 from Hall h join h.showtimes s
   where h.cinema = c and s.date >= current_date
 )
-and ci is not null
 order by ct.name, c.name
 """)
     List<CinemaSummaryResponse> findCinemasWithShowtimesAndImages(

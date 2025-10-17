@@ -26,4 +26,11 @@ public class ShowtimeResponse {
     //Movie
     private Long movieId;
     private String movieTitle;
+
+    private Long cityId;
+    private String cityName;
+    private Long countryId;
+    private String countryName;
+
+
 }

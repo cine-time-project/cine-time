@@ -2,8 +2,11 @@ package com.cinetime.payload.mappers;
 
 import com.cinetime.entity.business.Cinema;
 import com.cinetime.entity.business.CinemaImage;
+import com.cinetime.entity.business.City;
+import com.cinetime.entity.business.Country;
 import com.cinetime.payload.response.business.CinemaSummaryResponse;
 import com.cinetime.payload.response.business.CityMiniResponse;
+import com.cinetime.payload.response.business.CountryMiniResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -17,12 +20,24 @@ public class CinemaMapper {
         if (cinema == null) return null;
 
         CityMiniResponse cityMiniResponse = null;
+        CountryMiniResponse countryMiniResponse= null;
         if (cinema.getCity() != null) {
+            City city= cinema.getCity();
+
             cityMiniResponse = CityMiniResponse.builder()
-                    .id(cinema.getCity().getId())
-                    .name(cinema.getCity().getName())
+                    .id(city.getId())
+                    .name(city.getName())
                     .build();
+            if (city.getCountry() !=null){
+                Country country= city.getCountry();
+                countryMiniResponse = CountryMiniResponse.builder()
+                        .id(country.getId())
+                        .name(country.getName())
+                        .build();
+            }
         }
+
+
 
         // Build imageUrl: prefer external URL; otherwise expose your binary endpoint
         String imageUrl = null;
@@ -42,6 +57,7 @@ public class CinemaMapper {
                 .id(cinema.getId())
                 .name(cinema.getName())
                 .city(cityMiniResponse)
+                .country(countryMiniResponse)
                 .imageUrl(imageUrl)
                 .build();
     }
