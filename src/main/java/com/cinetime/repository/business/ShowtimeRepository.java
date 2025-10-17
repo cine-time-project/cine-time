@@ -9,6 +9,7 @@ import com.cinetime.payload.response.business.CityMiniResponse;
 import com.cinetime.payload.response.business.CountryMiniResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -133,7 +134,12 @@ public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
 
 
 
-
+    @EntityGraph(attributePaths = {
+            "hall",
+            "hall.cinema",
+            "hall.cinema.city",
+            "hall.cinema.city.country"
+    })
     Page<Showtime> findAllByMovie(Movie movie, Pageable pageable);
 
     @Query("""

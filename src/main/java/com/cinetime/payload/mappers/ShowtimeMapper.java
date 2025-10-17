@@ -25,21 +25,30 @@ public class ShowtimeMapper {
     public ShowtimeResponse mapShowtimeToResponse(Showtime showtime) {
         if (showtime == null) return null;
 
+        // Unwrap associations defensively
+        Hall hall = showtime.getHall();
+        var cinema = (hall != null) ? hall.getCinema() : null;
+        var city = (cinema != null) ? cinema.getCity() : null;
+        var country = (city != null) ? city.getCountry() : null;
+
         return ShowtimeResponse.builder()
                 .id(showtime.getId())
                 .date(showtime.getDate())
                 .startTime(showtime.getStartTime())
                 .endTime(showtime.getEndTime())
                 // Hall / Cinema data
-                .hallId(showtime.getHall() != null ? showtime.getHall().getId() : null)
-                .hallName(showtime.getHall() != null ? showtime.getHall().getName() : null)
-                .cinemaId(showtime.getHall() != null && showtime.getHall().getCinema() != null
-                        ? showtime.getHall().getCinema().getId() : null)
-                .cinemaName(showtime.getHall() != null && showtime.getHall().getCinema() != null
-                        ? showtime.getHall().getCinema().getName() : null)
+                .hallId(hall != null ? hall.getId() : null)
+                .hallName(hall != null ? hall.getName() : null)
+                .cinemaId(cinema != null ? cinema.getId() : null)
+                .cinemaName(cinema != null ? cinema.getName() : null)
                 // Movie data
                 .movieId(showtime.getMovie() != null ? showtime.getMovie().getId() : null)
                 .movieTitle(showtime.getMovie() != null ? showtime.getMovie().getTitle() : null)
+                // NEW: City / Country
+                .cityId(city != null ? city.getId() : null)
+                .cityName(city != null ? city.getName() : null)
+                .countryId(country != null ? country.getId() : null)
+                .countryName(country != null ? country.getName() : null)
                 .build();
     }
 
