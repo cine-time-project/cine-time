@@ -26,9 +26,20 @@ public class TicketResponse {
     private TicketStatus status;
     private Double price;
 
+    // NEW: public URL for the cinema's image (external URL if present; otherwise your /api/cinemaimages/{cinemaId} endpoint)
+    private String moviePosterUrl;
 
-
-
-
-
+    // Backward‑compat constructor (old 10‑arg signature). Any legacy `new TicketResponse(...)` calls still work.
+    public TicketResponse(Long id,
+                          String movieName,
+                          String cinema,
+                          String hall,
+                          LocalDate date,
+                          LocalTime startTime,
+                          String seatLetter,
+                          int seatNumber,
+                          TicketStatus status,
+                          Double price) {
+        this(id, movieName, cinema, hall, date, startTime, seatLetter, seatNumber, status, price, null);
+    }
 }
