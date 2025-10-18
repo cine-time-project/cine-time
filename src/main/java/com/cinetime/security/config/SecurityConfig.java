@@ -124,15 +124,18 @@ public class SecurityConfig {
             "/api/show-times",
             "/api/show-times/**",
             "/api/forgot-password",
+            "/api/reset-password",
             "/api/verify-reset-code",
             "/api/reset-password-code",
+            "/api/reset-password-direct",
             "/api/contactmessages",
             "/api/contactmessages/**",
             "/error",
             "/api/cinemaimages",
             "/api/cinemaimages/**",
             "/api/favorites/",
-            "/api/tickets/buy-ticket"
+            "/api/tickets/buy-ticket",
+            "/api/send-email-code",
 
 
     };

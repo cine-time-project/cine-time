@@ -1,6 +1,8 @@
 package com.cinetime.payload.request.user;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,9 +12,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class VerifyResetCodeRequest {
 
-    @NotBlank(message = "Email must not be blank")
+    @NotBlank
+    @Email
     private String email;
 
-    @NotBlank(message = "Verification code must not be blank")
+    @NotBlank
+    @Pattern(regexp="^\\d{6}$", message="Code must be 6 digits")
     private String code;
 }
