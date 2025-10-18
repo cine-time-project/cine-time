@@ -123,12 +123,23 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "Kod doğrulandı"));
     }
 
-    //Reset Password with Email code
+    // Yeni şifre belirleme (kodsuz) — kullanıcı kodu önceden doğruladı
+    @PostMapping("/reset-password-direct")
+    public ResponseEntity<Map<String, String>> resetPasswordDirect(@Valid @RequestBody ResetPasswordRequestDirect req) {
+        String msg = userService.resetPasswordDirect(req);
+        return ResponseEntity.ok(Map.of("message", msg));
+    }
+
+    // Kod + şifre aynı anda (eski tek adımlı akış)
     @PostMapping("/reset-password-code")
-    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequestEmail req) {
+    public ResponseEntity<Map<String, String>> resetPasswordWithCode(@Valid @RequestBody ResetPasswordRequestEmail req) {
         String msg = userService.resetPassword(req);
         return ResponseEntity.ok(Map.of("message", msg));
     }
+
+
+
+
 
 
 }
