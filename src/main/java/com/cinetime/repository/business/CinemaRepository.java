@@ -16,46 +16,46 @@ import java.util.Set;
 
 public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
-    // --- Search: sadece City filtresi ---
-    @EntityGraph(attributePaths = {"city"})
+    // --- Search: only city filter ---
+    @EntityGraph(attributePaths = {"city", "city.country"})
     @Query("""
-      select c
-      from Cinema c
-      where (:cityId is null or c.city.id = :cityId)
-      order by c.name asc
-    """)
+  select c
+  from Cinema c
+  where (:cityId is null or c.city.id = :cityId)
+  order by c.name asc
+""")
     Page<Cinema> search(@Param("cityId") Long cityId, Pageable pageable);
 
-    // --- Search: City + Hall.isSpecial filtresi ---
-    @EntityGraph(attributePaths = {"city"})
+    // --- Search: city + specialHall filter ---
+    @EntityGraph(attributePaths = {"city", "city.country"})
     @Query(
-        value = """
-            select c
-            from Cinema c
-            where (:cityId is null or c.city.id = :cityId)
-              and (
-                    :specialHall is null
-                    or exists (
-                        select 1
-                        from Hall h
-                        where h.cinema = c and h.isSpecial = :specialHall
-                    )
-                  )
-            order by c.name asc
-            """,
-        countQuery = """
-            select count(c)
-            from Cinema c
-            where (:cityId is null or c.city.id = :cityId)
-              and (
-                    :specialHall is null
-                    or exists (
-                        select 1
-                        from Hall h
-                        where h.cinema = c and h.isSpecial = :specialHall
-                    )
-                  )
-            """
+            value = """
+        select c
+        from Cinema c
+        where (:cityId is null or c.city.id = :cityId)
+          and (
+                :specialHall is null
+                or exists (
+                    select 1
+                    from Hall h
+                    where h.cinema = c and h.isSpecial = :specialHall
+                )
+              )
+        order by c.name asc
+        """,
+            countQuery = """
+        select count(c)
+        from Cinema c
+        where (:cityId is null or c.city.id = :cityId)
+          and (
+                :specialHall is null
+                or exists (
+                    select 1
+                    from Hall h
+                    where h.cinema = c and h.isSpecial = :specialHall
+                )
+              )
+        """
     )
     Page<Cinema> search(@Param("cityId") Long cityId,
                         @Param("specialHall") Boolean specialHall,
@@ -63,7 +63,8 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
 
     // --- Auth kullanıcının favori sinemaları ---
 // Auth kullanıcının favori sinemaları – kök: Cinema
-    @EntityGraph(attributePaths = {"city"})
+// --- Favorites also needs country if your mapper reads it ---
+    @EntityGraph(attributePaths = {"city", "city.country"})
     @Query(
             value = """
         select distinct c
