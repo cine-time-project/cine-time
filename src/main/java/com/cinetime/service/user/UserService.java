@@ -364,6 +364,24 @@ public class UserService {
                 .orElse(false);
     }
 
+    public String resetPasswordDirect(ResetPasswordRequestDirect req) {
+        final String email = req.getEmail().trim().toLowerCase();
+
+        User user = userRepository.findByLoginProperty(email)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
+
+        // Bu noktada kod doğrulaması zaten /verify-reset-code ile yapılmış olmalı.
+        // Kod alanını temizle (kullanılmış kodu geçersiz kıl)
+        user.setResetPasswordCode(null);
+
+        user.setPassword(encoder.encode(req.getNewPassword()));
+        userRepository.save(user);
+
+        return SuccessMessages.PASSWORD_RESET_SUCCESS;
+    }
+
+
+
 
 }
 
