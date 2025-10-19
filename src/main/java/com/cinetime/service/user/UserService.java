@@ -399,9 +399,10 @@ public class UserService {
         // Long userId = p.getId();
         // User user = userRepository.findById(userId)
         //     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userRepository.findByLoginProperty(subject)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
 
-        User user = userRepository.findByEmailIgnoreCase(subject)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
 
         UserResponse userResponse = new UserResponse();
         userResponse.setName(user.getName());
