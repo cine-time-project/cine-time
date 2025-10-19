@@ -1,7 +1,11 @@
 package com.cinetime.payload.response.user;
 
 import java.time.LocalDate;
+
+
+import lombok.Builder;
 import lombok.Data;
+
 
 @Data
 public class UserResponse {

@@ -137,6 +137,12 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", msg));
     }
 
+    // U01 - Get authenticated user info
+    @GetMapping("/user-information")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserResponse> getUserInformation() {
+        return ResponseEntity.ok(userService.getAuthenticatedUser());
+    }
 
 
 
