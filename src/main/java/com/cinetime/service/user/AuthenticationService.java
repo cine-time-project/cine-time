@@ -65,8 +65,6 @@ public class AuthenticationService {
 
         return AuthenticationResponse.builder()
                 .token(token)
-                .roles(userRoles)
-                .username(principal.getUsername()) // email/phone
                 .user(authenticatedUser)
                 .build();
     }
@@ -95,12 +93,16 @@ public class AuthenticationService {
                 .map(t -> t.getRoleName().name())
                 .toList();
 
-        // Build AuthenticationResponse
-        AuthenticationResponse authenticationResponse = AuthenticationResponse.builder()
+        AuthenticatedUser authenticatedUser = AuthenticatedUser.builder()
                 .name(googleUser.getName())
                 .username(googleUser.getEmail())
-                .token(jwt)
                 .roles(userRoles)
+                .build();
+
+        // Build AuthenticationResponse
+        AuthenticationResponse authenticationResponse = AuthenticationResponse.builder()
+                .token(jwt)
+                .user(authenticatedUser)
                 .build();
 
         return ResponseMessage.<AuthenticationResponse>builder()

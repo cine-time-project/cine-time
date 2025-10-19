@@ -16,12 +16,6 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthenticationResponse {
 
-    private String name;
-
-    private String username;
-
-    private List<String> roles;
-
     private String token;
 
     private AuthenticatedUser user;
