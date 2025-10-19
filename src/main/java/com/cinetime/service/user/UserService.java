@@ -34,6 +34,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -383,7 +384,45 @@ public class UserService {
 
 
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public UserResponse getAuthenticatedUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new AccessDeniedException("Not authenticated");
+        }
+
+        // If your JWT subject is email/username, this works:
+        String subject = auth.getName();
+
+        // Prefer by-id if your principal carries an id
+        // UserPrincipal p = (UserPrincipal) auth.getPrincipal();
+        // Long userId = p.getId();
+        // User user = userRepository.findById(userId)
+        //     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userRepository.findByLoginProperty(subject)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
+
+
+
+        UserResponse userResponse = new UserResponse();
+        userResponse.setName(user.getName());
+        userResponse.setSurname(user.getSurname());
+        userResponse.setEmail(user.getEmail());
+        return userResponse;
+
+
+    }
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
