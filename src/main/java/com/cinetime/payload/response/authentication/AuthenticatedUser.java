@@ -1,29 +1,23 @@
 package com.cinetime.payload.response.authentication;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuthenticationResponse {
+public class AuthenticatedUser {
 
     private String name;
 
     private String username;
 
     private List<String> roles;
-
-    private String token;
-
-    private AuthenticatedUser user;
-
 }

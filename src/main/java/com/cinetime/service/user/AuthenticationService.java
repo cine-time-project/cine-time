@@ -1,11 +1,13 @@
 package com.cinetime.service.user;
 
 import com.cinetime.entity.user.GoogleUser;
+import com.cinetime.entity.user.User;
 import com.cinetime.exception.BadRequestException;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.authentication.GoogleLoginRequest;
 import com.cinetime.payload.request.authentication.LoginRequest;
+import com.cinetime.payload.response.authentication.AuthenticatedUser;
 import com.cinetime.payload.response.authentication.AuthenticationResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.repository.user.GoogleUserRepository;
@@ -14,6 +16,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.cinetime.security.service.GoogleIdTokenService;
+import com.cinetime.service.helper.SecurityHelper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,6 +37,7 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final GoogleUserRepository googleUserRepository;
     private final UserService userService;
+    private final SecurityHelper securityHelper;
 
     public AuthenticationResponse authenticate(LoginRequest loginRequest) {
         String username = loginRequest.getPhoneOrEmail(); // email veya phone
@@ -52,10 +56,18 @@ public class AuthenticationService {
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
+        User user = securityHelper.loadByLoginProperty(principal.getUsername());
+        AuthenticatedUser authenticatedUser = AuthenticatedUser.builder()
+                .name(user.getName())
+                .username(principal.getUsername())
+                .roles(userRoles)
+                .build();
+
         return AuthenticationResponse.builder()
                 .token(token)
                 .roles(userRoles)
                 .username(principal.getUsername()) // email/phone
+                .user(authenticatedUser)
                 .build();
     }
 
