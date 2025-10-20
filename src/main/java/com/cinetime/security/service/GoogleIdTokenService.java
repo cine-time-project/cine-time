@@ -40,8 +40,11 @@ public class GoogleIdTokenService {
                     !"accounts.google.com".equals(issuer)) return Optional.empty();
 
             // 3- Email verification
+            String email = jwt.getClaimAsString("email");
             Boolean emailVerified = (Boolean) jwt.getClaim("email_verified");
-            if (!Boolean.TRUE.equals(emailVerified)) return Optional.empty();
+            if (email == null || !Boolean.TRUE.equals(emailVerified)) {
+                email = jwt.getSubject() + "@google.local"; // fake internal email
+            }
 
             // 4- Payload creation
             GoogleUserRequest payload = GoogleUserRequest.builder()

@@ -85,7 +85,7 @@ public class AuthenticationService {
                 });
 
         // JWT Generation
-        String jwt = jwtService.buildTokenFromLoginProp(googleUser.getGoogleId());
+        String jwt = jwtService.buildTokenFromLoginProp(googleUser.getEmail());
 
         // Role list in String
         List<String> userRoles = googleUser.getRoles()
