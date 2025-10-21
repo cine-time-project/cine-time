@@ -39,7 +39,7 @@ import java.util.List;
         })
 
 
-        @PreAuthorize("hasAnyAuthority('MEMBER')")
+        @PreAuthorize("hasAnyAuthority('MEMBER','ANONYMOUS','ADMIN')")
         @GetMapping("/auth/current-tickets")
         public ResponseEntity<ResponseMessage<Page<TicketResponse>>> currentTickets(
                 @AuthenticationPrincipal UserDetailsImpl principal,
@@ -60,7 +60,7 @@ import java.util.List;
             return ResponseEntity.ok(response);
         }
 
-        @PreAuthorize("hasAnyAuthority('MEMBER')")
+        @PreAuthorize("hasAnyAuthority('MEMBER','ANONYMOUS','ADMIN')")
         @GetMapping("/auth/passed-tickets")
 
         public ResponseEntity<ResponseMessage<Page<TicketResponse>>> passedTickets(
