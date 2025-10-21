@@ -38,3 +38,4 @@ log/
 logs/
 *.log
 
+*.properties
