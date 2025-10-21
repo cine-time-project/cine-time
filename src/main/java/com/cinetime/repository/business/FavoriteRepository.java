@@ -2,21 +2,19 @@ package com.cinetime.repository.business;
 
 import com.cinetime.entity.business.Favorite;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Optional;
 
-// FavoriteRepository.java
 public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     boolean existsByUserIdAndMovieId(Long userId, Long movieId);
     boolean existsByUserIdAndCinemaId(Long userId, Long cinemaId);
 
-    Optional<Favorite> findByUserIdAndMovieId(Long userId, Long movieId);
-    Optional<Favorite> findByUserIdAndCinemaId(Long userId, Long cinemaId);
+    @Modifying void deleteByUserIdAndMovieId(Long userId, Long movieId);
+    @Modifying void deleteByUserIdAndCinemaId(Long userId, Long cinemaId);
 
-    void deleteByUserIdAndMovieId(Long userId, Long movieId);
-    void deleteByUserIdAndCinemaId(Long userId, Long cinemaId);
-
-    List<Favorite> findAllByUserIdAndMovieIdIsNotNull(Long userId);   // film favorileri
-    List<Favorite> findAllByUserIdAndCinemaIdIsNotNull(Long userId);  // sinema favorileri
+    @Query("select f.movie.id from Favorite f where f.user.id = :uid and f.movie is not null")
+    List<Long> findMovieIdsByUserId(@Param("uid") Long userId);
 }
