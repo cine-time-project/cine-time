@@ -18,11 +18,12 @@ import java.time.LocalDateTime;
         }
 
 )
-@Check(constraints =
-        "(movie_id IS NOT NULL AND cinema_id IS NULL) OR (movie_id IS NULL AND cinema_id IS NOT NULL)"
-)
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @Builder
+@Check(constraints = "(movie_id IS NOT NULL AND cinema_id IS NULL) OR (movie_id IS NULL AND cinema_id IS NOT NULL)")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"user","movie","cinema"})
 public class Favorite {
@@ -37,12 +38,13 @@ public class Favorite {
             foreignKey = @ForeignKey(name = "fk_favorite_user"))
     private User user;
 
-    // --- DİKKAT: her ikisi de OPTIONAL/NULLABLE ---
+    // Film favorisi için dolu olur, aksi halde NULL kalabilir
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "movie_id", nullable = true,
+    @JoinColumn(name = "movie_id", nullable = true, updatable = false,
             foreignKey = @ForeignKey(name = "fk_favorite_movie"))
     private Movie movie;
 
+    // Sinema favorisi için dolu olur, aksi halde NULL kalabilir
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "cinema_id", nullable = true,
             foreignKey = @ForeignKey(name = "fk_favorite_cinema"))
@@ -56,7 +58,6 @@ public class Favorite {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // App-level XOR: ikisinden tam biri set olsun
     @PrePersist @PreUpdate
     private void validateExactlyOneTarget() {
         boolean hasMovie  = movie  != null;
