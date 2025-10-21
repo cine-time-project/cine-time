@@ -100,8 +100,7 @@ import java.util.List;
         }
 
 
-        //TODO  @PreAuthorize("hasAnyAuthority('MEMBER')") olarak güncelle
-        @PreAuthorize("permitAll()")
+        @PreAuthorize("hasAnyAuthority('MEMBER')")
         @PostMapping("/buy-ticket")
         public ResponseEntity<ResponseMessage<PaymentResponse>> buy(
                 @AuthenticationPrincipal com.cinetime.security.service.UserDetailsImpl principal,

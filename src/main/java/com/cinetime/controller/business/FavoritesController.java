@@ -1,6 +1,7 @@
 package com.cinetime.controller.business;
 
 import com.cinetime.payload.response.business.ResponseMessage;
+import com.cinetime.security.service.UserDetailsImpl;
 import com.cinetime.service.business.FavoriteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,56 +16,26 @@ import java.util.List;
 @RequestMapping("/api/favorites")
 @RequiredArgsConstructor
 public class FavoritesController {
-    private final FavoriteService favoriteService;
+    private final FavoriteService svc;
 
-    // --- MOVIES ---
-    @PreAuthorize("hasAnyAuthority('MEMBER','EMPLOYEE','ADMIN')")
-    @PostMapping("/movies/{movieId}")
-    public ResponseEntity<ResponseMessage<Void>> addMovieFavorite(
-            @PathVariable Long movieId,
-            Authentication auth) {
-        var resp = favoriteService.addMovieFavorite(auth.getName(), movieId);
-        return ResponseEntity.status(resp.getHttpStatus()).body(resp);
-    }
-
-    @PreAuthorize("hasAnyAuthority('MEMBER','EMPLOYEE','ADMIN')")
-    @DeleteMapping("/movies/{movieId}")
-    public ResponseEntity<ResponseMessage<Void>> removeMovieFavorite(
-            @PathVariable Long movieId,
-            Authentication auth) {
-        var resp = favoriteService.removeMovieFavorite(auth.getName(), movieId);
-        return ResponseEntity.status(resp.getHttpStatus()).body(resp);
-    }
-
-    // FE: FAVORITE_MOVIES_AUTH_API = /favorites/movies/auth
-    @PreAuthorize("hasAnyAuthority('MEMBER','EMPLOYEE','ADMIN')")
+    // Filmler
     @GetMapping("/movies/auth")
-    public ResponseEntity<ResponseMessage<List<Long>>> getMyMovieFavorites(Authentication auth) {
-        var resp = favoriteService.getMyFavoriteMovieIds(auth.getName());
-        return ResponseEntity.status(resp.getHttpStatus()).body(resp);
+    public List<Long> myMovieFavs(Authentication auth) {
+        Long uid = principalId(auth);
+        return svc.listMovieIds(uid);
     }
 
-    // --- (İsteğe bağlı) CINEMAS ---
-    @PreAuthorize("hasAnyAuthority('MEMBER','EMPLOYEE','ADMIN')")
-    @PostMapping("/cinemas/{cinemaId}")
-    public ResponseEntity<ResponseMessage<Void>> addCinemaFavorite(
-            @PathVariable Long cinemaId, Authentication auth) {
-        // favoriteService.addCinemaFavorite(...)
-        throw new UnsupportedOperationException("TODO");
+    @PostMapping("/movies/{movieId}")
+    public void addMovie(Authentication auth, @PathVariable Long movieId) {
+        svc.addMovieFavorite(principalId(auth), movieId);
     }
 
-    @PreAuthorize("hasAnyAuthority('MEMBER','EMPLOYEE','ADMIN')")
-    @DeleteMapping("/cinemas/{cinemaId}")
-    public ResponseEntity<ResponseMessage<Void>> removeCinemaFavorite(
-            @PathVariable Long cinemaId, Authentication auth) {
-        // favoriteService.removeCinemaFavorite(...)
-        throw new UnsupportedOperationException("TODO");
+    @DeleteMapping("/movies/{movieId}")
+    public void removeMovie(Authentication auth, @PathVariable Long movieId) {
+        svc.removeMovieFavorite(principalId(auth), movieId);
     }
 
-    @PreAuthorize("hasAnyAuthority('MEMBER','EMPLOYEE','ADMIN')")
-    @GetMapping("/cinemas/auth")
-    public ResponseEntity<ResponseMessage<List<Long>>> getMyCinemaFavorites(Authentication auth) {
-        // favoriteService.getMyFavoriteCinemaIds(...)
-        throw new UnsupportedOperationException("TODO");
+    private Long principalId(Authentication auth) {
+        return ((UserDetailsImpl) auth.getPrincipal()).getId(); // senin principal tipin
     }
 }
