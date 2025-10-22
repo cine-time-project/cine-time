@@ -142,7 +142,9 @@ public class MovieService {
      * @param date     optional date filter
      * @param pageable pagination info
      * @return ResponseMessage with a page of MovieResponse
+     *
      */
+    @Transactional(readOnly = true)
     public ResponseMessage<Page<MovieResponse>> getMoviesInTheaters(LocalDate date, Pageable pageable) {
         if (date != null) {
             return movieServiceHelper.getMoviesByDate(date, pageable);
