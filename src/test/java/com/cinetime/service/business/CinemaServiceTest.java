@@ -54,6 +54,7 @@ class CinemaServiceTest {
     @Test
     void listCinemas_ok_returnsPageWrappedInResponseMessage() {
         Long cityId = 1L;
+        String cityName = null;
         Boolean isSpecial = true;
 
         Cinema c1 = Cinema.builder().id(10L).name("A").slug("a").build();
@@ -68,7 +69,7 @@ class CinemaServiceTest {
         when(cinemaMapper.toSummary(c2)).thenReturn(dto2);
 
         ResponseMessage<Page<CinemaSummaryResponse>> resp =
-                cinemaService.listCinemas(cityId, isSpecial, pageable);
+                cinemaService.listCinemas(cityId, cityName, isSpecial, pageable);
 
         assertThat(resp.getHttpStatus()).isEqualTo(org.springframework.http.HttpStatus.OK);
         assertThat(resp.getMessage()).isEqualTo(SuccessMessages.CINEMAS_LISTED);

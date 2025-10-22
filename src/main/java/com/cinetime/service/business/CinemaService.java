@@ -51,8 +51,6 @@ public class CinemaService {
     }
 
 
-
-
     public List<CinemaSummaryResponse> cinemasWithShowtimesAndImages() {
         String base = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .toUriString().replaceAll("/$", ""); // no trailing slash
@@ -67,10 +65,18 @@ public class CinemaService {
     }
 
     //C01: Cinemas based on city and sipecialHalls
-    public ResponseMessage<Page<CinemaSummaryResponse>> listCinemas(Long cityId, Boolean isSpecial,
+    public ResponseMessage<Page<CinemaSummaryResponse>> listCinemas(Long cityId, String cityName, Boolean isSpecial,
                                                                     Pageable pageable) {
 
-        Page<Cinema> cinemas = cinemaRepository.search(cityId, isSpecial, pageable);
+
+        Page<Cinema> cinemas = null;
+        if (cityRepository.findByNameIgnoreCase(cityName).isPresent()){
+            Long existingCityId = cityRepository.findByNameIgnoreCase(cityName).get().getId();
+            cinemas = cinemaRepository.search(existingCityId, isSpecial, pageable);
+        } else {
+            cinemas = cinemaRepository.search(cityId, isSpecial, pageable);
+        }
+
         Page<CinemaSummaryResponse> dtoPage = cinemas.map(cinemaMapper::toSummary);
         return ResponseMessage.<Page<CinemaSummaryResponse>>builder()
                 .httpStatus(HttpStatus.OK)
@@ -196,23 +202,23 @@ public class CinemaService {
         if (cityId == null) {
             throw new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND);
         }
-            City city = cityRepository.findById(cityId)
-                    .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND + " " + cityId));
+        City city = cityRepository.findById(cityId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.CITY_NOT_FOUND + " " + cityId));
 
-            Cinema cinema = Cinema.builder()
-                    .name(name)
-                    .slug(uniqueSlug)
-                    .city(city)
-                    .build();
+        Cinema cinema = Cinema.builder()
+                .name(name)
+                .slug(uniqueSlug)
+                .city(city)
+                .build();
 
 
-            var dto = cinemaMapper.toSummary(cinemaRepository.save(cinema));
-            return ResponseMessage.<CinemaSummaryResponse>builder()
-                    .httpStatus(HttpStatus.CREATED)
-                    .message(SuccessMessages.CINEMA_CREATED)
-                    .returnBody(dto)
-                    .build();
-        }
+        var dto = cinemaMapper.toSummary(cinemaRepository.save(cinema));
+        return ResponseMessage.<CinemaSummaryResponse>builder()
+                .httpStatus(HttpStatus.CREATED)
+                .message(SuccessMessages.CINEMA_CREATED)
+                .returnBody(dto)
+                .build();
+    }
 
 
     //C07: Cinema Update
@@ -255,11 +261,11 @@ public class CinemaService {
         }
 
         var saved = cinemaRepository.save(cinema);
-        var dto   = cinemaMapper.toSummary(saved);
+        var dto = cinemaMapper.toSummary(saved);
 
         return ResponseMessage.<CinemaSummaryResponse>builder()
                 .httpStatus(HttpStatus.OK)
-                .message(String.format(SuccessMessages.CINEMA_UPDATED,id))
+                .message(String.format(SuccessMessages.CINEMA_UPDATED, id))
                 .returnBody(dto)
                 .build();
     }
@@ -326,7 +332,6 @@ public class CinemaService {
                 })
                 .toList();
     }
-
 
 
 }
