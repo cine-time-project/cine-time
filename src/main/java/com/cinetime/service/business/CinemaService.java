@@ -70,16 +70,18 @@ public class CinemaService {
 
 
         Page<Cinema> cinemas = null;
-        if (cityRepository.findByNameIgnoreCase(cityName).isPresent()){
+        boolean cityExist = false;
+        if (cityRepository.findByNameIgnoreCase(cityName).isPresent()) {
             Long existingCityId = cityRepository.findByNameIgnoreCase(cityName).get().getId();
             cinemas = cinemaRepository.search(existingCityId, isSpecial, pageable);
+            cityExist = true;
         } else {
             cinemas = cinemaRepository.search(cityId, isSpecial, pageable);
         }
 
-        Page<CinemaSummaryResponse> dtoPage = cinemas.map(cinemaMapper::toSummary);
+        Page<CinemaSummaryResponse> dtoPage = !cinemas.isEmpty() ? cinemas.map(cinemaMapper::toSummary) : Page.empty();
         return ResponseMessage.<Page<CinemaSummaryResponse>>builder()
-                .httpStatus(HttpStatus.OK)
+                .httpStatus(cityExist ? HttpStatus.OK : HttpStatus.I_AM_A_TEAPOT)
                 .message(SuccessMessages.CINEMAS_LISTED)
                 .returnBody(dtoPage) // <-- Page<CinemaSummaryResponse>
                 .build();
