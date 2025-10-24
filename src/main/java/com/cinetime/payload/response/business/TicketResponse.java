@@ -1,5 +1,6 @@
 package com.cinetime.payload.response.business;
 
+import com.cinetime.entity.business.Image;
 import com.cinetime.entity.enums.TicketStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +27,9 @@ public class TicketResponse {
     private TicketStatus status;
     private Double price;
 
+    private Long movieId;
+
+
     // NEW: public URL for the movie's image (external URL if present; otherwise your /api/cinemaimages/{cinemaId} endpoint)
     private String moviePosterUrl;
 
@@ -40,6 +44,6 @@ public class TicketResponse {
                           int seatNumber,
                           TicketStatus status,
                           Double price) {
-        this(id, movieName, cinema, hall, date, startTime, seatLetter, seatNumber, status, price, null);
+        this(id, movieName, cinema, hall, date, startTime, seatLetter, seatNumber, status, price,null,null);
     }
 }

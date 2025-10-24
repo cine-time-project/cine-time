@@ -13,11 +13,14 @@ public class TicketMapper {
     public TicketResponse mapTicketToTicketResponse(Ticket ticket){
         if (ticket ==null) return null;
 
+        Long movieId= null;
         String posterUrl = null;
         if (ticket.getShowtime() != null && ticket.getShowtime().getMovie() != null) {
             posterUrl = ticket.getShowtime().getMovie().getPosterUrl(); // assuming you store it as posterUrl or imageUrl
+            movieId= ticket.getShowtime().getMovie().getId();
         }
 
+     
 
 
         return TicketResponse.builder()
@@ -32,6 +35,7 @@ public class TicketMapper {
                 .price(ticket.getPrice())
                 .status(ticket.getStatus())
                 .moviePosterUrl(posterUrl)
+                .movieId(movieId)
                 .build();
 
     }
