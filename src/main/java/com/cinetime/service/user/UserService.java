@@ -34,7 +34,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -137,13 +136,17 @@ public class UserService {
     // U02 - User Register
     @Transactional
     public UserResponse saveUser(UserRegisterRequest req) {
-
         // 1) unique
         if (userRepository.existsByEmail(req.getEmail()))
             throw new ConflictException(ErrorMessages.EMAIL_NOT_UNIQUE);
 
         if (userRepository.existsByPhoneNumber(req.getPhone()))
             throw new ConflictException(ErrorMessages.PHONE_NUMBER_NOT_UNIQUE);
+
+        // If this is a GoogleUser, let the saveGoogleUser method save it.
+        if (req instanceof GoogleRegisterRequest){
+            return saveGoogleUser((GoogleRegisterRequest) req);
+        }
 
         // 2) request -> entity (STATIC mapper)
         User user = UserMapper.fromRegisterRequest(req);   // <<< static call
@@ -164,6 +167,8 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
         }
 
+        // 6) provider = LOCAL
+        user.setProvider(AuthProvider.LOCAL);
 
         // 5) save + map to response (STATIC mapper)
         User saved = userRepository.save(user);
@@ -171,22 +176,35 @@ public class UserService {
     }
 
     @Transactional
-    public GoogleUser saveGoogleUser(GoogleUserRequest googleRequest) {
+    private UserResponse saveGoogleUser(GoogleRegisterRequest registerRequest) {
+
         // get MEMBER role as default from DB
         Role memberRole = roleRepository.findByRoleName(RoleName.MEMBER)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.MEMBER_ROLE_MISSING));
 
         GoogleUser newUser = GoogleUser.builder()
-                .email(googleRequest.getEmail())
-                .name(googleRequest.getName())
-                .surname(googleRequest.getFamilyName())
-                .googleId(googleRequest.getGoogleId())
-                .picture(googleRequest.getPicture())
+                .googleId(registerRequest.getGoogleId())
+                .picture(registerRequest.getPicture())
+                .name(registerRequest.getFirstName())
+                .surname(registerRequest.getLastName())
+                //.phoneNumber(registerRequest.getPhone())   ---> will be added below after normalization
+                .email(registerRequest.getEmail())
+                .password(encoder.encode(registerRequest.getPassword()))
+                .birthDate(registerRequest.getBirthDate())
+                .gender(registerRequest.getGender())
                 .provider(AuthProvider.GOOGLE)
                 .roles(Set.of(memberRole)) // MEMBER role given by default.
                 .build();
 
-        return googleUserRepository.save(newUser);
+        try {
+            String normalizedPhone = PhoneUtils.toE164(registerRequest.getPhone(), defaultRegion); // <--- BURASI
+            newUser.setPhoneNumber(normalizedPhone);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
+        }
+
+        GoogleUser user = googleUserRepository.save(newUser);
+        return UserMapper.toResponse(user);
     }
 
     //U10-Update user by ADMIN or EMPLOYEE
@@ -382,8 +400,6 @@ public class UserService {
     }
 
 
-
-
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public UserResponse getAuthenticatedUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -401,7 +417,6 @@ public class UserService {
         //     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         User user = userRepository.findByLoginProperty(subject)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
-
 
 
         UserResponse userResponse = new UserResponse();

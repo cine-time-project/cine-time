@@ -1,5 +1,6 @@
 package com.cinetime.service.user;
 
+import com.cinetime.entity.enums.AuthProvider;
 import com.cinetime.entity.user.GoogleUser;
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.BadRequestException;
@@ -7,13 +8,14 @@ import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.authentication.GoogleLoginRequest;
 import com.cinetime.payload.request.authentication.LoginRequest;
+import com.cinetime.payload.response.user.GooglePreRegisterResponse;
 import com.cinetime.payload.response.authentication.AuthenticatedUser;
 import com.cinetime.payload.response.authentication.AuthenticationResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.repository.user.GoogleUserRepository;
 import com.cinetime.security.jwt.JwtService;
+
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.cinetime.security.service.GoogleIdTokenService;
 import com.cinetime.service.helper.SecurityHelper;
@@ -69,21 +71,7 @@ public class AuthenticationService {
                 .build();
     }
 
-    public ResponseMessage<AuthenticationResponse> loginOrRegisterWithGoogle(@Valid GoogleLoginRequest request) {
-        var payloadOpt = googleIdTokenService.verify(request.getIdToken());
-        if (payloadOpt.isEmpty()) throw new BadRequestException(ErrorMessages.INVALID_TOKEN_ID);
-
-        var payload = payloadOpt.get();
-
-        // Email check in UserRepository
-        AtomicBoolean newRegistration = new AtomicBoolean(false);
-        GoogleUser googleUser = googleUserRepository.findByGoogleId(payload.getGoogleId())
-                .orElseGet(() -> {
-                    // New GoogleUser registration
-                    newRegistration.set(true);
-                    return userService.saveGoogleUser(payload);
-                });
-
+    private ResponseMessage<Object> loginWithGoogle(GoogleUser googleUser) {
         // JWT Generation
         String jwt = jwtService.buildTokenFromLoginProp(googleUser.getEmail());
 
@@ -105,14 +93,37 @@ public class AuthenticationService {
                 .user(authenticatedUser)
                 .build();
 
-        return ResponseMessage.<AuthenticationResponse>builder()
+        return ResponseMessage.<Object>builder()
                 .httpStatus(HttpStatus.OK)
-                .message(
-                        newRegistration.get()
-                                ? SuccessMessages.USER_CREATE
-                                : SuccessMessages.USER_LOGGED_IN
-                )
+                .message(SuccessMessages.USER_LOGGED_IN)
                 .returnBody(authenticationResponse)
+                .build();
+    }
+
+    public ResponseMessage<Object> loginOrRegisterWithGoogle(@Valid GoogleLoginRequest request) {
+        var payloadOpt = googleIdTokenService.verify(request.getIdToken());
+        if (payloadOpt.isEmpty()) throw new BadRequestException(ErrorMessages.INVALID_TOKEN_ID);
+
+        var payload = payloadOpt.get();
+
+        // Checking if this is a login process of an already-registered Google User
+        if (googleUserRepository.findByGoogleId(payload.getGoogleId()).isPresent()) {
+            GoogleUser googleUser = googleUserRepository.findByGoogleId(payload.getGoogleId()).get();
+            return loginWithGoogle(googleUser);
+        }
+
+        GooglePreRegisterResponse preRegisterResponse = GooglePreRegisterResponse.builder()
+                .email(payload.getEmail())
+                .name(payload.getGivenName())
+                .surname(payload.getFamilyName())
+                .googleId(payload.getGoogleId())
+                .picture(payload.getPicture())
+                .build();
+
+        return ResponseMessage.<Object>builder()
+                .httpStatus(HttpStatus.I_AM_A_TEAPOT)
+                .message(SuccessMessages.USER_FORWARDED)
+                .returnBody(preRegisterResponse)
                 .build();
     }
 
