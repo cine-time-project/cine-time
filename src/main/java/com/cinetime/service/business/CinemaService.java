@@ -3,7 +3,6 @@ package com.cinetime.service.business;
 import com.cinetime.entity.business.Cinema;
 import com.cinetime.entity.business.City;
 import com.cinetime.entity.business.Movie;
-import com.cinetime.entity.business.Showtime;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaMapper;
 import com.cinetime.payload.mappers.HallMapper;
@@ -70,18 +69,18 @@ public class CinemaService {
 
 
         Page<Cinema> cinemas = null;
-        boolean cityExist = false;
+        boolean returnedWholeList = false;
         if (cityRepository.findByNameIgnoreCase(cityName).isPresent()) {
             Long existingCityId = cityRepository.findByNameIgnoreCase(cityName).get().getId();
             cinemas = cinemaRepository.search(existingCityId, isSpecial, pageable);
-            cityExist = true;
         } else {
             cinemas = cinemaRepository.search(cityId, isSpecial, pageable);
+            returnedWholeList = true;
         }
 
         Page<CinemaSummaryResponse> dtoPage = !cinemas.isEmpty() ? cinemas.map(cinemaMapper::toSummary) : Page.empty();
         return ResponseMessage.<Page<CinemaSummaryResponse>>builder()
-                .httpStatus(cityExist ? HttpStatus.OK : HttpStatus.I_AM_A_TEAPOT)
+                .httpStatus(returnedWholeList ? HttpStatus.I_AM_A_TEAPOT : HttpStatus.OK)
                 .message(SuccessMessages.CINEMAS_LISTED)
                 .returnBody(dtoPage) // <-- Page<CinemaSummaryResponse>
                 .build();

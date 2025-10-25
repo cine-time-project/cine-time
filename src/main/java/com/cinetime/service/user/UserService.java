@@ -178,7 +178,7 @@ public class UserService {
 
         GoogleUser newUser = GoogleUser.builder()
                 .email(googleRequest.getEmail())
-                .name(googleRequest.getName())
+                .name(googleRequest.getGivenName())
                 .surname(googleRequest.getFamilyName())
                 .googleId(googleRequest.getGoogleId())
                 .picture(googleRequest.getPicture())

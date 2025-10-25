@@ -15,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-//TODO: is endpoint correct?
+
 @RequestMapping("/api")
 public class AuthenticationController {
 
@@ -27,9 +27,9 @@ public class AuthenticationController {
         return ResponseEntity.ok(authenticationService.authenticate(loginRequest));
     }
 
-    //TODO: these endpoints should be rearranged.
+
     @PostMapping("/google")
-    public ResponseMessage<AuthenticationResponse> loginWithGoogle(@RequestBody @Valid GoogleLoginRequest request) {
+    public ResponseMessage<?> loginWithGoogle(@RequestBody @Valid GoogleLoginRequest request) {
         return authenticationService.loginOrRegisterWithGoogle(request);
     }
 

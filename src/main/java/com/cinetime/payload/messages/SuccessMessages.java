@@ -43,6 +43,7 @@ public class SuccessMessages {
 
 
     public static final String USER_CREATE = "User successfully created";
+    public static final String USER_FORWARDED = "User forwarded for registration";
     public static final String PASSWORD_CHANGED = "Password has been updated successfully.";
 
     //Hall
