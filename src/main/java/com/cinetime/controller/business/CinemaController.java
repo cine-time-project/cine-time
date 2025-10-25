@@ -32,10 +32,11 @@ public class CinemaController {
     @GetMapping("/cinemas")
     public ResponseMessage<Page<CinemaSummaryResponse>> listCinemas(
             @RequestParam(required = false) Long cityId,
+            @RequestParam(required = false) String cityName,
             @RequestParam(required = false) Boolean specialHall,
             @PageableDefault(page = 0, size = 10, sort = "name", direction = Sort.Direction.ASC)Pageable pageable) {
 
-     return cinemaService.listCinemas(cityId, specialHall, pageable);
+     return cinemaService.listCinemas(cityId, cityName, specialHall, pageable);
 
     }
     @PreAuthorize("permitAll()")

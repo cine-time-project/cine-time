@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CityRepository extends JpaRepository<City, Long> {
     boolean existsByNameIgnoreCase(String name);
@@ -18,6 +19,8 @@ public interface CityRepository extends JpaRepository<City, Long> {
         order by c.name asc
     """)
     List<City> findCitiesWithCinemas();
+
+    Optional<City> findByNameIgnoreCase(String name);
 
 
 
