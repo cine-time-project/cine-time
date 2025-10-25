@@ -2,13 +2,26 @@ package com.cinetime.payload.request.user;
 
 import com.cinetime.entity.enums.Gender;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.time.LocalDate;
 
 @Data
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "provider" // JSON içindeki provider alanına bakacak
+)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = UserRegisterRequest.class, name = "LOCAL"),
+        @JsonSubTypes.Type(value = GoogleRegisterRequest.class, name = "GOOGLE")
+})
 public class UserRegisterRequest {
+
+    //provider only exists in json payload that comes from FrontEnd to decide which subType of this class will be mapped.
 
     @NotBlank
     @Size(min = 2, max = 40)

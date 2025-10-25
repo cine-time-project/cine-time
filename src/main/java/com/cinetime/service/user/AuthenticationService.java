@@ -118,7 +118,6 @@ public class AuthenticationService {
                 .surname(payload.getFamilyName())
                 .googleId(payload.getGoogleId())
                 .picture(payload.getPicture())
-                .provider(AuthProvider.GOOGLE)
                 .build();
 
         return ResponseMessage.<Object>builder()

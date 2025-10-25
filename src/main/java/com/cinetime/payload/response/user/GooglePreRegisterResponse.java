@@ -18,8 +18,6 @@ public class GooglePreRegisterResponse {
 
     private String picture; // profile picture
 
-    private AuthProvider provider;
-
     //roles eklenecek
 
 

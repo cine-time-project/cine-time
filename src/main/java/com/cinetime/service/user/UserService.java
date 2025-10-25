@@ -34,7 +34,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -137,13 +136,17 @@ public class UserService {
     // U02 - User Register
     @Transactional
     public UserResponse saveUser(UserRegisterRequest req) {
-
         // 1) unique
         if (userRepository.existsByEmail(req.getEmail()))
             throw new ConflictException(ErrorMessages.EMAIL_NOT_UNIQUE);
 
         if (userRepository.existsByPhoneNumber(req.getPhone()))
             throw new ConflictException(ErrorMessages.PHONE_NUMBER_NOT_UNIQUE);
+
+        // If this is a GoogleUser, let the saveGoogleUser method save it.
+        if (req instanceof GoogleRegisterRequest){
+            return saveGoogleUser((GoogleRegisterRequest) req);
+        }
 
         // 2) request -> entity (STATIC mapper)
         User user = UserMapper.fromRegisterRequest(req);   // <<< static call
@@ -164,20 +167,16 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
         }
 
+        // 6) provider = LOCAL
+        user.setProvider(AuthProvider.LOCAL);
+
         // 5) save + map to response (STATIC mapper)
         User saved = userRepository.save(user);
         return UserMapper.toResponse(saved);               // <<< static call while mapper is not component
     }
 
     @Transactional
-    public GoogleUser saveGoogleUser(GoogleRegisterRequest registerRequest) {
-
-        // 1) unique
-        if (userRepository.existsByEmail(registerRequest.getEmail()))
-            throw new ConflictException(ErrorMessages.EMAIL_NOT_UNIQUE);
-
-        if (userRepository.existsByPhoneNumber(registerRequest.getPhone()))
-            throw new ConflictException(ErrorMessages.PHONE_NUMBER_NOT_UNIQUE);
+    private UserResponse saveGoogleUser(GoogleRegisterRequest registerRequest) {
 
         // get MEMBER role as default from DB
         Role memberRole = roleRepository.findByRoleName(RoleName.MEMBER)
@@ -204,7 +203,8 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
         }
 
-        return googleUserRepository.save(newUser);
+        GoogleUser user = googleUserRepository.save(newUser);
+        return UserMapper.toResponse(user);
     }
 
     //U10-Update user by ADMIN or EMPLOYEE
