@@ -8,7 +8,7 @@ import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.authentication.GoogleLoginRequest;
 import com.cinetime.payload.request.authentication.LoginRequest;
-import com.cinetime.payload.request.user.GooglePreRegisterResponse;
+import com.cinetime.payload.response.user.GooglePreRegisterResponse;
 import com.cinetime.payload.response.authentication.AuthenticatedUser;
 import com.cinetime.payload.response.authentication.AuthenticationResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
@@ -16,7 +16,6 @@ import com.cinetime.repository.user.GoogleUserRepository;
 import com.cinetime.security.jwt.JwtService;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.cinetime.security.service.GoogleIdTokenService;
 import com.cinetime.service.helper.SecurityHelper;

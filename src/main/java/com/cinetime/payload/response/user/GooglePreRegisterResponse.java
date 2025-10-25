@@ -1,4 +1,4 @@
-package com.cinetime.payload.request.user;
+package com.cinetime.payload.response.user;
 
 import com.cinetime.entity.enums.AuthProvider;
 import lombok.Builder;

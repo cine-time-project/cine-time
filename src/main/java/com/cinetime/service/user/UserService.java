@@ -164,27 +164,45 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
         }
 
-
         // 5) save + map to response (STATIC mapper)
         User saved = userRepository.save(user);
         return UserMapper.toResponse(saved);               // <<< static call while mapper is not component
     }
 
     @Transactional
-    public GoogleUser saveGoogleUser(GoogleUserRequest googleRequest) {
+    public GoogleUser saveGoogleUser(GoogleRegisterRequest registerRequest) {
+
+        // 1) unique
+        if (userRepository.existsByEmail(registerRequest.getEmail()))
+            throw new ConflictException(ErrorMessages.EMAIL_NOT_UNIQUE);
+
+        if (userRepository.existsByPhoneNumber(registerRequest.getPhone()))
+            throw new ConflictException(ErrorMessages.PHONE_NUMBER_NOT_UNIQUE);
+
         // get MEMBER role as default from DB
         Role memberRole = roleRepository.findByRoleName(RoleName.MEMBER)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.MEMBER_ROLE_MISSING));
 
         GoogleUser newUser = GoogleUser.builder()
-                .email(googleRequest.getEmail())
-                .name(googleRequest.getGivenName())
-                .surname(googleRequest.getFamilyName())
-                .googleId(googleRequest.getGoogleId())
-                .picture(googleRequest.getPicture())
+                .googleId(registerRequest.getGoogleId())
+                .picture(registerRequest.getPicture())
+                .name(registerRequest.getFirstName())
+                .surname(registerRequest.getLastName())
+                //.phoneNumber(registerRequest.getPhone())   ---> will be added below after normalization
+                .email(registerRequest.getEmail())
+                .password(encoder.encode(registerRequest.getPassword()))
+                .birthDate(registerRequest.getBirthDate())
+                .gender(registerRequest.getGender())
                 .provider(AuthProvider.GOOGLE)
                 .roles(Set.of(memberRole)) // MEMBER role given by default.
                 .build();
+
+        try {
+            String normalizedPhone = PhoneUtils.toE164(registerRequest.getPhone(), defaultRegion); // <--- BURASI
+            newUser.setPhoneNumber(normalizedPhone);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
+        }
 
         return googleUserRepository.save(newUser);
     }
@@ -382,8 +400,6 @@ public class UserService {
     }
 
 
-
-
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public UserResponse getAuthenticatedUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -401,7 +417,6 @@ public class UserService {
         //     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         User user = userRepository.findByLoginProperty(subject)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
-
 
 
         UserResponse userResponse = new UserResponse();
