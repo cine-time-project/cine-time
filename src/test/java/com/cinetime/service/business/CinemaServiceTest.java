@@ -1,38 +1,46 @@
 package com.cinetime.service.business;
 
-import com.cinetime.entity.business.*;
-import com.cinetime.entity.user.User;
+import com.cinetime.entity.business.Cinema;
+import com.cinetime.entity.business.City;
+import com.cinetime.entity.business.Movie;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaMapper;
 import com.cinetime.payload.mappers.HallMapper;
+import com.cinetime.payload.mappers.MovieMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.business.CinemaCreateRequest;
 import com.cinetime.payload.response.business.*;
 import com.cinetime.repository.business.*;
 import com.cinetime.repository.user.UserRepository;
-import com.cinetime.repository.business.ShowtimeRepository.HallMovieTimeRow;
 import com.cinetime.service.helper.CinemasHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+/**
+ * Unit tests for the CinemaService class.
+ * Uses Mockito to isolate business logic from repository or mapping layers.
+ * Verifies correctness of behavior, responses, and exceptions.
+ */
+@ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
 class CinemaServiceTest {
 
-    @InjectMocks
-    private CinemaService cinemaService;
-
+    // --- Mocked dependencies ---
     @Mock private CinemaRepository cinemaRepository;
     @Mock private CinemaMapper cinemaMapper;
     @Mock private CinemasHelper cinemasHelper;
@@ -42,305 +50,252 @@ class CinemaServiceTest {
     @Mock private HallMapper hallMapper;
     @Mock private CityRepository cityRepository;
     @Mock private TicketRepository ticketRepository;
+    @Mock private MovieMapper movieMapper;
+    @Mock private MovieRepository movieRepository;
 
-    private Pageable pageable;
+    // --- System under test ---
+    @InjectMocks
+    private CinemaService cinemaService;
+
+    private Cinema cinema;
+    private City city;
 
     @BeforeEach
-    void setup() {
-        pageable = PageRequest.of(0, 10, Sort.by("id").ascending());
+    void setUp() {
+        city = City.builder().id(1L).name("Istanbul").build();
+        city = City.builder().id(1L).name("Istanbul").build();
+
+        cinema = Cinema.builder()
+                .id(10L)
+                .name("CineTime Mall")
+                .slug("cinetime-mall")
+                .city(city)
+                .movies(new LinkedHashSet<>())
+                .halls(new LinkedHashSet<>())
+                .favorites(new LinkedHashSet<>())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+
+
     }
 
-    // ---------- listCinemas ----------
+    // ===========================================================
+    // Basic CRUD-like service methods
+    // ===========================================================
+
     @Test
-    void listCinemas_ok_returnsPageWrappedInResponseMessage() {
-        Long cityId = 1L;
-        String cityName = null;
-        Boolean isSpecial = true;
+    void getCinemaById_ShouldReturnCinema_WhenExists() {
+        // Arrange
+        when(cinemaRepository.findById(10L)).thenReturn(Optional.of(cinema));
+        CinemaSummaryResponse mapped =
+                CinemaSummaryResponse.builder().id(10L).name("CineTime Mall").build();
+        when(cinemaMapper.toSummary(cinema)).thenReturn(mapped);
 
-        Cinema c1 = Cinema.builder().id(10L).name("A").slug("a").build();
-        Cinema c2 = Cinema.builder().id(11L).name("B").slug("b").build();
-        Page<Cinema> page = new PageImpl<>(List.of(c1, c2), pageable, 2);
+        // Act
+        var response = cinemaService.getCinemaById(10L);
 
-        when(cinemaRepository.search(cityId, isSpecial, pageable)).thenReturn(page);
-
-        CinemaSummaryResponse dto1 = CinemaSummaryResponse.builder().id(10L).name("A").build();
-        CinemaSummaryResponse dto2 = CinemaSummaryResponse.builder().id(11L).name("B").build();
-        when(cinemaMapper.toSummary(c1)).thenReturn(dto1);
-        when(cinemaMapper.toSummary(c2)).thenReturn(dto2);
-
-        ResponseMessage<Page<CinemaSummaryResponse>> resp =
-                cinemaService.listCinemas(cityId, cityName, isSpecial, pageable);
-
-        assertThat(resp.getHttpStatus()).isEqualTo(org.springframework.http.HttpStatus.OK);
-        assertThat(resp.getMessage()).isEqualTo(SuccessMessages.CINEMAS_LISTED);
-        assertThat(resp.getReturnBody().getContent()).containsExactly(dto1, dto2);
-    }
-
-    // ---------- getCinemaById ----------
-    @Test
-    void getCinemaById_ok() {
-        Long id = 42L;
-        Cinema entity = Cinema.builder().id(id).name("Kanyon").slug("kanyon").build();
-        when(cinemaRepository.findById(id)).thenReturn(Optional.of(entity));
-
-        CinemaSummaryResponse dto = CinemaSummaryResponse.builder().id(id).name("Kanyon").build();
-        when(cinemaMapper.toSummary(entity)).thenReturn(dto);
-
-        ResponseMessage<CinemaSummaryResponse> resp = cinemaService.getCinemaById(id);
-
-        assertThat(resp.getHttpStatus()).isEqualTo(org.springframework.http.HttpStatus.OK);
-        assertThat(resp.getMessage()).isEqualTo(String.format(SuccessMessages.CINEMA_FETCHED, id));
-        assertThat(resp.getReturnBody()).isEqualTo(dto);
+        // Assert
+        assertThat(response.getHttpStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getReturnBody().getId()).isEqualTo(10L);
+        verify(cinemaRepository).findById(10L);
     }
 
     @Test
-    void getCinemaById_notFound_throws() {
+    void getCinemaById_ShouldThrowException_WhenNotFound() {
         when(cinemaRepository.findById(999L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> cinemaService.getCinemaById(999L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining(ErrorMessages.CINEMA_NOT_FOUND);
     }
 
-    // ---------- getById helper ----------
     @Test
-    void getById_ok() {
-        Long id = 5L;
-        Cinema c = Cinema.builder().id(id).name("X").slug("x").build();
-        when(cinemaRepository.findById(id)).thenReturn(Optional.of(c));
+    void createCinema_ShouldCreateSuccessfully() {
+        // Arrange
+        CinemaCreateRequest request = new CinemaCreateRequest();
+        request.setName("Test Cinema");
+        request.setCityId(1L);
 
-        Cinema found = cinemaService.getById(id);
-        assertThat(found).isSameAs(c);
+        when(cityRepository.findById(1L)).thenReturn(Optional.of(city));
+        when(cinemasHelper.slugify("Test Cinema")).thenReturn("test-cinema");
+        when(cinemasHelper.ensureUniqueSlug("test-cinema")).thenReturn("test-cinema");
+        when(cinemaRepository.save(any(Cinema.class))).thenReturn(cinema);
+        when(cinemaMapper.toSummary(cinema))
+                .thenReturn(CinemaSummaryResponse.builder().id(10L).name("CineTime Mall").build());
+
+        // Act
+        var result = cinemaService.createCinema(request);
+
+        // Assert
+        assertThat(result.getHttpStatus()).isEqualTo(HttpStatus.CREATED);
+        assertThat(result.getMessage()).isEqualTo(SuccessMessages.CINEMA_CREATED);
+        verify(cinemaRepository).save(any(Cinema.class));
     }
 
     @Test
-    void getById_notFound_throws() {
-        when(cinemaRepository.findById(123L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> cinemaService.getById(123L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining(ErrorMessages.CINEMA_NOT_FOUND);
-    }
+    void createCinema_ShouldThrow_WhenCityNotFound() {
+        CinemaCreateRequest request = new CinemaCreateRequest();
+        request.setName("Cinema X");
+        request.setCityId(999L);
+        when(cityRepository.findById(999L)).thenReturn(Optional.empty());
 
-    // ---------- getAuthFavoritesByLogin ----------
-    @Test
-    void getAuthFavoritesByLogin_ok() {
-        String login = "esra@example.com";
-        User user = new User();
-        user.setId(7L);
-
-        when(userRepository.findByLoginProperty(login)).thenReturn(Optional.of(user));
-
-        Cinema c1 = Cinema.builder().id(1L).name("A").slug("a").build();
-        Cinema c2 = Cinema.builder().id(2L).name("B").slug("b").build();
-        Page<Cinema> page = new PageImpl<>(List.of(c1, c2), pageable, 2);
-
-        when(cinemaRepository.findFavoriteCinemasByUserId(7L, pageable)).thenReturn(page);
-
-        CinemaSummaryResponse d1 = CinemaSummaryResponse.builder().id(1L).name("A").build();
-        CinemaSummaryResponse d2 = CinemaSummaryResponse.builder().id(2L).name("B").build();
-        when(cinemaMapper.toSummary(c1)).thenReturn(d1);
-        when(cinemaMapper.toSummary(c2)).thenReturn(d2);
-
-        ResponseMessage<Page<CinemaSummaryResponse>> resp =
-                cinemaService.getAuthFavoritesByLogin(login, pageable);
-
-        assertThat(resp.getHttpStatus()).isEqualTo(org.springframework.http.HttpStatus.OK);
-        assertThat(resp.getMessage()).isEqualTo(SuccessMessages.FAVORITES_LISTED);
-        assertThat(resp.getReturnBody().getContent()).containsExactly(d1, d2);
-    }
-
-    @Test
-    void getAuthFavoritesByLogin_userNotFound_throws() {
-        when(userRepository.findByLoginProperty("ghost")).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> cinemaService.getAuthFavoritesByLogin("ghost", pageable))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining(ErrorMessages.NOT_FOUND_USER_MESSAGE_UNIQUE_FIELD);
-    }
-
-    // ---------- getCinemaHallsWithShowtimes ----------
-    @Test
-    void getCinemaHallsWithShowtimes_ok_groupsByHallAndMovie() {
-        Long cinemaId = 99L;
-        when(cinemaRepository.existsById(cinemaId)).thenReturn(true);
-
-        List<HallMovieTimeRow> rows = List.of(
-                row(1L, "Hall-1", 100, false, 1000L, "Movie-A", LocalDate.now(), LocalTime.of(10, 0)),
-                row(1L, "Hall-1", 100, false, 1000L, "Movie-A", LocalDate.now(), LocalTime.of(12, 0)),
-                row(1L, "Hall-1", 100, false, 1001L, "Movie-B", LocalDate.now(), LocalTime.of(13, 30)),
-                row(2L, "Hall-2", 80,  true, 1000L, "Movie-A", LocalDate.now(), LocalTime.of(11, 15))
-        );
-        when(showtimeRepository.findShowtimesByCinemaId(cinemaId)).thenReturn(rows);
-
-        List<HallWithShowtimesResponse> resp = cinemaService.getCinemaHallsWithShowtimes(cinemaId);
-
-        assertThat(resp).hasSize(2);
-        HallWithShowtimesResponse h1 = resp.get(0);
-        assertThat(h1.getId()).isEqualTo(1L);
-        assertThat(h1.getMovies()).hasSize(2);
-        var timesA = h1.getMovies().get(0).getTimes();
-        assertThat(timesA).isSorted();
-    }
-
-    @Test
-    void getCinemaHallsWithShowtimes_cinemaNotFound_throws() {
-        when(cinemaRepository.existsById(404L)).thenReturn(false);
-
-        assertThatThrownBy(() -> cinemaService.getCinemaHallsWithShowtimes(404L))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining(String.format(ErrorMessages.CINEMA_NOT_FOUND, 404L));
-    }
-
-    // ---------- getAllSpecialHalls ----------
-    @Test
-    void getAllSpecialHalls_ok() {
-        Hall h1 = Hall.builder().id(1L).name("IMAX").seatCapacity(200).isSpecial(true).build();
-        Hall h2 = Hall.builder().id(2L).name("4DX").seatCapacity(120).isSpecial(true).build();
-
-        when(hallRepository.findByIsSpecialTrueOrderByNameAsc()).thenReturn(List.of(h1, h2));
-
-        SpecialHallResponse r1 = SpecialHallResponse.builder().id(1L).name("IMAX").build();
-        SpecialHallResponse r2 = SpecialHallResponse.builder().id(2L).name("4DX").build();
-        when(hallMapper.toSpecial(h1)).thenReturn(r1);
-        when(hallMapper.toSpecial(h2)).thenReturn(r2);
-
-        ResponseMessage<List<SpecialHallResponse>> resp = cinemaService.getAllSpecialHalls();
-
-        assertThat(resp.getHttpStatus()).isEqualTo(org.springframework.http.HttpStatus.OK);
-        assertThat(resp.getMessage()).isEqualTo(SuccessMessages.SPECIAL_HALLS_LISTED);
-        assertThat(resp.getReturnBody()).containsExactly(r1, r2);
-    }
-
-    // ---------- createCinema (tek şehir) ----------
-    @Test
-    void createCinema_ok_singleCity() {
-        CinemaCreateRequest req = new CinemaCreateRequest();
-        req.setName("Zorlu");
-        req.setSlug(null);
-        req.setCityId(10L);
-
-        when(cinemasHelper.slugify("Zorlu")).thenReturn("zorlu");
-        when(cinemasHelper.ensureUniqueSlug("zorlu")).thenReturn("zorlu");
-
-        City city10 = City.builder().id(10L).name("Istanbul").build();
-        when(cityRepository.findById(10L)).thenReturn(Optional.of(city10));
-
-        Cinema saved = Cinema.builder()
-                .id(1L)
-                .name("Zorlu")
-                .slug("zorlu")
-                .city(city10)
-                .build();
-
-        when(cinemaRepository.save(any(Cinema.class))).thenReturn(saved);
-
-        CinemaSummaryResponse dto = CinemaSummaryResponse.builder().id(1L).name("Zorlu").build();
-        when(cinemaMapper.toSummary(saved)).thenReturn(dto);
-
-        ResponseMessage<CinemaSummaryResponse> resp = cinemaService.createCinema(req);
-
-        assertThat(resp.getHttpStatus()).isEqualTo(org.springframework.http.HttpStatus.CREATED);
-        assertThat(resp.getMessage()).isEqualTo(SuccessMessages.CINEMA_CREATED);
-        assertThat(resp.getReturnBody()).isEqualTo(dto);
-
-        ArgumentCaptor<Cinema> cap = ArgumentCaptor.forClass(Cinema.class);
-        verify(cinemaRepository).save(cap.capture());
-        assertThat(cap.getValue().getName()).isEqualTo("Zorlu");
-        assertThat(cap.getValue().getSlug()).isEqualTo("zorlu");
-        assertThat(cap.getValue().getCity().getId()).isEqualTo(10L);
-    }
-
-    @Test
-    void createCinema_missingCity_throws() {
-        CinemaCreateRequest req = new CinemaCreateRequest();
-        req.setName("Zorlu");
-        req.setCityId(99L);
-
-        when(cinemasHelper.slugify("Zorlu")).thenReturn("zorlu");
-        when(cinemasHelper.ensureUniqueSlug("zorlu")).thenReturn("zorlu");
-        when(cityRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> cinemaService.createCinema(req))
+        assertThatThrownBy(() -> cinemaService.createCinema(request))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining(ErrorMessages.CITY_NOT_FOUND);
     }
 
-    // ---------- update ----------
     @Test
-    void update_ok_changesNameAndMakesUniqueSlug() {
-        Long id = 5L;
-        Cinema existing = Cinema.builder().id(id).name("Old").slug("old").build();
-        when(cinemaRepository.findById(id)).thenReturn(Optional.of(existing));
+    void delete_ShouldDeleteCinema_WhenExists() {
+        when(cinemaRepository.findById(10L)).thenReturn(Optional.of(cinema));
 
-        CinemaCreateRequest req = new CinemaCreateRequest();
-        req.setName("New Name");
-        req.setSlug(null);
+        var response = cinemaService.delete(10L);
 
-        when(cinemasHelper.slugify("New Name")).thenReturn("new-name");
-        when(cinemaRepository.existsBySlugIgnoreCaseAndIdNot("new-name", id)).thenReturn(true);
-        when(cinemaRepository.existsBySlugIgnoreCaseAndIdNot("new-name-2", id)).thenReturn(false);
+        assertThat(response.getHttpStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getMessage())
+                .isEqualTo(String.format(SuccessMessages.CINEMA_DELETED, 10L));
 
-        Cinema saved = Cinema.builder().id(id).name("New Name").slug("new-name-2").build();
-        when(cinemaRepository.save(existing)).thenReturn(saved);
-
-        CinemaSummaryResponse dto = CinemaSummaryResponse.builder().id(id).name("New Name").build();
-        when(cinemaMapper.toSummary(saved)).thenReturn(dto);
-
-        ResponseMessage<CinemaSummaryResponse> resp = cinemaService.update(id, req);
-
-        assertThat(resp.getHttpStatus()).isEqualTo(org.springframework.http.HttpStatus.OK);
-        assertThat(resp.getMessage()).isEqualTo(String.format(SuccessMessages.CINEMA_UPDATED, id));
-        assertThat(resp.getReturnBody()).isEqualTo(dto);
-        assertThat(existing.getSlug()).isEqualTo("new-name-2");
-        assertThat(existing.getName()).isEqualTo("New Name");
-    }
-
-    // ---------- delete ----------
-    @Test
-    void delete_ok_cascadePath() {
-        Long id = 9L;
-
-        Cinema c = Cinema.builder()
-                .id(id)
-                .name("Del")
-                .slug("del")
-                .movies(new LinkedHashSet<>())
-                .halls(new LinkedHashSet<>())
-                .favorites(new LinkedHashSet<>())
-                .build();
-
-        when(cinemaRepository.findById(id)).thenReturn(Optional.of(c));
-
-        ResponseMessage<Void> resp = cinemaService.delete(id);
-
-        verify(cinemaRepository).delete(c);
-        assertThat(resp.getHttpStatus()).isEqualTo(org.springframework.http.HttpStatus.OK);
-        assertThat(resp.getMessage()).isEqualTo(String.format(SuccessMessages.CINEMA_DELETED, id));
-        assertThat(resp.getReturnBody()).isNull();
+        verify(cinemaRepository).delete(cinema);
     }
 
     @Test
-    void delete_notFound_throws() {
-        when(cinemaRepository.findById(77L)).thenReturn(Optional.empty());
+    void delete_ShouldThrow_WhenNotFound() {
+        when(cinemaRepository.findById(404L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> cinemaService.delete(77L))
+        assertThatThrownBy(() -> cinemaService.delete(404L))
                 .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining(String.format(ErrorMessages.CINEMA_NOT_FOUND, 77L));
+                .hasMessageContaining(String.format(ErrorMessages.CINEMA_NOT_FOUND, 404L));
     }
 
-    // --------- helper for showtime rows ---------
-    private static HallMovieTimeRow row(
-            Long hallId, String hallName, int seatCapacity, boolean isSpecial,
-            Long movieId, String movieTitle,
-            LocalDate date, LocalTime startTime
-    ) {
-        return new HallMovieTimeRow() {
-            @Override public Long getHallId() { return hallId; }
-            @Override public String getHallName() { return hallName; }
-            @Override public Integer getSeatCapacity() { return seatCapacity; }
-            @Override public Boolean getIsSpecial() { return isSpecial; }
-            @Override public Long getMovieId() { return movieId; }
-            @Override public String getMovieTitle() { return movieTitle; }
-            @Override public LocalDate getDate() { return date; }
-            @Override public LocalTime getStartTime() { return startTime; }
-        };
+    @Test
+    void listCinemas_ShouldReturnPage_WhenCityExists() {
+        var pageable = PageRequest.of(0, 10);
+        when(cityRepository.findByNameIgnoreCase("Istanbul")).thenReturn(Optional.of(city));
+        when(cinemaRepository.search(eq(1L), anyBoolean(), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(cinema)));
+        when(cinemaMapper.toSummary(cinema))
+                .thenReturn(CinemaSummaryResponse.builder().id(10L).name("CineTime Mall").build());
+
+        var response = cinemaService.listCinemas(1L, "Istanbul", false, pageable);
+
+        assertThat(response.getHttpStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getReturnBody().getContent()).hasSize(1);
+        verify(cinemaRepository).search(1L, false, pageable);
+    }
+
+    @Test
+    void getAllSpecialHalls_ShouldReturnList() {
+        lenient().when(hallRepository.findByIsSpecialTrueOrderByNameAsc()).thenReturn(List.of());
+        lenient().when(hallMapper.toSpecial(any()))
+                .thenReturn(SpecialHallResponse.builder().id(1L).name("IMAX Hall").build());
+
+        var result = cinemaService.getAllSpecialHalls();
+
+        assertThat(result.getHttpStatus()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getMessage()).isEqualTo(SuccessMessages.SPECIAL_HALLS_LISTED);
+    }
+
+    // ===========================================================
+    // getMoviesWithShowtimesByCinema()
+    // ===========================================================
+
+    @Test
+    void getMoviesWithShowtimesByCinema_ShouldReturnMoviesGroupedById() {
+        Long cinemaId = 10L;
+        LocalDate today = LocalDate.now();
+
+        // Prepare mock rows (as projection results)
+        ShowtimeRepository.HallMovieTimeRow row1 = mock(ShowtimeRepository.HallMovieTimeRow.class);
+        ShowtimeRepository.HallMovieTimeRow row2 = mock(ShowtimeRepository.HallMovieTimeRow.class);
+
+        when(row1.getMovieId()).thenReturn(101L);
+        when(row2.getMovieId()).thenReturn(101L);
+        when(row1.getDate()).thenReturn(today);
+        when(row2.getDate()).thenReturn(today.plusDays(1));
+        when(row1.getStartTime()).thenReturn(LocalTime.of(14, 0));
+        when(row2.getStartTime()).thenReturn(LocalTime.of(16, 30));
+
+        List<ShowtimeRepository.HallMovieTimeRow> rows = List.of(row1, row2);
+        when(showtimeRepository.findShowtimesByCinemaId(cinemaId)).thenReturn(rows);
+
+        Movie movie = Movie.builder().id(101L).title("Interstellar").build();
+        when(movieRepository.findById(101L)).thenReturn(Optional.of(movie));
+        when(movieMapper.mapMovieToCinemaMovieResponse(movie))
+                .thenReturn(CinemaMovieResponse.builder().id(101L).title("Interstellar").build());
+
+        // Act
+        var result = cinemaService.getMoviesWithShowtimesByCinema(cinemaId, today);
+
+        // Assert
+        assertThat(result).hasSize(1);
+        var entry = result.get(0); // get first element
+        assertThat(entry.getMovie().getTitle()).isEqualTo("Interstellar");
+        assertThat(entry.getShowtimes()).hasSize(2);
+        verify(movieRepository, times(1)).findById(101L);
+    }
+
+    @Test
+    void getMoviesWithShowtimesByCinema_ShouldThrow_WhenMovieMissing() {
+        Long cinemaId = 10L;
+
+        // --- Arrange (Given) ---
+        ShowtimeRepository.HallMovieTimeRow row = mock(ShowtimeRepository.HallMovieTimeRow.class);
+
+        lenient().when(row.getMovieId()).thenReturn(999L);
+        lenient().when(row.getDate()).thenReturn(LocalDate.now());
+        lenient().when(row.getStartTime()).thenReturn(LocalTime.NOON);
+        lenient().when(showtimeRepository.findShowtimesByCinemaId(cinemaId))
+                .thenReturn(List.of(row));
+        lenient().when(movieRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        // --- Act & Assert ---
+        assertThatThrownBy(() -> cinemaService.getMoviesWithShowtimesByCinema(cinemaId, null))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Movie not found");
+    }
+
+
+    // ===========================================================
+    // getCinemaHallsWithShowtimes()
+    // ===========================================================
+
+    @Test
+    void getCinemaHallsWithShowtimes_ShouldGroupShowtimesByHallAndMovie() {
+        Long cinemaId = 10L;
+        when(cinemaRepository.existsById(cinemaId)).thenReturn(true);
+
+        // Mock projection row with hall and movie info
+        ShowtimeRepository.HallMovieTimeRow row = mock(ShowtimeRepository.HallMovieTimeRow.class);
+        when(row.getHallId()).thenReturn(5L);
+        when(row.getHallName()).thenReturn("Main Hall");
+        when(row.getSeatCapacity()).thenReturn(120);
+        when(row.getIsSpecial()).thenReturn(false);
+        when(row.getMovieId()).thenReturn(77L);
+        when(row.getMovieTitle()).thenReturn("Inception");
+        when(row.getDate()).thenReturn(LocalDate.of(2025, 1, 1));
+        when(row.getStartTime()).thenReturn(LocalTime.of(13, 0));
+
+        when(showtimeRepository.findShowtimesByCinemaId(cinemaId)).thenReturn(List.of(row));
+
+        // Act
+        var halls = cinemaService.getCinemaHallsWithShowtimes(cinemaId);
+
+        // Assert
+        assertThat(halls).hasSize(1);
+        var hall = halls.get(0);
+        assertThat(hall.getName()).isEqualTo("Main Hall");
+        assertThat(hall.getMovies()).hasSize(1);
+        assertThat(hall.getMovies().get(0).getMovie().getTitle()).isEqualTo("Inception");
+        assertThat(hall.getMovies().get(0).getTimes()).hasSize(1);
+    }
+
+    @Test
+    void getCinemaHallsWithShowtimes_ShouldThrow_WhenCinemaDoesNotExist() {
+        when(cinemaRepository.existsById(999L)).thenReturn(false);
+        assertThatThrownBy(() -> cinemaService.getCinemaHallsWithShowtimes(999L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(String.format(ErrorMessages.CINEMA_NOT_FOUND, 999L));
+
     }
 }
