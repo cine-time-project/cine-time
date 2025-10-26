@@ -1,8 +1,10 @@
 package com.cinetime.service.user;
 
+import com.cinetime.entity.user.User;
 import com.cinetime.payload.request.authentication.LoginRequest;
 import com.cinetime.payload.response.authentication.AuthenticationResponse;
 import com.cinetime.security.jwt.JwtService;
+import com.cinetime.service.helper.SecurityHelper;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -29,6 +31,7 @@ class AuthenticationServiceTest {
 
     @Mock private AuthenticationManager authenticationManager;
     @Mock private JwtService jwtService;
+    @Mock private SecurityHelper securityHelper;
     @Mock private Authentication authentication;
 
     @InjectMocks private AuthenticationService authenticationService;
@@ -40,19 +43,22 @@ class AuthenticationServiceTest {
     void authenticate_ok() {
         // given
         var req = new LoginRequest();
-        req.setUsername("user@example.com");   // record ise: new LoginRequest("user@example.com","P@ssw0rd!")
+        req.setPhoneOrEmail("user@example.com");
         req.setPassword("P@ssw0rd!");
 
+        // 🔹 SecurityHelper User entity döndürür
+        User mockUser = new User();
+        mockUser.setEmail("user@example.com");
+        when(securityHelper.loadByLoginProperty("user@example.com")).thenReturn(mockUser);
+
+        // 🔹 Authentication.getPrincipal() -> UserDetails döner
         UserDetails userDetails = mock(UserDetails.class);
         when(userDetails.getUsername()).thenReturn("user@example.com");
-
 
         Collection<? extends GrantedAuthority> authorities = List.of(
                 new SimpleGrantedAuthority("ROLE_MEMBER"),
                 new SimpleGrantedAuthority("ROLE_ADMIN")
         );
-
-// thenReturn yerine doReturn kullanın (generic uyumsuzlukta daha toleranslı)
         doReturn(authorities).when(userDetails).getAuthorities();
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
@@ -64,24 +70,29 @@ class AuthenticationServiceTest {
         AuthenticationResponse res = authenticationService.authenticate(req);
 
         // then
+        assertThat(res).isNotNull();
         assertThat(res.getToken()).isEqualTo("jwt-token-123");
-        assertThat(res.getUsername()).isEqualTo("user@example.com");
-        assertThat(res.getRoles()).containsExactlyInAnyOrder("ROLE_MEMBER", "ROLE_ADMIN");
+        assertThat(res.getUser()).isNotNull();
+        assertThat(res.getUser().getUsername()).isEqualTo("user@example.com");
+        assertThat(res.getUser().getRoles()).containsExactlyInAnyOrder("ROLE_MEMBER", "ROLE_ADMIN");
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isSameAs(authentication);
 
+        verify(securityHelper).loadByLoginProperty("user@example.com");
         verify(authenticationManager).authenticate(any());
         verify(jwtService).generateToken(authentication);
     }
 
     @Test
     void authenticate_badCredentials_propagatesException() {
+        // given
         var req = new LoginRequest();
-        req.setUsername("wrong@example.com");
+        req.setPhoneOrEmail("wrong@example.com");
         req.setPassword("bad");
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Bad credentials"));
 
+        // when / then
         assertThatThrownBy(() -> authenticationService.authenticate(req))
                 .isInstanceOf(BadCredentialsException.class);
 
