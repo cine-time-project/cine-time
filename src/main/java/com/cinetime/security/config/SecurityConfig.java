@@ -26,7 +26,7 @@ import org.springframework.http.HttpMethod;
 
 @EnableWebSecurity
 @Configuration
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true, jsr250Enabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -128,8 +128,8 @@ public class SecurityConfig {
             "/api/verify-reset-code",
             "/api/reset-password-code",
             "/api/reset-password-direct",
-            "/api/contactmessages",
-            "/api/contactmessages/**",
+            //"/api/contactmessages",
+            //"/api/contactmessages/**",
             "/error",
             "/api/cinemaimages",
             "/api/cinemaimages/**",
