@@ -73,5 +73,9 @@ public class SuccessMessages {
     //Contact
     public static final String MESSAGE_TAKEN = "Mesajınız alındı. En kısa sürede size dönüş sağlanacaktır.";
 
+    //ContactMessage
+    public static final String MESSAGE_DELETED = "Message deleted successfully.";
+
+
 
 }
