@@ -50,6 +50,7 @@ class CreateUserTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
+        // Varsayılan olarak admin yetkisi ile testler başlasın
         Authentication authentication = mock(Authentication.class);
         doReturn(Set.of(new SimpleGrantedAuthority("ROLE_ADMIN")))
                 .when(authentication).getAuthorities();
@@ -67,7 +68,7 @@ class CreateUserTest {
                 .surname("Yılmaz")
                 .email("ahmet@example.com")
                 .password("123456")
-                .phoneNumber("(555) 123-4567")
+                .phoneNumber("+905551234567")
                 .birthDate(LocalDate.of(1990, 1, 1))
                 .gender(Gender.MALE)
                 .builtIn(true)
@@ -101,7 +102,7 @@ class CreateUserTest {
     void createUser_whenEmailExists_shouldThrowConflictException() {
         UserCreateRequest request = UserCreateRequest.builder()
                 .email("ahmet@example.com")
-                .phoneNumber("(555) 123-4567")
+                .phoneNumber("+905551234567")
                 .build();
 
         when(userRepository.existsByEmail("ahmet@example.com")).thenReturn(true);
@@ -118,11 +119,11 @@ class CreateUserTest {
     void createUser_whenPhoneExists_shouldThrowConflictException() {
         UserCreateRequest request = UserCreateRequest.builder()
                 .email("ahmet@example.com")
-                .phoneNumber("(555) 123-4567")
+                .phoneNumber("+905551234567")
                 .build();
 
         when(userRepository.existsByEmail("ahmet@example.com")).thenReturn(false);
-        when(userRepository.existsByPhoneNumber("(555) 123-4567")).thenReturn(true);
+        when(userRepository.existsByPhoneNumber("+905551234567")).thenReturn(true);
 
         assertThatThrownBy(() -> userService.createUser(request))
                 .isInstanceOf(ConflictException.class)
@@ -135,6 +136,7 @@ class CreateUserTest {
     @Test
     void createUser_whenNotAdmin_shouldForceMemberRoleAndBuiltInFalse() {
 
+        // Yetkiliyi admin değil olarak mockla
         Authentication authentication = mock(Authentication.class);
         doReturn(Set.of(new SimpleGrantedAuthority("ROLE_MEMBER")))
                 .when(authentication).getAuthorities();
@@ -146,7 +148,7 @@ class CreateUserTest {
         UserCreateRequest request = UserCreateRequest.builder()
                 .email("member@example.com")
                 .password("123456")
-                .phoneNumber("(555) 987-6543")
+                .phoneNumber("+905559876543")
                 .role(RoleName.ADMIN)
                 .build();
 
