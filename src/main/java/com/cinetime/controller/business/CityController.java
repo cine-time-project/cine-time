@@ -1,6 +1,5 @@
 package com.cinetime.controller.business;
 
-import com.cinetime.entity.business.City;
 import com.cinetime.payload.request.business.CityRequest;
 import com.cinetime.payload.response.business.CityMiniResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
@@ -24,8 +23,8 @@ public class CityController {
 
     @PermitAll
     @GetMapping()
-    public ResponseEntity<List<CityMiniResponse>> listCities(){
-        return ResponseEntity.ok(cityService.listCities());
+    public ResponseEntity<List<CityMiniResponse>> listCitiesWithCinemas(){
+        return ResponseEntity.ok(cityService.listCitiesWithCinemas());
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -61,6 +60,11 @@ public class CityController {
         return cityService.updateCity(cityId,cityRequest);
     }
 
+    @PermitAll
+    @GetMapping("/listAllCities")
+    public ResponseEntity<List<CityMiniResponse>> listAllCities(){
+        return ResponseEntity.ok(cityService.listAllCities());
+    }
 
 
 

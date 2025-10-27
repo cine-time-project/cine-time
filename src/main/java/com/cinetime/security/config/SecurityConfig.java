@@ -136,6 +136,10 @@ public class SecurityConfig {
             "/api/favorites/",
             "/api/tickets/buy-ticket",
             "/api/send-email-code",
+            "/api/districts",
+            "/api/districts/**",
+            "/api/countries",
+            "/api/countries/**"
 
 
     };

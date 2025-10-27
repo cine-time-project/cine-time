@@ -36,8 +36,9 @@ public class DistrictController {
     public ResponseEntity<List<DistrictMiniResponse>> listDistricts (){
         return ResponseEntity.ok(districtService.listDistricts());
     }
-
-    public ResponseEntity<ResponseMessage> saveDistrict(DistrictRequest districtRequest) {
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping
+    public ResponseEntity<ResponseMessage> saveDistrict(@RequestBody DistrictRequest districtRequest) {
         Optional<District> existingDistrict =
                 districtRepository.findByNameIgnoreCase(districtRequest.getName());
 
@@ -59,21 +60,27 @@ public class DistrictController {
                             .message("District not found for id " + districtRequest.getCityId())
                             .build());
         }
+        District newDistrict = new District();
+        newDistrict.setName(districtRequest.getName());
+        newDistrict.setCity(mandatoryCity.get());
+
+        districtRepository.save(newDistrict);
 
         return ResponseEntity
                 .status(201)
                 .body(ResponseMessage.builder()
-                        .message("District saved successfully")
+                        .message("District saved successfully, districtId: "+newDistrict.getId()+" districtName: "+ newDistrict.getName())
                         .build());
     }
-
-    public ResponseEntity<ResponseMessage> deleteDistrict(Long districtId) {
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @DeleteMapping("{districtId}")
+    public ResponseEntity<ResponseMessage> deleteDistrict(@PathVariable Long districtId) {
         Optional<District> districtToCheck = districtRepository.findById(districtId);
         if (districtToCheck.isEmpty()){
             return ResponseEntity
                     .status(404)
                     .body(ResponseMessage.builder()
-                            .message("City does not exist")
+                            .message("District does not exist")
                             .build());
         }
         District districtToDelete = districtToCheck.get();
@@ -95,30 +102,13 @@ public class DistrictController {
         return  districtService.findDistrictById(districtId);
     }
 
-    // --- CREATE DISTRICT (ADMIN ONLY) ---
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @PostMapping
-    public ResponseEntity<ResponseMessage> addDistrict(
-            @RequestBody @Valid DistrictRequest districtRequest
-    ){
-        // same idea as cityService.saveCity(...)
-        return districtService.saveDistrict(districtRequest);
-    }
-
-    // --- DELETE DISTRICT (ADMIN ONLY) ---
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @DeleteMapping("/{districtId}")
-    public ResponseEntity<ResponseMessage> deleteDistrict(
-            @PathVariable Long districtId
-    ){
-        // same idea as cityService.deleteCity(...)
-        return districtService.deleteDistrict(districtId);
-    }
-}
-
-
-
-
 
 
 }
+
+
+
+
+
+
+

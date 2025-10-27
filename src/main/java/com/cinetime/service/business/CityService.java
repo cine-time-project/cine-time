@@ -23,7 +23,7 @@ public class CityService {
     private final CityMapper cityMapper;
     private final CountryRepository countryRepository;
 
-    public List<CityMiniResponse> listCities() {
+    public List<CityMiniResponse> listCitiesWithCinemas() {
         return
                 cityRepository.findCitiesWithCinemas().stream()
                         .map(cityMapper::cityToCityMiniResponse)
@@ -62,7 +62,7 @@ public class CityService {
     return ResponseEntity
             .status(201)
             .body(ResponseMessage.builder()
-                    .message("City saved successfully")
+                    .message("City saved successfully with id: "+ newCity.getId())
                     .build());
     }
 
@@ -80,7 +80,7 @@ public class CityService {
         return ResponseEntity
                 .status(200)
                 .body(ResponseMessage.builder()
-                        .message(cityToDelete.getName()+" deleted successfully")
+                        .message(cityToDelete.getName()+" deleted successfully with id:" +cityToDelete.getId()+ "city name "+ cityToDelete.getName())
                         .build());
 
     }
@@ -138,7 +138,14 @@ public class CityService {
         return ResponseEntity
                 .status(200)
                 .body(ResponseMessage.builder()
-                        .message("City updated successfully")
+                        .message("City updated successfully with cityId "+ existingCity.getId()+" countryId: " + existingCity.getCountry().getId())
                         .build());
+    }
+
+    public List<CityMiniResponse> listAllCities() {
+        return cityRepository.findAll().stream()
+                .map(cityMapper::cityToCityMiniResponse).collect(Collectors.toList());
+
+
     }
 }

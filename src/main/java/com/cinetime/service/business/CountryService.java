@@ -50,7 +50,7 @@ public class CountryService {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ResponseMessage.builder()
-                        .message("Country added successfully")
+                        .message("Country added successfully, countryName: "+country.getName()+"countryId: "+country.getId())
                         .build());
     }
 
