@@ -28,11 +28,9 @@ public class District {
   @Column(nullable = false, length = 30, unique = true)
   private String name;
 
-  @ManyToOne
-  @JoinColumn(name = "city_id")
+ @ManyToOne(fetch = FetchType.LAZY,optional = false)
+  @JoinColumn(name = "city_id",nullable = false, foreignKey = @ForeignKey(name = "fk_city_district"))
   private City city;
 
-  @JsonIgnore
-  @OneToMany(mappedBy = "district", cascade = CascadeType.REMOVE, orphanRemoval = true)
-  private Set<Country> countries = new HashSet<>();
+
 }

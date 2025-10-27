@@ -20,7 +20,7 @@ public class TicketMapper {
             movieId= ticket.getShowtime().getMovie().getId();
         }
 
-     
+
 
 
         return TicketResponse.builder()
