@@ -12,7 +12,7 @@ public interface CountryRepository extends JpaRepository<Country,Long> {
 
     Optional<Country> findByNameIgnoreCase(String name);
 
-    boolean existById(Long countryId);
+
 
 
 

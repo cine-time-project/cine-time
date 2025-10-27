@@ -53,7 +53,7 @@ public class CountryController {
     public ResponseEntity<CountryMiniResponse> getCountry(
             @RequestParam Long countryId)
     {
-        return ResponseEntity.ok(countryService.getCountry(countryId));
+        return  countryService.getCountry(countryId);
     }
 
 
