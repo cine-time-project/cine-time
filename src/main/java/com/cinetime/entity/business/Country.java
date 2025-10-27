@@ -31,8 +31,5 @@ public class Country {
   @OneToMany(mappedBy = "country", cascade = CascadeType.REMOVE, orphanRemoval = true)
   private Set<City> cities = new HashSet<>();
 
-  @NotNull
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "district_id", nullable = false, foreignKey = @ForeignKey(name = "fk_country_district"))
-  private District district;
+
 }

@@ -35,4 +35,9 @@ public class City {
     @JsonIgnore
     @OneToMany(mappedBy = "city", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Set<Cinema> cinemas = new HashSet<>();
+
+    @OneToMany(mappedBy = "city", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @JsonIgnore
+    private Set<District> districts = new HashSet<>();
+
 }
