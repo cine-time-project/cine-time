@@ -1,6 +1,6 @@
 package com.cinetime.service.user;
 
-import com.cinetime.entity.enums.AuthProvider;
+
 import com.cinetime.entity.user.GoogleUser;
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.BadRequestException;

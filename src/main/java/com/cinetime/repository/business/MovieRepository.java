@@ -2,6 +2,7 @@ package com.cinetime.repository.business;
 
 import com.cinetime.entity.business.Movie;
 import com.cinetime.entity.enums.MovieStatus;
+import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -16,7 +17,12 @@ import java.util.Set;
 
 public interface MovieRepository extends JpaRepository<Movie, Long> {
 
+    @EntityGraph(attributePaths = {"images"})
     Page<Movie> findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(String title, String summary, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"images"})
+    @NonNull
+    Page<Movie> findAll(@NonNull Pageable pageable);
 
     @Query("SELECT DISTINCT m FROM Movie m JOIN m.cinemas c WHERE LOWER(c.slug) = LOWER(:cinemaSlug)")
     Page<Movie> findAllByCinemaSlugIgnoreCase(@Param("cinemaSlug") String cinemaSlug, Pageable pageable);
