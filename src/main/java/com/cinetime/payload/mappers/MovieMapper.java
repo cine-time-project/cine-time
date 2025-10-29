@@ -23,7 +23,7 @@ public class MovieMapper {
 
     public MovieResponse mapMovieToMovieResponse(Movie movie) {
         if (movie == null) return null;
-
+        System.out.println("Movie: " + movie.getTitle() + " → images count: " + movie.getImages().size());
         List<ImageResponse> imageResponses =
                 movie.getImages() == null ? List.of()
                         : movie.getImages().stream().map(imageMapper::toResponse).toList();
