@@ -66,6 +66,13 @@ public class CityController {
         return ResponseEntity.ok(cityService.listAllCities());
     }
 
+    @PermitAll
+    @GetMapping("/listCityWithItsDistrict/{cityId}")
+    public ResponseEntity<CityMiniResponse> listAllCitiesWithDistricts(
+            @PathVariable Long cityId
+    ){
+        return cityService.listCityWithDistrict(cityId);
+    }
 
 
 
