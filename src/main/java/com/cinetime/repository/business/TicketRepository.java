@@ -81,4 +81,5 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
                                      Pageable pageable);
 
 
+    boolean existsByShowtimeId(Long id);
 }
