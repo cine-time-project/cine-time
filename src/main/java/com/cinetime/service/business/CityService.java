@@ -11,6 +11,7 @@ import com.cinetime.repository.business.CountryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +23,7 @@ public class CityService {
     private final CityRepository cityRepository;
     private final CityMapper cityMapper;
     private final CountryRepository countryRepository;
-
+    @Transactional(readOnly = true)
     public List<CityMiniResponse> listCitiesWithCinemas() {
         return
                 cityRepository.findCitiesWithCinemas().stream()
@@ -84,14 +85,14 @@ public class CityService {
                         .build());
 
     }
-
+    @Transactional(readOnly = true)
     public ResponseEntity <CityMiniResponse> findCityById(Long cityId) {
         return cityRepository.findById(cityId)
                 .map(city ->ResponseEntity.ok(cityMapper.cityToCityMiniResponse(city)))
                 .orElseGet(() ->ResponseEntity.status(404).build());
 
     }
-
+    @Transactional
     public ResponseEntity<ResponseMessage> updateCity(Long cityId, CityRequest cityRequest) {
 
         // 1. Load the city we're updating
@@ -141,7 +142,7 @@ public class CityService {
                         .message("City updated successfully with cityId "+ existingCity.getId()+" countryId: " + existingCity.getCountry().getId())
                         .build());
     }
-
+    @Transactional(readOnly = true)
     public List<CityMiniResponse> listAllCities() {
         return cityRepository.findAll().stream()
                 .map(cityMapper::cityToCityMiniResponse).collect(Collectors.toList());
