@@ -255,7 +255,47 @@ public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
             @Param("countryId") Long countryId
     );
 
+    @Query("""
+        SELECT s
+          FROM Showtime s
+          JOIN s.hall h
+          JOIN h.cinema c
+         WHERE (:cinemaId IS NULL OR c.id = :cinemaId)
+           AND (:hallId   IS NULL OR h.id = :hallId)
+           AND (:movieId  IS NULL OR s.movie.id = :movieId)
+           AND (:dateFrom IS NULL OR s.date >= :dateFrom)
+           AND (:dateTo   IS NULL OR s.date <= :dateTo)
+        """)
+    Page<Showtime> findAllFiltered(
+            @Param("cinemaId") Long cinemaId,
+            @Param("hallId")   Long hallId,
+            @Param("movieId")  Long movieId,
+            @Param("dateFrom") LocalDate dateFrom,
+            @Param("dateTo")   LocalDate dateTo,
+            Pageable pageable
+    );
 
+    @EntityGraph(attributePaths = {"hall", "hall.cinema", "movie"})
+    Optional<Showtime> findById(Long id);
+
+    @EntityGraph(attributePaths = {"hall", "movie"})
+    Page<Showtime> findAll(Pageable pageable);
+
+
+
+    // minimal  EntityGraph
+    @EntityGraph(attributePaths = {"hall", "hall.cinema", "movie"})
+    Optional<Showtime> findWithRefsById(Long id);
+
+    // Alternatif: HQL fetch-join
+    @Query("""
+           select s from Showtime s
+             left join fetch s.hall h
+             left join fetch h.cinema c
+             left join fetch s.movie m
+           where s.id = :id
+           """)
+    Optional<Showtime> findByIdFetchAll(@Param("id") Long id);
 
 }
 

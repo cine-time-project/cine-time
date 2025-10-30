@@ -48,6 +48,7 @@ public class ErrorMessages {
     // 409 - Conflict
     public static final String MOVIE_ALREADY_HAS_POSTER = "This movie already has a poster.";
     public static final String MOVIE_ALREADY_HAS_DIFFERENT_POSTER = "This movie already has a different poster.";
+    public static final String TICKET_RESERVATION_ATTACHED = "Since there is a ticket/reservation attached to this screening, it cannot be deleted.";
 
 
     //Hall

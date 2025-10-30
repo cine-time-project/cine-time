@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -50,8 +51,9 @@ public class ShowtimeController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ADMIN')")
-    public ResponseMessage<ShowtimeResponse> deleteShowtimeById(@PathVariable Long id) {
-        return showTimeService.deleteShowtimeById(id);
+    public ResponseEntity<Void> deleteShowtimeById(@PathVariable Long id) {
+        showTimeService.deleteShowtimeById(id);
+        return ResponseEntity.noContent().build(); // 204
     }
 
     @GetMapping("/{id}")
@@ -112,5 +114,17 @@ public class ShowtimeController {
         return showTimeService.getCountriesWithShowtimes(onOrAfter, movieId);
     }
 
+    @GetMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    public ResponseMessage<Page<ShowtimeResponse>> getAllShowtimes(
+            @PageableDefault(page = 0, size = 20, sort = "date", direction = Sort.Direction.ASC) Pageable pageable,
+            @RequestParam(required = false) Long cinemaId,
+            @RequestParam(required = false) Long hallId,
+            @RequestParam(required = false) Long movieId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo
+    ) {
+        return showTimeService.getAllShowtimes(pageable, cinemaId, hallId, movieId, dateFrom, dateTo);
+    }
 
 }

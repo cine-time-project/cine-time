@@ -4,6 +4,7 @@ import com.cinetime.entity.business.City;
 import com.cinetime.entity.business.Hall;
 import com.cinetime.entity.business.Movie;
 import com.cinetime.entity.business.Showtime;
+import com.cinetime.exception.ConflictException;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CityMapper;
 import com.cinetime.payload.mappers.ShowtimeMapper;
@@ -13,6 +14,7 @@ import com.cinetime.payload.request.business.ShowtimeRequest;
 import com.cinetime.payload.response.business.*;
 import com.cinetime.repository.business.CinemaRepository;
 import com.cinetime.repository.business.ShowtimeRepository;
+import com.cinetime.repository.business.TicketRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,6 +40,7 @@ public class ShowtimeService {
     private final ShowtimeMapper showtimeMapper;
     private final CinemaRepository cinemaRepository;
     private final CityMapper cityMapper;
+    private final TicketRepository ticketRepository;
 
     @Transactional
     public ResponseMessage<ShowtimeResponse> saveShowtime(@Valid ShowtimeRequest showtimeRequest) {
@@ -61,47 +64,55 @@ public class ShowtimeService {
                 .build();
     }
 
+
+    @Transactional(readOnly = true)
     public Showtime findShowtimeById(Long id) {
-        return showtimeRepository.findById(id)
+        // EntityGraph veya Query’li olanı kullanabilirsin
+        return showtimeRepository.findWithRefsById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessages.SHOWTIME_NOT_FOUND_ID, id)));
+        //        .orElseThrow(() -> new EntityNotFoundException("Showtime not found: " + id));
     }
 
+
+    @Transactional
     public ResponseMessage<ShowtimeResponse> deleteShowtimeById(Long id) {
-        Showtime showtime = findShowtimeById(id);
-        ShowtimeResponse response = showtimeMapper.mapShowtimeToResponse(showtime);
-        showtimeRepository.delete(showtime);
+        Showtime s = findShowtimeById(id);
+        ShowtimeResponse body = showtimeMapper.mapShowtimeToResponse(s);
+
+        showtimeRepository.delete(s);
+
         return ResponseMessage.<ShowtimeResponse>builder()
                 .httpStatus(HttpStatus.OK)
                 .message(SuccessMessages.SHOWTIME_DELETED)
-                .returnBody(response)
+                .returnBody(body)
                 .build();
     }
 
 
+    @Transactional(readOnly = true)
     public ResponseMessage<ShowtimeResponse> getShowtimeById(Long id) {
-        Showtime showtime = findShowtimeById(id);
+        Showtime s = findShowtimeById(id);
+        ShowtimeResponse body = showtimeMapper.mapShowtimeToResponse(s);
         return ResponseMessage.<ShowtimeResponse>builder()
                 .httpStatus(HttpStatus.OK)
                 .message(SuccessMessages.SHOWTIME_FOUND)
-                .returnBody(showtimeMapper.mapShowtimeToResponse(showtime))
+                .returnBody(body)
                 .build();
     }
 
     @Transactional
-    public ResponseMessage<ShowtimeResponse> updateShowtimeById(Long id, ShowtimeRequest showtimeRequest) {
-        Showtime showtime = findShowtimeById(id);
+    public ResponseMessage<ShowtimeResponse> updateShowtimeById(Long id, ShowtimeRequest req) {
+        Showtime s = findShowtimeById(id); // ilişkileri açıkken geldi
+        Hall hall   = (req.getHallId()  != null) ? hallService.findHallById(req.getHallId())   : null;
+        Movie movie = (req.getMovieId() != null) ? movieService.findMovieById(req.getMovieId()): null;
 
-        Hall hall = (showtimeRequest.getHallId() != null) ? hallService.findHallById(showtimeRequest.getHallId()) : null;
-        Movie movie = (showtimeRequest.getMovieId() != null) ? movieService.findMovieById(showtimeRequest.getMovieId()) : null;
-
-        showtimeMapper.updateShowtimeFromRequest(showtime, showtimeRequest, hall, movie);
-
-        Showtime updatedShowtime = showtimeRepository.save(showtime);
+        showtimeMapper.updateShowtimeFromRequest(s, req, hall, movie);
+        Showtime saved = showtimeRepository.save(s);
 
         return ResponseMessage.<ShowtimeResponse>builder()
                 .httpStatus(HttpStatus.OK)
                 .message(SuccessMessages.SHOWTIME_UPDATED)
-                .returnBody(showtimeMapper.mapShowtimeToResponse(updatedShowtime))
+                .returnBody(showtimeMapper.mapShowtimeToResponse(saved))
                 .build();
     }
 
@@ -219,4 +230,25 @@ public class ShowtimeService {
     }
 
 
+    @Transactional(readOnly = true)
+    public ResponseMessage<Page<ShowtimeResponse>> getAllShowtimes(
+            Pageable pageable,
+            Long cinemaId,
+            Long hallId,
+            Long movieId,
+            LocalDate dateFrom,
+            LocalDate dateTo
+    ) {
+        Page<Showtime> page = showtimeRepository.findAllFiltered(
+                cinemaId, hallId, movieId, dateFrom, dateTo, pageable
+        );
+
+        Page<ShowtimeResponse> dtoPage = page.map(showtimeMapper::mapShowtimeToResponse);
+
+        return ResponseMessage.<Page<ShowtimeResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message("Showtimes listed successfully.")
+                .returnBody(dtoPage)
+                .build();
+    }
 }
