@@ -273,26 +273,23 @@ public class CinemaService {
 
     //C08 : Delete Cinema
     @Transactional
-    public ResponseMessage<Void> delete(Long id) {
-        // 1) Id kontrol
-        Cinema cinema = cinemaRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(String.format(ErrorMessages.CINEMA_NOT_FOUND, id)));
+    public ResponseMessage<Void> deleteMultiple(List<Long> ids) {
+        // 1) doesExist validation
+        for (Long id : ids) {
+            Cinema cinema = cinemaRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessages.CINEMA_NOT_FOUND, id)));
+            //clear relation with movies
+            cinema.getMovies().clear(); // ManyToMany cleanup
+            cinemaRepository.delete(cinema); // cascade will remove halls & favorites
+        }
 
-        // 2) Relation clear
-        cinema.getMovies().clear();
-
-
-        // 3) Tek satır: cascade zinciri halleder
-        cinemaRepository.delete(cinema);
-
-        // 4) Response
         return ResponseMessage.<Void>builder()
                 .httpStatus(HttpStatus.OK)
-                .message(String.format(SuccessMessages.CINEMA_DELETED, id))
+                .message(String.format(SuccessMessages.CINEMA_DELETED, ids.size()))
                 .returnBody(null)
                 .build();
     }
+
 
     @Transactional(readOnly = true)
     public List<MovieWithShowtimesResponse> getMoviesWithShowtimesByCinema(Long cinemaId, LocalDate fromDate) {
