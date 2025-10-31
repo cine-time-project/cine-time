@@ -1,5 +1,6 @@
 package com.cinetime.controller.business;
 
+import com.cinetime.payload.mappers.ShowtimeMapper;
 import com.cinetime.payload.request.business.ShowtimeRequest;
 import com.cinetime.payload.response.business.*;
 import com.cinetime.service.business.ShowtimeService;
@@ -50,11 +51,11 @@ public class ShowtimeController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public ResponseEntity<Void> deleteShowtimeById(@PathVariable Long id) {
         showTimeService.deleteShowtimeById(id);
         return ResponseEntity.noContent().build(); // 204
     }
+
 
     @GetMapping("/{id}")
     @PreAuthorize("permitAll()")
@@ -115,7 +116,7 @@ public class ShowtimeController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
     public ResponseMessage<Page<ShowtimeResponse>> getAllShowtimes(
             @PageableDefault(page = 0, size = 20, sort = "date", direction = Sort.Direction.ASC) Pageable pageable,
             @RequestParam(required = false) Long cinemaId,
@@ -125,6 +126,12 @@ public class ShowtimeController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo
     ) {
         return showTimeService.getAllShowtimes(pageable, cinemaId, hallId, movieId, dateFrom, dateTo);
+    }
+
+    @GetMapping("/cinema/{cinemaId}/flat")
+    @PreAuthorize("permitAll()")
+    public List<ShowtimeMapper.ShowtimeFlatRow> getFlatByCinema(@PathVariable Long cinemaId) {
+        return showTimeService.findFlatByCinemaId(cinemaId);
     }
 
 }
