@@ -54,13 +54,11 @@ public class Showtime {
     private Movie movie;
 
     @JsonIgnore
-    @OneToMany(
-            mappedBy = "showtime",
-            fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL,     // <-- PERSIST+MERGE yerine ALL (REMOVE dahil)
-            orphanRemoval = true
-    )
+    @OneToMany(mappedBy="showtime", fetch=FetchType.LAZY,
+            cascade={CascadeType.PERSIST, CascadeType.MERGE},
+            orphanRemoval=false)
     private Set<Ticket> tickets = new LinkedHashSet<>();
+
 
     @PrePersist
     protected void onCreate() {
