@@ -10,6 +10,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +41,10 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     Page<Movie> findByStatusAndReleaseDateGreaterThanEqual(MovieStatus status, LocalDate from, Pageable pageable);
 
     Page<Movie> findByStatusAndReleaseDateAfter(MovieStatus status, LocalDate date, Pageable pageable);
+
+    @Modifying
+    @Query(value = "DELETE FROM movie_cinema WHERE movie_id = :movieId", nativeQuery = true)
+    void deleteMovieCinemaLinks(@Param("movieId") Long movieId);
 
 
     Page<Movie> findAllByGenreContainingIgnoreCase(String genre, Pageable pageable);
