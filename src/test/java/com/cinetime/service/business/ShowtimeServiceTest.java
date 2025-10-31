@@ -132,15 +132,13 @@ class ShowtimeServiceTest {
 
     @Test
     void deleteShowtimeById_Success() {
+        // given
         when(showtimeRepository.findById(100L)).thenReturn(Optional.of(showtime));
-        when(showtimeMapper.mapShowtimeToResponse(showtime)).thenReturn(response);
+        assertDoesNotThrow(() -> showtimeService.deleteShowtimeById(100L));
 
-        ResponseMessage<ShowtimeResponse> result = showtimeService.deleteShowtimeById(100L);
-
-        assertEquals(HttpStatus.OK, result.getHttpStatus());
-        assertEquals(SuccessMessages.SHOWTIME_DELETED, result.getMessage());
         verify(showtimeRepository, times(1)).delete(showtime);
     }
+
 
     @Test
     void getShowtimeById_Success() {

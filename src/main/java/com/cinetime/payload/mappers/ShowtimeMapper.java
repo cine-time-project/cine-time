@@ -73,4 +73,53 @@ public class ShowtimeMapper {
             showtime.setMovie(movie);
         }
     }
+
+
+    public static class ShowtimeFlatRow {
+        public Long showtimeId;
+        public java.time.LocalDate date;
+        public java.time.LocalTime startTime;
+        public java.time.LocalTime endTime;
+        public Long hallId;
+        public String hallName;
+        public Long movieId;
+        public String movieTitle;
+        public Integer duration;
+
+        public ShowtimeFlatRow(Long showtimeId, java.time.LocalDate date,
+                               java.time.LocalTime startTime, java.time.LocalTime endTime,
+                               Long hallId, String hallName,
+                               Long movieId, String movieTitle, Integer duration) {
+            this.showtimeId = showtimeId;
+            this.date = date;
+            this.startTime = startTime;
+            this.endTime = endTime;
+            this.hallId = hallId;
+            this.hallName = hallName;
+            this.movieId = movieId;
+            this.movieTitle = movieTitle;
+            this.duration = duration;
+        }
+    }
+
+    // Entity → Flat Row
+    public ShowtimeFlatRow toFlatRow(Showtime st) {
+        if (st == null) return null;
+        var h = st.getHall();
+        var m = st.getMovie();
+        return new ShowtimeFlatRow(
+                st.getId(),
+                st.getDate(),
+                st.getStartTime(),
+                st.getEndTime(),
+                h != null ? h.getId() : null,
+                h != null ? h.getName() : null,
+                m != null ? m.getId() : null,
+                m != null ? m.getTitle() : null,
+                m != null ? m.getDuration() : null
+        );
+    }
+
+
+
 }

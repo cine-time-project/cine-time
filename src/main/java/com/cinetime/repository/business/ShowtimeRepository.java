@@ -297,6 +297,8 @@ public interface ShowtimeRepository extends JpaRepository <Showtime,Long> {
            """)
     Optional<Showtime> findByIdFetchAll(@Param("id") Long id);
 
+    List<Showtime> findByHall_Cinema_IdOrderByDateAscStartTimeAsc(Long cinemaId);
+
 }
 
 
