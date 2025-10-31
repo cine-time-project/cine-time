@@ -251,4 +251,12 @@ public class ShowtimeService {
                 .returnBody(dtoPage)
                 .build();
     }
+
+    public List<ShowtimeMapper.ShowtimeFlatRow> findFlatByCinemaId(Long cinemaId) {
+        var list = showtimeRepository.findByHall_Cinema_IdOrderByDateAscStartTimeAsc(cinemaId);
+        return list.stream()
+                .map(showtimeMapper::toFlatRow)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
 }
