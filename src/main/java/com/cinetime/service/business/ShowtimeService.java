@@ -75,17 +75,17 @@ public class ShowtimeService {
 
 
     @Transactional
-    public ResponseMessage<ShowtimeResponse> deleteShowtimeById(Long id) {
-        Showtime s = findShowtimeById(id);
-        ShowtimeResponse body = showtimeMapper.mapShowtimeToResponse(s);
+    public void deleteShowtimeById(Long id) {
+        var st = showtimeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Showtime not found: " + id));
 
-        showtimeRepository.delete(s);
+        if (ticketRepository.existsByShowtime_Id(id)) {
+            long cnt = ticketRepository.countByShowtime_Id(id);
+            throw new ConflictException("Bu gösterime ait " + cnt +
+                    " bilet mevcut. Biletli bir gösterim silinemez. Önce iptal/iade süreci uygulanmalıdır.");
+        }
 
-        return ResponseMessage.<ShowtimeResponse>builder()
-                .httpStatus(HttpStatus.OK)
-                .message(SuccessMessages.SHOWTIME_DELETED)
-                .returnBody(body)
-                .build();
+        showtimeRepository.delete(st);
     }
 
 

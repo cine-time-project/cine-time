@@ -82,4 +82,7 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
 
 
     boolean existsByShowtimeId(Long id);
+
+    boolean existsByShowtime_Id(Long showtimeId);
+    long countByShowtime_Id(Long showtimeId);
 }
