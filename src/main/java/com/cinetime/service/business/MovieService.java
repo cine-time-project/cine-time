@@ -10,6 +10,7 @@ import com.cinetime.payload.request.business.MovieRequest;
 import com.cinetime.payload.response.business.CinemaMovieResponse;
 import com.cinetime.payload.response.business.MovieResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
+import com.cinetime.repository.business.FavoriteRepository;
 import com.cinetime.repository.business.MovieRepository;
 import com.cinetime.service.helper.MovieServiceHelper;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class MovieService {
     private final CinemaService cinemaService;
     private final ImageService imageService;
     private final MovieServiceHelper movieServiceHelper;
+    private final FavoriteRepository favoriteRepository;
 
     /**
      * Retrieves all movies for a given cinema on a specific date.
@@ -354,19 +356,24 @@ public class MovieService {
         // 1️⃣ Find movie or throw
         Movie movie = findMovieById(movieId);
 
-        // 2️⃣ Map before delete (to avoid detached entity / lazy issues)
+        // 2️⃣ Related records cleanup
+        favoriteRepository.deleteByMovie(movie);
+        movieRepository.deleteMovieCinemaLinks(movieId); // 💥 add this line
+
+        // 3️⃣ Map before delete (avoid lazy issues)
         MovieResponse deletedMovieResponse = movieMapper.mapMovieToMovieResponse(movie);
 
-        // 3️⃣ Delete from DB
+        // 4️⃣ Delete the movie
         movieRepository.delete(movie);
 
-        // 4️⃣ Build response
+        // 5️⃣ Build response
         return ResponseMessage.<MovieResponse>builder()
                 .httpStatus(HttpStatus.OK)
                 .message(SuccessMessages.MOVIE_DELETE)
                 .returnBody(deletedMovieResponse)
                 .build();
     }
+
 
     /**
      * Fetches movies filtered by genre with pagination and sorting.
