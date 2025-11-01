@@ -32,12 +32,12 @@ public class CountryService {
 
     }
 
-    public ResponseEntity<ResponseMessage> saveCountry(CountryRequest countryRequest) {
+    public ResponseEntity<ResponseMessage<CountryMiniResponse>> saveCountry(CountryRequest countryRequest) {
         // Check if country already exists (case-insensitive)
         if (countryRepository.findByNameIgnoreCase(countryRequest.getName()).isPresent()) {
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
-                    .body(ResponseMessage.builder()
+                    .body(ResponseMessage.<CountryMiniResponse>builder()
                             .message("Country already exists")
                             .build());
         }
@@ -49,8 +49,9 @@ public class CountryService {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ResponseMessage.builder()
+                .body(ResponseMessage.<CountryMiniResponse>builder()
                         .message("Country added successfully, countryName: "+country.getName()+"countryId: "+country.getId())
+                        .returnBody(countryMapper.countryToCountryMiniResponse(country))
                         .build());
     }
 
