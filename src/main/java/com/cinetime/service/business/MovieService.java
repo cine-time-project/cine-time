@@ -187,6 +187,8 @@ public class MovieService {
      * @param pageable pagination info
      * @return ResponseMessage with a page of MovieResponse
      */
+
+    @Transactional(readOnly = true)
     public ResponseMessage<Page<MovieResponse>> searchAuthorizedMovies(String q, Pageable pageable) {
         Page<Movie> movies;
         if (q != null && !q.trim().isEmpty()) {
