@@ -115,11 +115,6 @@ public class Movie {
     @Column(name = "poster_url")
     private String posterUrl;  // getter/setter via Lombok
 
-
-
-
-
-
     @Column(name = "trailer_url", length = 255)
     private String trailerUrl;
 

@@ -62,5 +62,9 @@ public class MovieRequest {
 
     private Set<Long> imageIds;
 
+    private String posterUrl;
+
+    private String trailerUrl;
+
 }
 
