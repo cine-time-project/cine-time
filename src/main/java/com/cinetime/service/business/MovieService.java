@@ -326,10 +326,15 @@ public class MovieService {
             movie.setCinemas(cinemaService.getAllByIdIn(movieRequest.getCinemaIds()));
         }
 
+        movie.setPosterUrl(movieRequest.getPosterUrl());
+        movie.setTrailerUrl(movieRequest.getTrailerUrl());
+
         // 4️⃣ Update images (OneToMany)
         if (movieRequest.getImageIds() != null) {
             movie.setImages(imageService.getAllByIdIn(movieRequest.getImageIds()));
         }
+
+
 
         // 5️⃣ Save the updated entity to the DB
         Movie updatedMovie = movieRepository.save(movie);
