@@ -32,9 +32,8 @@ public class MovieResponse {
     private List<ImageResponse> images;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
     private String trailerUrl;
-
+    private String posterUrl;
     private Long posterId;
     private Long heroId;
 

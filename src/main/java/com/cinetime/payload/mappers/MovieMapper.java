@@ -48,6 +48,7 @@ public class MovieMapper {
                 .createdAt(movie.getCreatedAt())
                 .updatedAt(movie.getUpdatedAt())
                 .trailerUrl(movie.getTrailerUrl())
+                .posterUrl(movie.getPosterUrl())
                 .posterId(posterId)
                 .heroId(heroId)
                 .build();
