@@ -103,6 +103,7 @@ public class Movie {
     private Set<Showtime> showtimes = new LinkedHashSet<>();
 
     @JsonIgnore
+    @Builder.Default
     @OneToMany(mappedBy = "movie",
             cascade = CascadeType.ALL,
             orphanRemoval = true,
