@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Data
 public class CityMapper {
+
     public CityMiniResponse cityToCityMiniResponse(City city){
         if (city==null) return null;
 

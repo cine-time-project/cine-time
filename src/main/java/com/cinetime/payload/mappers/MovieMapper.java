@@ -6,10 +6,12 @@ import com.cinetime.entity.enums.MovieStatus;
 import com.cinetime.payload.request.business.MovieRequest;
 import com.cinetime.payload.response.business.CinemaMovieResponse;
 import com.cinetime.payload.response.business.ImageResponse;
+import com.cinetime.payload.response.business.MovieMiniResponse;
 import com.cinetime.payload.response.business.MovieResponse;
 import lombok.Data;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
+
 import java.util.List;
 
 
@@ -29,7 +31,7 @@ public class MovieMapper {
                         : movie.getImages().stream().map(imageMapper::toResponse).toList();
 
         Long posterId = resolvePosterId(movie);
-        Long heroId   = resolveHeroId(movie, posterId); // scene/backdrop yoksa postere düş
+        Long heroId = resolveHeroId(movie, posterId); // scene/backdrop yoksa postere düş
 
         return MovieResponse.builder()
                 .id(movie.getId())
@@ -84,10 +86,6 @@ public class MovieMapper {
                 .posterUrl(movie.getPosterUrl())
                 .build();
     }
-
-
-
-
 
 
     public Page<CinemaMovieResponse> mapToCinemaResponsePage(Page<Movie> movies) {
@@ -169,7 +167,7 @@ public class MovieMapper {
         }
     }
 
-    public MovieStatus movieStatusMapper(String status){
+    public MovieStatus movieStatusMapper(String status) {
         if (status == null || status.isBlank()) return null;
 
         MovieStatus movieStatus = null;
@@ -183,5 +181,16 @@ public class MovieMapper {
         }
 
         return movieStatus;
+    }
+
+    public MovieMiniResponse toMiniResponse(Movie movie) {
+        Image image = movie.getImages().stream().findFirst().orElse(null);
+        ImageResponse posterImageResponse = (image == null) ? null : imageMapper.toResponse(image);
+        return MovieMiniResponse.builder()
+                .id(movie.getId())
+                .title(movie.getTitle())
+                .duration(movie.getDuration())
+                .posterUrl((posterImageResponse == null) ? null : posterImageResponse.getUrl())
+                .build();
     }
 }

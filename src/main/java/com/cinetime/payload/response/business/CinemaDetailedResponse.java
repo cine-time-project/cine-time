@@ -12,17 +12,14 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class HallResponse {
-
+public class CinemaDetailedResponse {
     private Long id;
     private String name;
-    private Integer seatCapacity;
-    private Boolean isSpecial;
+    private String slug;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Optionally include cinema info
-    private Long cinemaId;
-    private String cinemaName;
-    private Set<ShowtimeSimpleResponse> showtimes;
+    private CityMiniResponse city;
+    private Set<HallResponse> halls;
+    private Set<MovieMiniResponse> movies;
 }

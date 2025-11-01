@@ -9,8 +9,7 @@ import lombok.*;
 public class CityMiniResponse {
     private Long id;
     private String name;
-
-  private CountryMiniResponse countryMiniResponse;
+    private CountryMiniResponse countryMiniResponse;
 
     public CityMiniResponse(Long id, String name) {
         this.id = id;

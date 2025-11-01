@@ -5,6 +5,7 @@ import com.cinetime.entity.business.Movie;
 import com.cinetime.entity.business.Showtime;
 import com.cinetime.payload.request.business.ShowtimeRequest;
 import com.cinetime.payload.response.business.ShowtimeResponse;
+import com.cinetime.payload.response.business.ShowtimeSimpleResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,18 @@ public class ShowtimeMapper {
                 .endTime(request.getEndTime())
                 .hall(hall)
                 .movie(movie)
+                .build();
+    }
+
+    public ShowtimeSimpleResponse toSimpleResponse(Showtime showtime) {
+        return ShowtimeSimpleResponse.builder()
+                .id(showtime.getId())
+                .date(showtime.getDate())
+                .startTime(showtime.getStartTime())
+                .endTime(showtime.getEndTime())
+                .movieId(showtime.getMovie().getId())
+                .movieTitle(showtime.getMovie().getTitle())
+                .moviePosterUrl(showtime.getMovie().getPosterUrl())
                 .build();
     }
 
@@ -119,7 +132,6 @@ public class ShowtimeMapper {
                 m != null ? m.getDuration() : null
         );
     }
-
 
 
 }

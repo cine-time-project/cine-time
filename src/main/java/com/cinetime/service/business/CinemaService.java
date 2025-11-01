@@ -331,5 +331,14 @@ public class CinemaService {
                 .toList();
     }
 
-
+    @Transactional(readOnly = true)
+    public ResponseMessage<CinemaDetailedResponse> getDetailedCinemaById(Long id) {
+        Cinema cinema = getById(id);
+        CinemaDetailedResponse detailedResponse = cinemaMapper.toDetailedResponse(cinema);
+        return ResponseMessage.<CinemaDetailedResponse>builder()
+                .message(SuccessMessages.CINEMA_FETCHED)
+                .returnBody(detailedResponse)
+                .httpStatus(HttpStatus.OK)
+                .build();
+    }
 }

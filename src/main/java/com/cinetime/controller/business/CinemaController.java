@@ -84,6 +84,12 @@ public class CinemaController {
         return ResponseEntity.ok(cinemaService.getCinemaById(id));
     }
 
+    //C03: Cinemas Details By id For Dashboard
+    @GetMapping("/dashboard/cinemas/{id}")
+    public ResponseMessage<CinemaDetailedResponse> getCinemaDetailed(@PathVariable Long id){
+        return cinemaService.getDetailedCinemaById(id);
+    }
+
 
     // C04: get cinemas Halls
     @GetMapping("/cinemas/{id}/halls")
