@@ -18,6 +18,7 @@ public class CinemaMapper {
     private final CityMapper cityMapper;
     private final HallMapper hallMapper;
     private final MovieMapper movieMapper;
+    private final CinemaImageMapper cinemaImageMapper;
 
     public CinemaSummaryResponse toSummary(Cinema cinema) {
         if (cinema == null) return null;
@@ -65,6 +66,25 @@ public class CinemaMapper {
     }
 
     public CinemaDetailedResponse toDetailedResponse(Cinema cinema) {
+        String imageUrl = null;
+        if (cinema.getCinemaImage() != null) {
+            String storedUrl = cinema.getCinemaImage().getUrl();
+            if (storedUrl != null && !storedUrl.isBlank()) {
+                imageUrl = storedUrl;
+            } else {
+                imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                        .path("/api/cinemaimages/")
+                        .path(String.valueOf(cinema.getId()))
+                        .toUriString();
+            }
+        }
+
+        CinemaImageResponse cinemaImageResponse = (
+                cinema.getCinemaImage() == null
+                        ? null
+                        : cinemaImageMapper.cinemaImageToResponse(cinema.getCinemaImage())
+        );
+
         CityMiniResponse cityMiniResponse = cityMapper.cityToCityMiniResponse(cinema.getCity());
 
         Set<HallResponse> hallResponses = (
@@ -74,13 +94,19 @@ public class CinemaMapper {
 
         Set<MovieMiniResponse> movieMiniResponses = (
                 cinema.getMovies() != null && !cinema.getMovies().isEmpty()
-                ? cinema.getMovies().stream().map(movieMapper::toMiniResponse).collect(Collectors.toSet())
-                : null);
+                        ? cinema.getMovies().stream().map(movieMapper::toMiniResponse).collect(Collectors.toSet())
+                        : null);
 
         return CinemaDetailedResponse.builder()
                 .id(cinema.getId())
                 .name(cinema.getName())
                 .slug(cinema.getSlug())
+                .imageUrl(imageUrl)
+                .cinemaImageUrl(
+                        cinemaImageResponse == null
+                                ? null
+                                : cinemaImageResponse.getUrl()
+                )
                 .createdAt(cinema.getCreatedAt())
                 .updatedAt(cinema.getUpdatedAt())
                 .city(cityMiniResponse)
