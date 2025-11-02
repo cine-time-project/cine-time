@@ -103,6 +103,7 @@ public class Movie {
     private Set<Showtime> showtimes = new LinkedHashSet<>();
 
     @JsonIgnore
+    @Builder.Default
     @OneToMany(mappedBy = "movie",
             cascade = CascadeType.ALL,
             orphanRemoval = true,
@@ -113,11 +114,6 @@ public class Movie {
     // in com.cinetime.entity.business.Movie
     @Column(name = "poster_url")
     private String posterUrl;  // getter/setter via Lombok
-
-
-
-
-
 
     @Column(name = "trailer_url", length = 255)
     private String trailerUrl;

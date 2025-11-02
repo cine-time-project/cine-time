@@ -21,7 +21,7 @@ import java.util.Set;
 
 public interface MovieRepository extends JpaRepository<Movie, Long> {
 
-    @EntityGraph(attributePaths = {"images"})
+    @EntityGraph(attributePaths = {"images", "genre"})
     Page<Movie> findByTitleContainingIgnoreCaseOrSummaryContainingIgnoreCase(String title, String summary, Pageable pageable);
 
     @EntityGraph(attributePaths = {"images","genre"})
