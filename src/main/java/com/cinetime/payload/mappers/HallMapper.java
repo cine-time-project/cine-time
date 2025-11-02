@@ -5,20 +5,27 @@ import com.cinetime.entity.business.Hall;
 import com.cinetime.payload.request.business.HallRequest;
 import com.cinetime.payload.response.business.HallResponse;
 import com.cinetime.payload.response.business.SpecialHallResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
+import java.util.stream.Collectors;
+
 @Component
+@RequiredArgsConstructor
 public class HallMapper {
-    public SpecialHallResponse toSpecial(Hall hall){
-        if(hall==null) return null;
-        var cinema=hall.getCinema();
+
+    private final ShowtimeMapper showtimeMapper;
+
+    public SpecialHallResponse toSpecial(Hall hall) {
+        if (hall == null) return null;
+        var cinema = hall.getCinema();
         return SpecialHallResponse.builder()
                 .id(hall.getId())
                 .name(hall.getName())
                 .seatCapacity(hall.getSeatCapacity())
-                .cinemaId(cinema!=null?cinema.getId():null)
-                .cinemaName(cinema!=null?cinema.getName():null)
+                .cinemaId(cinema != null ? cinema.getId() : null)
+                .cinemaName(cinema != null ? cinema.getName() : null)
                 .build();
     }
 
@@ -41,7 +48,13 @@ public class HallMapper {
                 .updatedAt(hall.getUpdatedAt())
                 .cinemaId(hall.getCinema() != null ? hall.getCinema().getId() : null)
                 .cinemaName(hall.getCinema() != null ? hall.getCinema().getName() : null)
-                .build();
+                .showtimes(
+                        (hall.getShowtimes() != null && !hall.getShowtimes().isEmpty())
+                                ? hall.getShowtimes().stream()
+                                .map(showtimeMapper::toSimpleResponse)
+                                .collect(Collectors.toSet())
+                                : null)
+                                .build();
     }
 
     public Page<HallResponse> mapToResponsePage(Page<Hall> halls) {

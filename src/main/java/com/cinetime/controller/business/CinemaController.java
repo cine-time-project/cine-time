@@ -34,7 +34,7 @@ public class CinemaController {
             @RequestParam(required = false) Long cityId,
             @RequestParam(required = false) String cityName,
             @RequestParam(required = false) Boolean specialHall,
-            @PageableDefault(page = 0, size = 10, sort = "name", direction = Sort.Direction.ASC)Pageable pageable) {
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.ASC)Pageable pageable) {
 
      return cinemaService.listCinemas(cityId, cityName, specialHall, pageable);
 
@@ -84,6 +84,14 @@ public class CinemaController {
         return ResponseEntity.ok(cinemaService.getCinemaById(id));
     }
 
+    //C03: Cinemas Details By id For Dashboard
+
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/dashboard/cinemas/{id}")
+    public ResponseMessage<CinemaDetailedResponse> getCinemaDetailed(@PathVariable Long id){
+        return cinemaService.getDetailedCinemaById(id);
+    }
+
 
     // C04: get cinemas Halls
     @GetMapping("/cinemas/{id}/halls")
@@ -114,12 +122,13 @@ public class CinemaController {
         return ResponseEntity.ok(cinemaService.update(id, request));
     }
 
-    //C08: Delete Cinema
-    @DeleteMapping("/cinemas/{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")  // <= ***changed***
-    public ResponseEntity<ResponseMessage<Void>> delete(@PathVariable Long id) {
-        return ResponseEntity.ok(cinemaService.delete(id));
+    // to delete multiple cinemas at once.
+    @DeleteMapping("/cinemas")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<ResponseMessage<Void>> deleteMultiple(@RequestBody List<Long> ids) {
+        return ResponseEntity.ok(cinemaService.deleteMultiple(ids));
     }
+
 
     @PreAuthorize("permitAll()")
     @GetMapping("/cinemas/{cinemaId}/movies")

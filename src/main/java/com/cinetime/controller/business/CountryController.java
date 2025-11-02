@@ -29,7 +29,7 @@ public class CountryController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/add")
-    public ResponseEntity<ResponseMessage> addCountry(
+    public ResponseEntity<ResponseMessage<CountryMiniResponse>> addCountry(
             @RequestBody @Valid CountryRequest countryRequest) {
         return  countryService.saveCountry(countryRequest);
     }
