@@ -270,6 +270,7 @@ public class MovieService {
             movie.setImages(imageService.getAllByIdIn(movieRequest.getImageIds()));
         }
         Movie savedMovie = movieRepository.save(movie);
+        movieRepository.flush();
 
         return ResponseMessage.<MovieResponse>builder()
                 .httpStatus(HttpStatus.CREATED)

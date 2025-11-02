@@ -40,7 +40,7 @@ public class MovieRequest {
 
     private String specialHalls;
 
-    @Size(min = 5, max = 20)
+    @Size(min = 5, max = 50)
     private String director;
 
     @NotNull(message = "Cast cannot be empty")
