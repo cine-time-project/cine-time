@@ -50,6 +50,7 @@ public class MovieMapper {
                 .createdAt(movie.getCreatedAt())
                 .updatedAt(movie.getUpdatedAt())
                 .trailerUrl(movie.getTrailerUrl())
+                .posterUrl(movie.getPosterUrl())
                 .posterId(posterId)
                 .heroId(heroId)
                 .build();
@@ -108,6 +109,8 @@ public class MovieMapper {
                 .formats(req.getFormats())
                 .genre(req.getGenre())
                 .status(req.getStatus())
+                .posterUrl(req.getPosterUrl())
+                .trailerUrl(req.getTrailerUrl())
                 // slug, cinemas, images service katmanında set edilecek
                 .build();
     }
@@ -126,6 +129,9 @@ public class MovieMapper {
         movie.setFormats(req.getFormats());
         movie.setGenre(req.getGenre());
         movie.setStatus(req.getStatus());
+        movie.setPosterUrl(req.getPosterUrl());
+        movie.setTrailerUrl(req.getTrailerUrl());
+
         // cinemas & images service katmanında yönetilecek
     }
 
