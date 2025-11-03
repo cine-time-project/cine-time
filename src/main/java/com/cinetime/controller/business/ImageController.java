@@ -1,5 +1,7 @@
 package com.cinetime.controller.business;
 
+import com.cinetime.entity.business.Image;
+import com.cinetime.payload.mappers.ImageMapper;
 import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.response.business.ImageResponse;
 import com.cinetime.service.business.ImageService;
@@ -14,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Tag(name = "Images")
@@ -23,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 public class ImageController {
 
     private final ImageService imageService;
+
+    private final ImageMapper imageMapper;
 
     /**
      * I01 — Stream image bytes by id (sets content type and long cache).
@@ -98,4 +103,60 @@ public class ImageController {
                 .header("X-Success-Message", SuccessMessages.IMAGE_UPDATED)
                 .body(updated);
     }
+
+    @PreAuthorize("permitAll()")
+    @GetMapping("/movies/{movieId}/images")
+    public ResponseEntity<List<Image>> getImagesForMovie(@PathVariable Long movieId) {
+        List<Image> images = imageService.findImagesByMovieId(movieId);
+        return ResponseEntity.ok(images);
+    }
+
+    @PreAuthorize("permitAll()")
+    @GetMapping("/movies/{movieId}/poster")
+    public ResponseEntity<Long> getPosterImageId(@PathVariable Long movieId) {
+        Long posterId = imageService.findPosterIdByMovieId(movieId);
+        return ResponseEntity.ok(posterId);
+    }
+
+    /**
+     * Dashboard endpoint - Get paginated list of all images
+     */
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/dashboard/images/list")
+    public ResponseEntity<?> getAllImages(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "createdAt") String sort,
+            @RequestParam(defaultValue = "desc") String type,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Long movieId
+    ) {
+        var images = imageService.getAllImagesPaginated(page, size, sort, type, q, movieId);
+
+        var result = new java.util.HashMap<String, Object>();
+        result.put("httpStatus", "OK");
+        result.put("message", "Images retrieved successfully");
+        result.put("returnBody", images);
+
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Dashboard endpoint - Get single image details
+     */
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/dashboard/images/{imageId}")
+    public ResponseEntity<?> getImageDetails(@PathVariable Long imageId) {
+        var image = imageService.getImageEntity(imageId);
+        var response = imageMapper.toResponse(image);
+
+        var result = new java.util.HashMap<String, Object>();
+        result.put("httpStatus", "OK");
+        result.put("message", "Image retrieved successfully");
+        result.put("returnBody", response);
+
+        return ResponseEntity.ok(result);
+    }
+
+
 }
