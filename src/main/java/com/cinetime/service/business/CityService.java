@@ -58,11 +58,12 @@ public class CityService {
         newCity.setName(cityRequest.getName());
         newCity.setCountry(mandatoryCountry.get());
 
-        cityRepository.save(newCity);
+        City savedCity = cityRepository.save(newCity);
 
     return ResponseEntity
             .status(201)
             .body(ResponseMessage.builder()
+                    .returnBody(cityMapper.cityToCityMiniResponse(savedCity))
                     .message("City saved successfully with id: "+ newCity.getId())
                     .build());
     }
