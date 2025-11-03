@@ -22,7 +22,6 @@ import com.cinetime.service.business.RoleService;
 import com.cinetime.service.helper.MailHelper;
 import com.cinetime.service.helper.SecurityHelper;
 
-import com.cinetime.util.PhoneUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -79,7 +78,7 @@ public class UserService {
 
         if (StringUtils.hasText(request.getPhone())) {
             try {
-                user.setPhoneNumber(PhoneUtils.toE164(request.getPhone(), defaultRegion)); // <--- BURASI
+                user.setPhoneNumber(request.getPhone());
             } catch (IllegalArgumentException ex) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
             }
@@ -161,8 +160,7 @@ public class UserService {
         user.setRoles(Set.of(member));
 
         try {
-            String normalizedPhone = PhoneUtils.toE164(req.getPhone(), defaultRegion); // <--- BURASI
-            user.setPhoneNumber(normalizedPhone);
+            user.setPhoneNumber(req.getPhone());
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
         }
@@ -197,8 +195,7 @@ public class UserService {
                 .build();
 
         try {
-            String normalizedPhone = PhoneUtils.toE164(registerRequest.getPhone(), defaultRegion); // <--- BURASI
-            newUser.setPhoneNumber(normalizedPhone);
+            newUser.setPhoneNumber(registerRequest.getPhone());
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
         }
@@ -284,7 +281,7 @@ public class UserService {
         }
 
         try {
-            user.setPhoneNumber(PhoneUtils.toE164(request.getPhoneNumber(), defaultRegion)); // <--- BURASI
+            user.setPhoneNumber(request.getPhoneNumber());
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
         }
@@ -428,17 +425,6 @@ public class UserService {
 
     }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
