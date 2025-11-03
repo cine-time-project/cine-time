@@ -21,7 +21,7 @@ import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.business.RoleService;
 import com.cinetime.service.helper.MailHelper;
 import com.cinetime.service.helper.SecurityHelper;
-
+import com.cinetime.util.PhoneUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +45,6 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-
     private final UserRepository userRepository;
     private final GoogleUserRepository googleUserRepository;
     private final RoleRepository roleRepository;
@@ -56,51 +55,44 @@ public class UserService {
     private final JavaMailSender mailSender;
     private final MailHelper mailHelper;
     private final SecurityHelper securityHelper;
+
     @Value("${app.mail.from}")
     private String mailForm;
     @Value("${app.mail.reset.subject}")
     private String resetSubject;
     @Value("${app.mail.reset.template}")
     private String resetTemplateHtml;
-
     @Value("${cinetime.default-region:TR}")
     private String defaultRegion;
 
     // U06 - Update Authenticated User
     public UserResponse updateAuthenticatedUser(UserUpdateRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
         User user = securityHelper.loadByLoginProperty(username);
-
         if (Boolean.TRUE.equals(user.getBuiltIn())) {
             throw new ConflictException(ErrorMessages.BUILT_IN_USER_UPDATE_NOT_ALLOWED);
         }
 
         if (StringUtils.hasText(request.getPhone())) {
             try {
-                user.setPhoneNumber(request.getPhone());
+                user.setPhoneNumber(PhoneUtils.toE164(request.getPhone(), defaultRegion));
             } catch (IllegalArgumentException ex) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
             }
         }
 
-
         UserMapper.updateEntityFromRequest(request, user);
         userRepository.save(user);
-
         return UserMapper.toResponse(user);
     }
 
     // U07 - Delete Authenticated User
     public String deleteAuthenticatedUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
         User user = securityHelper.loadByLoginProperty(username);
-
         if (Boolean.TRUE.equals(user.getBuiltIn())) {
             throw new ConflictException(ErrorMessages.BUILT_IN_USER_DELETE_NOT_ALLOWED);
         }
-
         userRepository.delete(user);
         return SuccessMessages.USER_DELETED;
     }
@@ -113,16 +105,13 @@ public class UserService {
                 : userRepository
                 .findByNameContainingIgnoreCaseOrSurnameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrPhoneNumberContainingIgnoreCase(
                         q, q, q, q, pageable);
-
         Page<UserResponse> body = page.map(UserMapper::toResponse);
-
         return ResponseMessage.<Page<UserResponse>>builder()
                 .httpStatus(HttpStatus.OK)
-                .message(SuccessMessages.USERS_LISTED) // örn: "Users listed successfully"
+                .message(SuccessMessages.USERS_LISTED)
                 .returnBody(body)
                 .build();
     }
-
 
     // U09 - Get users (ADMIN or EMPLOYEE)
     public List<UserResponse> getAllUsers() {
@@ -135,67 +124,55 @@ public class UserService {
     // U02 - User Register
     @Transactional
     public UserResponse saveUser(UserRegisterRequest req) {
-        // 1) unique
         if (userRepository.existsByEmail(req.getEmail()))
             throw new ConflictException(ErrorMessages.EMAIL_NOT_UNIQUE);
-
         if (userRepository.existsByPhoneNumber(req.getPhone()))
             throw new ConflictException(ErrorMessages.PHONE_NUMBER_NOT_UNIQUE);
 
-        // If this is a GoogleUser, let the saveGoogleUser method save it.
-        if (req instanceof GoogleRegisterRequest){
+        if (req instanceof GoogleRegisterRequest) {
             return saveGoogleUser((GoogleRegisterRequest) req);
         }
 
-        // 2) request -> entity (STATIC mapper)
-        User user = UserMapper.fromRegisterRequest(req);   // <<< static call
+        User user = UserMapper.fromRegisterRequest(req);
         user.setEmail(user.getEmail().trim().toLowerCase());
-
-        // 3) encode password
         user.setPassword(encoder.encode(user.getPassword()));
 
-        // 4) default role = MEMBER
         Role member = roleRepository.findByRoleName(RoleName.MEMBER)
                 .orElseThrow(() -> new IllegalStateException(ErrorMessages.MEMBER_ROLE_MISSING));
         user.setRoles(Set.of(member));
 
         try {
-            user.setPhoneNumber(req.getPhone());
+            String normalizedPhone = PhoneUtils.toE164(req.getPhone(), defaultRegion);
+            user.setPhoneNumber(normalizedPhone);
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
         }
 
-        // 6) provider = LOCAL
         user.setProvider(AuthProvider.LOCAL);
-
-        // 5) save + map to response (STATIC mapper)
         User saved = userRepository.save(user);
-        return UserMapper.toResponse(saved);               // <<< static call while mapper is not component
+        return UserMapper.toResponse(saved);
     }
 
     @Transactional
     private UserResponse saveGoogleUser(GoogleRegisterRequest registerRequest) {
-
-        // get MEMBER role as default from DB
         Role memberRole = roleRepository.findByRoleName(RoleName.MEMBER)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.MEMBER_ROLE_MISSING));
-
         GoogleUser newUser = GoogleUser.builder()
                 .googleId(registerRequest.getGoogleId())
                 .picture(registerRequest.getPicture())
                 .name(registerRequest.getFirstName())
                 .surname(registerRequest.getLastName())
-                //.phoneNumber(registerRequest.getPhone())   ---> will be added below after normalization
                 .email(registerRequest.getEmail())
                 .password(encoder.encode(registerRequest.getPassword()))
                 .birthDate(registerRequest.getBirthDate())
                 .gender(registerRequest.getGender())
                 .provider(AuthProvider.GOOGLE)
-                .roles(Set.of(memberRole)) // MEMBER role given by default.
+                .roles(Set.of(memberRole))
                 .build();
 
         try {
-            newUser.setPhoneNumber(registerRequest.getPhone());
+            String normalizedPhone = PhoneUtils.toE164(registerRequest.getPhone(), defaultRegion);
+            newUser.setPhoneNumber(normalizedPhone);
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
         }
@@ -204,23 +181,18 @@ public class UserService {
         return UserMapper.toResponse(user);
     }
 
-    //U10-Update user by ADMIN or EMPLOYEE
+    // U10 - Update user by ADMIN or EMPLOYEE
     @Transactional
     public ResponseMessage<UserResponse> updateUserByAdminOrEmployee(Long userId, UserUpdateRequest request) {
         User target = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
-
         if (Boolean.TRUE.equals(target.getBuiltIn())) {
             throw new ConflictException(ErrorMessages.BUILT_IN_USER_UPDATE_NOT_ALLOWED);
         }
-
         Authentication caller = SecurityContextHolder.getContext().getAuthentication();
-
-        // Employee can only  MEMBER update.
         if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(target, RoleName.MEMBER)) {
             throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
         }
-
         UserMapper.updateUserFromRequest(request, target);
         userRepository.save(target);
         return ResponseMessage.<UserResponse>builder()
@@ -235,19 +207,15 @@ public class UserService {
     public ResponseMessage<UserResponse> deleteUserByAdminOrEmployee(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
-
         if (Boolean.TRUE.equals(user.getBuiltIn())) {
             throw new ConflictException(ErrorMessages.BUILT_IN_USER_DELETE_NOT_ALLOWED);
         }
-
         Authentication caller = SecurityContextHolder.getContext().getAuthentication();
-
         if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(user, RoleName.MEMBER)) {
             throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
         }
         UserResponse body = UserMapper.toResponse(user);
         userRepository.delete(user);
-
         return ResponseMessage.<UserResponse>builder()
                 .message(SuccessMessages.USER_DELETED)
                 .httpStatus(HttpStatus.OK)
@@ -255,12 +223,9 @@ public class UserService {
                 .build();
     }
 
-
     public ResponseMessage<UserCreateResponse> createUser(UserCreateRequest request) {
-
         if (userRepository.existsByEmail(request.getEmail()))
             throw new ConflictException(ErrorMessages.EMAIL_NOT_UNIQUE);
-
         if (userRepository.existsByPhoneNumber(request.getPhoneNumber()))
             throw new ConflictException(ErrorMessages.PHONE_NUMBER_NOT_UNIQUE);
 
@@ -281,15 +246,15 @@ public class UserService {
         }
 
         try {
-            user.setPhoneNumber(request.getPhoneNumber());
+            user.setPhoneNumber(PhoneUtils.toE164(request.getPhoneNumber(), defaultRegion));
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid phone number");
         }
 
         user.setRoles(Set.of(role));
         userRepository.save(user);
-        UserCreateResponse response = userMapper.mapUserToUserCreateResponse(user);
 
+        UserCreateResponse response = userMapper.mapUserToUserCreateResponse(user);
         return ResponseMessage.<UserCreateResponse>builder()
                 .message(SuccessMessages.USER_CREATE)
                 .httpStatus(HttpStatus.CREATED)
@@ -297,53 +262,39 @@ public class UserService {
                 .build();
     }
 
-    //U04-Reset Password
+    // U04 - Reset Password
     @Transactional
     public void resetPasswordForAuthenticatedUser(ResetPasswordRequest request) {
         User user = getCurrentUser();
-
-        // 1) Verify old password
         if (!encoder.matches(request.getOldPassword(), user.getPassword())) {
-            throw new BadRequestException(ErrorMessages.OLD_PASSWORD_MISMATCH); // use your constant
+            throw new BadRequestException(ErrorMessages.OLD_PASSWORD_MISMATCH);
         }
-
-        // 2) Optional extra validations (keep if useful; remove if you prefer minimal)
         if (encoder.matches(request.getNewPassword(), user.getPassword())) {
             throw new BadRequestException(ErrorMessages.NEW_PASSWORD_SAME_AS_OLD);
         }
-
-        // 3) Update
         user.setPassword(encoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
 
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // Depending on your UserDetails implementation:
-        // If principal holds email/phone/ID, adapt this logic accordingly.
-        // Example assumes username = email:
         String username = auth.getName();
         return securityHelper.loadByLoginProperty(username);
     }
 
-    //U03 Forgot-Reset Password Email
+    // U03 Forgot-Reset Password Email
     public String forgotPassword(String rawEmail) {
         final String email = rawEmail.trim().toLowerCase();
-
         userRepository.findByLoginProperty(email).ifPresent(user -> {
             String code = generateSixDigitCode();
             user.setResetPasswordCode(code);
             userRepository.save(user);
-
             try {
-                // Kodlu e-posta gönderimi
                 mailHelper.sendResetCodeEmail(user.getEmail(), code);
             } catch (Exception e) {
                 log.error("E-posta gönderimi başarısız: {}", e.getMessage());
-                //throw new BadRequestException("E-posta gönderimi başarısız oldu, lütfen tekrar deneyin.");
             }
         });
-
         return SuccessMessages.FORGOT_PASSWORD_EMAIL_SENT;
     }
 
@@ -352,25 +303,19 @@ public class UserService {
         return String.format("%06d", r.nextInt(1_000_000));
     }
 
-
     public String resetPassword(ResetPasswordRequestEmail req) {
         final String email = req.getEmail().trim().toLowerCase();
         final String code = req.getCode().trim();
-
         User user = userRepository.findByLoginProperty(email)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
-
         String savedCode = user.getResetPasswordCode();
         if (savedCode == null || savedCode.isBlank())
             throw new BadRequestException(ErrorMessages.RESET_CODE_REQUIRED);
-
         if (!savedCode.equals(code))
             throw new BadRequestException(ErrorMessages.INVALID_RESET_CODE);
-
         user.setPassword(encoder.encode(req.getNewPassword()));
-        user.setResetPasswordCode(null); // kod tüket
+        user.setResetPasswordCode(null);
         userRepository.save(user);
-
         return SuccessMessages.PASSWORD_RESET_SUCCESS;
     }
 
@@ -382,20 +327,13 @@ public class UserService {
 
     public String resetPasswordDirect(ResetPasswordRequestDirect req) {
         final String email = req.getEmail().trim().toLowerCase();
-
         User user = userRepository.findByLoginProperty(email)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
-
-        // Bu noktada kod doğrulaması zaten /verify-reset-code ile yapılmış olmalı.
-        // Kod alanını temizle (kullanılmış kodu geçersiz kıl)
         user.setResetPasswordCode(null);
-
         user.setPassword(encoder.encode(req.getNewPassword()));
         userRepository.save(user);
-
         return SuccessMessages.PASSWORD_RESET_SUCCESS;
     }
-
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public UserResponse getAuthenticatedUser() {
@@ -403,28 +341,14 @@ public class UserService {
         if (auth == null || !auth.isAuthenticated()) {
             throw new AccessDeniedException("Not authenticated");
         }
-
-        // If your JWT subject is email/username, this works:
         String subject = auth.getName();
-
-        // Prefer by-id if your principal carries an id
-        // UserPrincipal p = (UserPrincipal) auth.getPrincipal();
-        // Long userId = p.getId();
-        // User user = userRepository.findById(userId)
-        //     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         User user = userRepository.findByLoginProperty(subject)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.USER_NOT_FOUND));
-
-
         UserResponse userResponse = new UserResponse();
         userResponse.setName(user.getName());
         userResponse.setSurname(user.getSurname());
         userResponse.setEmail(user.getEmail());
         return userResponse;
-
-
     }
 }
-
-
 
