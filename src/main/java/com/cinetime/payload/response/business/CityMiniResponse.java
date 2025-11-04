@@ -12,7 +12,7 @@ import java.util.Set;
 public class CityMiniResponse {
     private Long id;
     private String name;
- 
+
 
   private CountryMiniResponse countryMiniResponse;
     private Set<DistrictMiniResponse> districtMiniResponses;
