@@ -6,6 +6,7 @@ import com.cinetime.payload.request.business.HallRequest;
 import com.cinetime.payload.response.business.HallResponse;
 import com.cinetime.payload.response.business.SpecialHallResponse;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
@@ -39,7 +40,7 @@ public class HallMapper {
     }
 
     public HallResponse mapHallToResponse(Hall hall) {
-        return HallResponse.builder()
+        var builder = HallResponse.builder()
                 .id(hall.getId())
                 .name(hall.getName())
                 .seatCapacity(hall.getSeatCapacity())
@@ -47,15 +48,20 @@ public class HallMapper {
                 .createdAt(hall.getCreatedAt())
                 .updatedAt(hall.getUpdatedAt())
                 .cinemaId(hall.getCinema() != null ? hall.getCinema().getId() : null)
-                .cinemaName(hall.getCinema() != null ? hall.getCinema().getName() : null)
-                .showtimes(
-                        (hall.getShowtimes() != null && !hall.getShowtimes().isEmpty())
-                                ? hall.getShowtimes().stream()
-                                .map(showtimeMapper::toSimpleResponse)
-                                .collect(Collectors.toSet())
-                                : null)
-                                .build();
+                .cinemaName(hall.getCinema() != null ? hall.getCinema().getName() : null);
+
+
+        if (Hibernate.isInitialized(hall.getShowtimes()) && hall.getShowtimes() != null && !hall.getShowtimes().isEmpty()) {
+            builder.showtimes(
+                    hall.getShowtimes().stream()
+                            .map(showtimeMapper::toSimpleResponse)
+                            .collect(Collectors.toSet())
+            );
+        }
+
+        return builder.build();
     }
+
 
     public Page<HallResponse> mapToResponsePage(Page<Hall> halls) {
         return halls.map(this::mapHallToResponse);

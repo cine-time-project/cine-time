@@ -118,6 +118,8 @@ public class SecurityConfig {
             "/api/cities",
             "/api/cities/**",
             "/api/movies",
+            "/api/hall/**",
+            "/api/hall",
             "/api/movies/**",
             "/api/special-halls",
             "/api/register",
