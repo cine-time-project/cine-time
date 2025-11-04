@@ -193,7 +193,7 @@ public class UserService {
         if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(target, RoleName.MEMBER)) {
             throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
         }
-        UserMapper.updateUserFromRequest(request, target);
+        UserMapper.updateUserFromRequest(request, target,roleRepository);
         userRepository.save(target);
         return ResponseMessage.<UserResponse>builder()
                 .message(SuccessMessages.USER_UPDATED)

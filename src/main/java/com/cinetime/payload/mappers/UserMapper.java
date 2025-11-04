@@ -8,13 +8,18 @@ import com.cinetime.payload.request.user.UserUpdateRequest;
 import com.cinetime.payload.response.user.UserCreateResponse;
 import com.cinetime.payload.response.user.UserResponse;
 import com.cinetime.entity.user.User;
+import com.cinetime.repository.user.RoleRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
+@AllArgsConstructor
 public class UserMapper {
+    private final RoleRepository roleRepository;
 
     //  UserUpdateRequest -> User
     public static void updateEntityFromRequest(UserUpdateRequest req, User user) {
@@ -98,7 +103,8 @@ public class UserMapper {
     }
 
     //  Update again (refined duplicate)
-    public static void updateUserFromRequest(UserUpdateRequest req, User user) {
+
+    public static void updateUserFromRequest(UserUpdateRequest req, User user, RoleRepository roleRepository) {
         if (req.getFirstName() != null && !req.getFirstName().isBlank())
             user.setName(req.getFirstName().trim());
 
@@ -116,6 +122,14 @@ public class UserMapper {
 
         if (req.getGender() != null)
             user.setGender(req.getGender());
+
+        if (req.getRoles() != null) {
+            Set<Role> resolved = req.getRoles().stream()
+                    .map(rn -> roleRepository.findByRoleName(RoleName.valueOf(rn))
+                            .orElseThrow(() -> new IllegalArgumentException("Role not found in DB: " + rn)))
+                    .collect(Collectors.toSet());
+            user.setRoles(resolved);
+        }
     }
 }
 
