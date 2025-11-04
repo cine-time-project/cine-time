@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Set;
 
 
@@ -114,5 +115,49 @@ public class ImageService {
 
         Image saved = imageRepository.save(image);
         return imageMapper.toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Image> findImagesByMovieId(Long movieId) {
+        return imageRepository.findByMovie_IdOrderByCreatedAtDesc(movieId);
+    }
+
+    @Transactional(readOnly = true)
+    public Long findPosterIdByMovieId(Long movieId) {
+        return imageRepository.findPosterImageIdByMovieId(movieId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format("Poster not found for movie ID: %s", movieId)));
+    }
+
+    /**
+     * Get all images with pagination and filtering
+     */
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<ImageResponse> getAllImagesPaginated(
+            int page, int size, String sort, String type, String q, Long movieId) {
+
+        // Create sort direction
+        var direction = type.equalsIgnoreCase("asc")
+                ? org.springframework.data.domain.Sort.Direction.ASC
+                : org.springframework.data.domain.Sort.Direction.DESC;
+
+        // Create pageable
+        var pageable = org.springframework.data.domain.PageRequest.of(
+                page, size, org.springframework.data.domain.Sort.by(direction, sort)
+        );
+
+        // Get images based on filters
+        org.springframework.data.domain.Page<Image> images;
+
+        if (movieId != null) {
+            images = imageRepository.findByMovieId(movieId, pageable);
+        } else if (q != null && !q.isEmpty()) {
+            images = imageRepository.findByNameContainingIgnoreCase(q, pageable);
+        } else {
+            images = imageRepository.findAll(pageable);
+        }
+
+        // Convert to ImageResponse
+        return images.map(imageMapper::toResponse);
     }
 }

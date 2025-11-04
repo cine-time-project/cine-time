@@ -31,5 +31,20 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
     @Query("select i.id from Image i where i.movie.id = :movieId and i.isPoster = true")
     Optional<Long> findPosterImageIdByMovieId(@Param("movieId") Long movieId);
 
+    /**
+     * Find images by movie ID with pagination
+     */
+    org.springframework.data.domain.Page<Image> findByMovieId(
+            Long movieId,
+            org.springframework.data.domain.Pageable pageable
+    );
+
+    /**
+     * Search images by name (case-insensitive) with pagination
+     */
+    org.springframework.data.domain.Page<Image> findByNameContainingIgnoreCase(
+            String name,
+            org.springframework.data.domain.Pageable pageable
+    );
 
 }
