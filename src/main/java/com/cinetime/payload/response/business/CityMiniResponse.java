@@ -23,5 +23,6 @@ public class CityMiniResponse {
         this.name = name;
         this.countryMiniResponse = null;
         this.districtMiniResponses = new HashSet<>();
+
     }
 }
