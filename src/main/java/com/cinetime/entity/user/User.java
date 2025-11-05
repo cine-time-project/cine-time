@@ -87,7 +87,7 @@ public class User {
     private Set<Favorite> favorites = new HashSet<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @OrderBy("paymentDate DESC")
     private List<Payment> payments = new ArrayList<>();
 

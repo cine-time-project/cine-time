@@ -15,7 +15,10 @@ public class UserUpdateRequest {
     @Size(min = 2, max = 40) private String firstName;
     @Size(min = 2, max = 40) private String lastName;
 
-    @Pattern(regexp = "^\\(\\d{3}\\)\\s\\d{3}-\\d{4}$")
+    @Pattern(
+            regexp = "^(\\+?[1-9]\\d{7,14}|\\(\\d{3}\\)\\s\\d{3}-\\d{4})$",
+            message = "Phone must be E.164 (e.g. +491234567890) or (123) 456-7890"
+    )
     private String phone;
 
     @Email private String email;

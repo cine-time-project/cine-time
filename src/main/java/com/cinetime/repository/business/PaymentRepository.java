@@ -20,7 +20,7 @@ import java.util.Optional;
 public interface PaymentRepository extends JpaRepository<Payment,Long>, JpaSpecificationExecutor<Payment> {
     Optional<Payment> findByIdempotencyKey(String idempotencyKey);
 
-
+    void deleteAllByUser_Id(Long userId);
 
         @Query(
                 value = """

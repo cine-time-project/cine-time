@@ -22,4 +22,6 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     List<Long> findMovieIdsByUserId(@Param("uid") Long userId);
 
     void deleteByMovie(Movie movie);
+
+    void deleteAllByUser_Id(Long userId);
 }
