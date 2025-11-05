@@ -61,11 +61,13 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
     // U09 - Get users (ADMIN or EMPLOYEE)
-    @GetMapping("/users/4/admin")
+    @GetMapping("/users/admin/all")
     @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
+
+
 
     // U10 - Update user by ADMIN or EMPLOYEE
     @PutMapping("/{userId}/admin")
@@ -76,6 +78,15 @@ public class UserController {
 
         return ResponseEntity.ok(userService.updateUserByAdminOrEmployee(userId, request));
     }
+
+    // U10.1 - Get user by ID (ADMIN or EMPLOYEE)
+    @GetMapping("/{userId}/admin")
+    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
+    public ResponseEntity<UserResponse> getUserByAdminOrEmployee(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.getUserById(userId));
+    }
+
+
 
 
     // U11 - Delete user by ADMIN or EMPLOYEE

@@ -202,6 +202,14 @@ public class UserService {
                 .build();
     }
 
+    public UserResponse getUserById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı: " + userId));
+
+        return UserMapper.toResponse(user);
+    }
+
+
     // U11 – Delete User by Admin or Employee
     @Transactional
     public ResponseMessage<UserResponse> deleteUserByAdminOrEmployee(Long userId) {
