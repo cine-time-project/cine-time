@@ -21,6 +21,7 @@
 		<java.version>17</java.version>
 		<jjwt.version>0.11.5</jjwt.version>
 		<springdoc.version>2.3.0</springdoc.version>
+		<lombok.version>1.18.34</lombok.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -122,6 +123,17 @@
 	</dependencies>
 
 	<build>
+
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
+
+
+
+
 		<plugins>
 			<!-- Compiler -->
 			<plugin>
@@ -141,6 +153,16 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+
 
 			<!-- Spring Boot plugin -->
 			<plugin>
