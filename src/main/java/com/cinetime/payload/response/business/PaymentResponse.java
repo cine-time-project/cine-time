@@ -2,10 +2,7 @@ package com.cinetime.payload.response.business;
 
 import com.cinetime.entity.enums.PaymentStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
 public class PaymentResponse {
 
     @Builder.Default
@@ -27,4 +25,8 @@ public class PaymentResponse {
     private String paymentCurrency;
     private PaymentStatus paymentStatus;
     private LocalDateTime paymentDate;
+
+    private Long userId;
+    private String userName;
+    private String userEmail;
 }

@@ -3,8 +3,10 @@ package com.cinetime.service.business;
 import com.cinetime.entity.business.City;
 import com.cinetime.entity.business.Country;
 import com.cinetime.payload.mappers.CityMapper;
+import com.cinetime.payload.mappers.DistrictMapper;
 import com.cinetime.payload.request.business.CityRequest;
 import com.cinetime.payload.response.business.CityMiniResponse;
+import com.cinetime.payload.response.business.CountryMiniResponse;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.repository.business.CityRepository;
 import com.cinetime.repository.business.CountryRepository;
@@ -23,6 +25,7 @@ public class CityService {
     private final CityRepository cityRepository;
     private final CityMapper cityMapper;
     private final CountryRepository countryRepository;
+    private final DistrictMapper districtMapper;
     @Transactional(readOnly = true)
     public List<CityMiniResponse> listCitiesWithCinemas() {
         return
@@ -149,5 +152,19 @@ public class CityService {
                 .map(cityMapper::cityToCityMiniResponse).collect(Collectors.toList());
 
 
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<CityMiniResponse> listCityWithDistrict(Long cityId) {
+        City foundCity = cityRepository.findByIdWithDistricts(cityId).orElseThrow(()->new RuntimeException("City not exits"));
+
+        CityMiniResponse cityMiniResponse= new CityMiniResponse();
+        cityMiniResponse.setId(foundCity.getId());
+        cityMiniResponse.setCountryMiniResponse(new CountryMiniResponse(foundCity.getCountry().getId(),foundCity.getCountry().getName()));
+        cityMiniResponse.setName(foundCity.getName());
+        cityMiniResponse.setDistrictMiniResponses(foundCity.getDistricts().stream()
+                .map(districtMapper::districtToDistrictMiniResponse).collect(Collectors.toSet()));
+
+        return ResponseEntity.ok(cityMiniResponse);
     }
 }

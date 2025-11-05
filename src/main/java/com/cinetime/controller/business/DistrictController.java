@@ -102,6 +102,13 @@ public class DistrictController {
         return  districtService.findDistrictById(districtId);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PutMapping("/{districtId}")
+    public ResponseEntity<ResponseMessage> updateDistrict(
+            @PathVariable Long districtId, @RequestBody @Valid DistrictRequest districtRequest
+    ){
+        return districtService.updateDistrict(districtId,districtRequest);
+    }
 
 
 }

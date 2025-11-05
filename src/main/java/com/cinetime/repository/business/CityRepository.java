@@ -4,6 +4,7 @@ import com.cinetime.entity.business.City;
 import com.cinetime.payload.response.business.CinemaSummaryResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -22,6 +23,9 @@ public interface CityRepository extends JpaRepository<City, Long> {
     List<City> findCitiesWithCinemas();
 
     Optional<City> findByNameIgnoreCase(String name);
+
+    @Query("select c from City c left join fetch c.districts where c.id = :id")
+    Optional<City> findByIdWithDistricts(@Param("id") Long id);
 
 
 

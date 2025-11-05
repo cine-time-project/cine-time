@@ -88,7 +88,9 @@ public class ShowtimeController {
     }
 
     // /api/show-times/cities-with-showtimes?onOrAfter=YYYY-MM-DD&movieId=..&countryId=..
+
    @Transactional(readOnly = true)
+
     @GetMapping("/cities-with-showtimes")
     @PreAuthorize("permitAll()")
     public ResponseMessage<List<CityMiniResponse>> getCitiesWithShowtimes(
@@ -105,7 +107,7 @@ public class ShowtimeController {
 
 
 
-
+    @Transactional(readOnly = true)
     @GetMapping("/countries-with-showtimes")
     @PreAuthorize("permitAll()")
     public ResponseMessage<List<CountryMiniResponse>> getCountriesWithShowtimes(

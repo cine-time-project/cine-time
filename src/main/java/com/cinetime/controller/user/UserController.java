@@ -4,7 +4,9 @@ import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.user.*;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.user.UserCreateResponse;
+import com.cinetime.payload.response.user.UserPaymentSummaryResponse;
 import com.cinetime.payload.response.user.UserResponse;
+import com.cinetime.service.business.PaymentService;
 import com.cinetime.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,8 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final PaymentService paymentService;
+
 
     // U06 - Update authenticated user
     @PutMapping("/users/auth")
@@ -57,11 +61,13 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
     // U09 - Get users (ADMIN or EMPLOYEE)
-    @GetMapping("/users/4/admin")
+    @GetMapping("/users/admin/all")
     @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
+
+
 
     // U10 - Update user by ADMIN or EMPLOYEE
     @PutMapping("/{userId}/admin")
@@ -72,6 +78,15 @@ public class UserController {
 
         return ResponseEntity.ok(userService.updateUserByAdminOrEmployee(userId, request));
     }
+
+    // U10.1 - Get user by ID (ADMIN or EMPLOYEE)
+    @GetMapping("/{userId}/admin")
+    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
+    public ResponseEntity<UserResponse> getUserByAdminOrEmployee(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.getUserById(userId));
+    }
+
+
 
 
     // U11 - Delete user by ADMIN or EMPLOYEE
@@ -144,7 +159,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getAuthenticatedUser());
     }
 
-
+    @PreAuthorize("hasAnyAuthority('EMPLOYEE','ADMIN')")
+    @GetMapping("/{userId}/payments/summary")
+    public ResponseEntity<UserPaymentSummaryResponse> userPaymentsSummary(@PathVariable Long userId) {
+        return ResponseEntity.ok(paymentService.getUserPaymentSummary(userId));
+    }
 
 
 

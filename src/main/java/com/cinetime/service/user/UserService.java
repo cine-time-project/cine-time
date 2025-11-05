@@ -15,6 +15,9 @@ import com.cinetime.payload.request.user.*;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.user.UserCreateResponse;
 import com.cinetime.payload.response.user.UserResponse;
+import com.cinetime.repository.business.FavoriteRepository;
+import com.cinetime.repository.business.PaymentRepository;
+import com.cinetime.repository.business.TicketRepository;
 import com.cinetime.repository.user.GoogleUserRepository;
 import com.cinetime.repository.user.RoleRepository;
 import com.cinetime.repository.user.UserRepository;
@@ -56,6 +59,10 @@ public class UserService {
     private final MailHelper mailHelper;
     private final SecurityHelper securityHelper;
 
+    private final TicketRepository ticketRepository;
+    private final FavoriteRepository favoriteRepository;
+    private final PaymentRepository paymentRepository;
+
     @Value("${app.mail.from}")
     private String mailForm;
     @Value("${app.mail.reset.subject}")
@@ -87,13 +94,24 @@ public class UserService {
     }
 
     // U07 - Delete Authenticated User
+    @Transactional
     public String deleteAuthenticatedUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = securityHelper.loadByLoginProperty(username);
         if (Boolean.TRUE.equals(user.getBuiltIn())) {
             throw new ConflictException(ErrorMessages.BUILT_IN_USER_DELETE_NOT_ALLOWED);
         }
-        userRepository.delete(user);
+
+        Long userId = user.getId();
+
+        ticketRepository.deleteAllByUser_Id(userId);
+        favoriteRepository.deleteAllByUser_Id(userId);
+        paymentRepository.deleteAllByUser_Id(userId);
+
+        user.getRoles().clear();
+        userRepository.save(user);
+
+        userRepository.deleteById(userId);
         return SuccessMessages.USER_DELETED;
     }
 
@@ -193,7 +211,7 @@ public class UserService {
         if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(target, RoleName.MEMBER)) {
             throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
         }
-        UserMapper.updateUserFromRequest(request, target);
+        UserMapper.updateUserFromRequest(request, target,roleRepository);
         userRepository.save(target);
         return ResponseMessage.<UserResponse>builder()
                 .message(SuccessMessages.USER_UPDATED)
@@ -201,6 +219,14 @@ public class UserService {
                 .returnBody(UserMapper.toResponse(target))
                 .build();
     }
+
+    public UserResponse getUserById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı: " + userId));
+
+        return UserMapper.toResponse(user);
+    }
+
 
     // U11 – Delete User by Admin or Employee
     @Transactional
@@ -214,15 +240,30 @@ public class UserService {
         if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(user, RoleName.MEMBER)) {
             throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
         }
+
+        // 1) Önce Ticket'lar (Payment FK'sı yüzünden önce Ticket silinir)
+        ticketRepository.deleteAllByUser_Id(userId);
+
+        // 2) Sonra Favorite'lar
+        favoriteRepository.deleteAllByUser_Id(userId);
+
+        // 3) Sonra Payment'lar (artık Ticket bağlılığı kalmadı)
+        paymentRepository.deleteAllByUser_Id(userId);
+
+        // 4) (Opsiyonel ama güvenli) Many-to-Many join satırlarını net temizlet
+        user.getRoles().clear();
+        userRepository.save(user); // join tablodan satırları kaldırır
+
+        // 5) En son User
         UserResponse body = UserMapper.toResponse(user);
         userRepository.delete(user);
+
         return ResponseMessage.<UserResponse>builder()
                 .message(SuccessMessages.USER_DELETED)
                 .httpStatus(HttpStatus.OK)
                 .returnBody(body)
                 .build();
     }
-
     public ResponseMessage<UserCreateResponse> createUser(UserCreateRequest request) {
         if (userRepository.existsByEmail(request.getEmail()))
             throw new ConflictException(ErrorMessages.EMAIL_NOT_UNIQUE);

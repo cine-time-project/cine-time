@@ -36,6 +36,7 @@ public class Favorite {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, updatable = false,
             foreignKey = @ForeignKey(name = "fk_favorite_user"))
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
     private User user;
 
     // Film favorisi için dolu olur, aksi halde NULL kalabilir

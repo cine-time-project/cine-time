@@ -85,4 +85,8 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
 
     boolean existsByShowtime_Id(Long showtimeId);
     long countByShowtime_Id(Long showtimeId);
+
+
+    void deleteAllByUser_Id(Long userId);
+
 }
