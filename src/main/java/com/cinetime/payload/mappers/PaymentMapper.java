@@ -4,6 +4,7 @@ import com.cinetime.entity.business.Payment;
 import com.cinetime.entity.business.Ticket;
 import com.cinetime.payload.response.business.PaymentResponse;
 import com.cinetime.payload.response.business.TicketResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,26 @@ public class PaymentMapper {
                 .build();
 
     }
+
+    // ✅ New version for listing all payments
+    public PaymentResponse mapPaymentToPaymentResponse(@NonNull Payment payment) {
+        List<TicketResponse> ticketDTOs = payment.getTickets().stream()
+                .filter(t -> t.getId() != null)
+                .map(ticketMapper::mapTicketToTicketResponse)
+                .toList();
+
+        return PaymentResponse.builder()
+                .tickets(ticketDTOs)
+                .paymentId(payment.getId())
+                .paymentAmount(payment.getAmount())
+                .paymentIdempotencyKey(payment.getIdempotencyKey())
+                .paymentCurrency(payment.getCurrency())
+                .paymentStatus(payment.getPaymentStatus())
+                .paymentProviderReference(payment.getProviderReference())
+                .paymentDate(payment.getPaymentDate())
+                .build();
+    }
+
 
 
 }

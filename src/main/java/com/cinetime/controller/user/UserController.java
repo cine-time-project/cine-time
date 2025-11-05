@@ -4,7 +4,9 @@ import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.user.*;
 import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.user.UserCreateResponse;
+import com.cinetime.payload.response.user.UserPaymentSummaryResponse;
 import com.cinetime.payload.response.user.UserResponse;
+import com.cinetime.service.business.PaymentService;
 import com.cinetime.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,8 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final PaymentService paymentService;
+
 
     // U06 - Update authenticated user
     @PutMapping("/users/auth")
@@ -144,7 +148,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getAuthenticatedUser());
     }
 
-
+    @PreAuthorize("hasAnyAuthority('EMPLOYEE','ADMIN')")
+    @GetMapping("/{userId}/payments/summary")
+    public ResponseEntity<UserPaymentSummaryResponse> userPaymentsSummary(@PathVariable Long userId) {
+        return ResponseEntity.ok(paymentService.getUserPaymentSummary(userId));
+    }
 
 
 

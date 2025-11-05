@@ -139,7 +139,10 @@ public class SecurityConfig {
             "/api/districts",
             "/api/districts/**",
             "/api/countries",
-            "/api/countries/**"
+            "/api/countries/**",
+            "/api/payment/",
+            "/api/payment/**"
+
 
 
     };

@@ -1,6 +1,8 @@
 package com.cinetime.entity.business;
 
 import com.cinetime.entity.enums.PaymentStatus;
+
+
 import com.cinetime.entity.user.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -49,7 +51,7 @@ public class Payment {
 
     // -------------------- RELATIONS --------------------
     @JsonIgnore
-  @OneToMany(fetch = FetchType.LAZY, mappedBy = "payment" , cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "payment", cascade = CascadeType.ALL)
     private List<Ticket> tickets;
 
     @ManyToOne(fetch = FetchType.LAZY,optional = false)
