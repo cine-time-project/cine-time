@@ -66,13 +66,13 @@ public class Ticket {
     )
     private Showtime showtime;
 
-    // Ticket -> User: Kullanıcı bağımsız varlık; cascade yok (doğru).
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
             name = "user_id",
             nullable = false,
             foreignKey = @ForeignKey(name = "fk_ticket_user")
     )
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
     private User user;
 
     // Ticket -> Payment: Many tickets can belong to one payment (single purchase).
