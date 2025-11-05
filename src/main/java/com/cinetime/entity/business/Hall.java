@@ -52,7 +52,7 @@ public class Hall {
     private LocalDateTime updatedAt;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(
             name = "cinema_id",
             nullable = false,
