@@ -34,14 +34,14 @@ public interface PaymentRepository extends JpaRepository<Payment,Long>, JpaSpeci
       join p.tickets t
     """
         )
-        @EntityGraph(attributePaths = "tickets")
+        @EntityGraph(attributePaths = {"tickets", "user"})
         Page<Payment> findAllWithTickets(Pageable pageable);
 
 
 
 
     @Override
-    @EntityGraph(attributePaths = "tickets")
+    @EntityGraph(attributePaths = {"tickets","user"})
     @org.springframework.lang.NonNull
     Page<Payment> findAll(
             @org.springframework.lang.Nullable Specification<Payment> spec,

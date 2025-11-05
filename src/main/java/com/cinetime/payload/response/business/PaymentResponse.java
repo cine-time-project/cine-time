@@ -25,4 +25,8 @@ public class PaymentResponse {
     private String paymentCurrency;
     private PaymentStatus paymentStatus;
     private LocalDateTime paymentDate;
+
+    private Long userId;
+    private String userName;
+    private String userEmail;
 }

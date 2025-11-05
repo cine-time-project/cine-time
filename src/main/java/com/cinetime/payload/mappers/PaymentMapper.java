@@ -48,6 +48,12 @@ public class PaymentMapper {
                 .paymentStatus(payment.getPaymentStatus())
                 .paymentProviderReference(payment.getProviderReference())
                 .paymentDate(payment.getPaymentDate())
+
+                .userId(payment.getUser() != null ? payment.getUser().getId() : null)
+                .userName(payment.getUser() != null ? payment.getUser().getName() : null)
+                .userEmail(payment.getUser() != null ? payment.getUser().getEmail() : null)
+
+
                 .build();
     }
 

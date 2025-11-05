@@ -2,6 +2,7 @@ package com.cinetime.payload.mappers;
 
 import com.cinetime.entity.business.Cinema;
 import com.cinetime.entity.business.Hall;
+import com.cinetime.payload.mappers.ShowtimeMapper;
 import com.cinetime.payload.request.business.HallRequest;
 import com.cinetime.payload.response.business.HallResponse;
 import com.cinetime.payload.response.business.SpecialHallResponse;
