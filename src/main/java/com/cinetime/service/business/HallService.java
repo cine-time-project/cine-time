@@ -35,7 +35,9 @@ public class HallService {
         if (isExist) {
             return ResponseMessage.<HallResponse>builder()
                     .httpStatus(HttpStatus.CONFLICT)
-                    .message("A hall with this name already exists in the selected cinema.")
+              
+                    .message(ErrorMessages.HALL_ALREADY_EXISTS )
+          
                     .returnBody(null)
                     .build();
         }
