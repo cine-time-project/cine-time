@@ -30,6 +30,15 @@ public class HallService {
     public ResponseMessage<HallResponse> saveHall(@Valid HallRequest hallRequest) {
         Cinema cinema = cinemaService.getById(hallRequest.getCinemaId());
         Hall hall = hallMapper.mapRequestToHall(hallRequest, cinema);
+        boolean isExist = hallRepository.existsByCinemaIdAndName(cinema.getId(), hall.getName());
+
+        if (isExist) {
+            return ResponseMessage.<HallResponse>builder()
+                    .httpStatus(HttpStatus.CONFLICT)
+                    .message(ErrorMessages.HALL_ALREADY_EXISTS )
+                    .returnBody(null)
+                    .build();
+        }
         Hall savedHall = hallRepository.save(hall);
         return ResponseMessage.<HallResponse>builder()
                 .httpStatus(HttpStatus.CREATED)
