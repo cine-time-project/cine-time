@@ -35,7 +35,9 @@ public class HallService {
         if (isExist) {
             return ResponseMessage.<HallResponse>builder()
                     .httpStatus(HttpStatus.CONFLICT)
+              
                     .message(ErrorMessages.HALL_ALREADY_EXISTS )
+          
                     .returnBody(null)
                     .build();
         }
@@ -46,6 +48,7 @@ public class HallService {
                 .returnBody(hallMapper.mapHallToResponse(savedHall))
                 .build();
     }
+
 
     public Hall findHallById(Long id) {
         return hallRepository.findById(id)
