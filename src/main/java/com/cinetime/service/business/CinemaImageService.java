@@ -2,14 +2,11 @@ package com.cinetime.service.business;
 
 import com.cinetime.entity.business.Cinema;
 import com.cinetime.entity.business.CinemaImage;
-import com.cinetime.entity.business.Image;
-import com.cinetime.entity.business.Movie;
 import com.cinetime.exception.ConflictException;
 import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.CinemaImageMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.response.business.CinemaImageResponse;
-import com.cinetime.payload.response.business.ImageResponse;
 import com.cinetime.repository.business.CinemaImageRepository;
 import com.cinetime.repository.business.CinemaRepository;
 import com.cinetime.service.validator.ImageValidator;
@@ -17,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -39,22 +38,26 @@ public class CinemaImageService {
         ImageValidator.requireValid(file);
 
         Cinema cinema = cinemaRepository.findById(cinemaId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        String.format(ErrorMessages.CINEMA_NOT_FOUND, cinemaId)));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format(ErrorMessages.CINEMA_NOT_FOUND, cinemaId)));
 
-        if (cinema.getCinemaImage() != null) {
-            throw new ConflictException("Cinema already has an image");
-        }
+        CinemaImage cinemaImage = cinema.getCinemaImage();
 
-        CinemaImage cinemaImage;
         try {
-            cinemaImage = CinemaImage.builder()
-                    .cinema(cinema)
-                    .name(file.getOriginalFilename())
-                    .type(file.getContentType())
-                    .data(file.getBytes())
-                    .build();
-        } catch (java.io.IOException e) {
+            if (cinemaImage == null) {
+                // Eğer mevcut image yoksa, yeni bir tane oluştur
+                cinemaImage = CinemaImage.builder()
+                        .cinema(cinema)
+                        .name(file.getOriginalFilename())
+                        .type(file.getContentType())
+                        .data(file.getBytes())
+                        .build();
+            } else {
+                // Mevcut image varsa üzerine yaz
+                cinemaImage.setName(file.getOriginalFilename());
+                cinemaImage.setType(file.getContentType());
+                cinemaImage.setData(file.getBytes());
+            }
+        } catch (IOException e) {
             throw new RuntimeException("Could not read image bytes", e);
         }
 

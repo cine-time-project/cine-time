@@ -64,6 +64,7 @@ public class CinemaService {
     }
 
     //C01: Cinemas based on city and sipecialHalls
+    @Transactional(readOnly = true)
     public ResponseMessage<Page<CinemaSummaryResponse>> listCinemas(Long cityId, String cityName, Boolean isSpecial,
                                                                     Pageable pageable) {
 
@@ -228,7 +229,7 @@ public class CinemaService {
         Cinema cinema = cinemaRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                String.format(ErrorMessages.CINEMA_NOT_FOUND, String.valueOf(id))
+                                String.format(ErrorMessages.CINEMA_NOT_FOUND, id)
                         )
                 );
 
