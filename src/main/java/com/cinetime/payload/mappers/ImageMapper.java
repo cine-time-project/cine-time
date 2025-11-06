@@ -6,6 +6,8 @@ import com.cinetime.payload.response.business.ImageResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.time.ZoneId;
+
 
 @Component
 public class ImageMapper {
@@ -13,6 +15,7 @@ public class ImageMapper {
     public ImageResponse toResponse(Image img) {
         String url = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/api/images/")
+                .queryParam("v", img.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
                 .path(String.valueOf(img.getId()))
                 .toUriString();
 
