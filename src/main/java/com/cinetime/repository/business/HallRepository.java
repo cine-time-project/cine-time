@@ -15,4 +15,6 @@ public interface HallRepository extends JpaRepository<Hall, Long> {
     @EntityGraph(attributePaths = "cinema")
     List<Hall> findByIsSpecialTrueOrderByNameAsc();
 
+    boolean existsByCinemaIdAndName(Long cinemaId, String name);
+
 }
