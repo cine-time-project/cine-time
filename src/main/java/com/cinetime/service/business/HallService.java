@@ -35,9 +35,7 @@ public class HallService {
         if (isExist) {
             return ResponseMessage.<HallResponse>builder()
                     .httpStatus(HttpStatus.CONFLICT)
-              
                     .message(ErrorMessages.HALL_ALREADY_EXISTS )
-          
                     .returnBody(null)
                     .build();
         }
