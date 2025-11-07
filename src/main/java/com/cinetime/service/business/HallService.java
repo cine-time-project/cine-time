@@ -84,7 +84,7 @@ public class HallService {
     }
 
     @Transactional
-    public ResponseMessage<HallResponse> updateHall(@Valid HallRequest hallRequest, Long id) {
+    public ResponseMessage<HallResponse> updateHallById(@Valid HallRequest hallRequest, Long id) {
 
         Hall hall = findHallById(id);
 

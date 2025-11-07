@@ -74,7 +74,7 @@ public class HallController {
             @RequestBody @Valid HallRequest hallRequest,
             @PathVariable Long hallId
     ){
-        return hallService.updateHall(hallRequest, hallId);
+        return hallService.updateHallById(hallRequest, hallId);
     }
 
 }
