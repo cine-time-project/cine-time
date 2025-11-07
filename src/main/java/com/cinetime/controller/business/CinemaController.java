@@ -86,7 +86,7 @@ public class CinemaController {
 
     //C03: Cinemas Details By id For Dashboard
 
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'EMPLOYEE')")
+    @PreAuthorize("permitAll()")
     @GetMapping("/dashboard/cinemas/{id}")
     public ResponseMessage<CinemaDetailedResponse> getCinemaDetailed(@PathVariable Long id){
         return cinemaService.getDetailedCinemaById(id);

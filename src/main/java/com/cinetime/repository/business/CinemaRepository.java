@@ -146,4 +146,12 @@ public interface CinemaRepository extends JpaRepository<Cinema, Long> {
     List<CinemaSummaryResponse> findCinemasWithShowtimesAndImages(
             @org.springframework.data.repository.query.Param("apiBase") String apiBase);
 
+    @Query("""
+    SELECT c FROM Cinema c
+    LEFT JOIN FETCH c.halls h
+    LEFT JOIN FETCH h.showtimes
+    WHERE c.id = :id
+""")
+    Optional<Cinema> findDetailedCinema(@Param("id") Long id);
+
 }

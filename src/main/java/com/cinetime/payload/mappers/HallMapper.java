@@ -52,7 +52,7 @@ public class HallMapper {
                 .cinemaName(hall.getCinema() != null ? hall.getCinema().getName() : null);
 
 
-        if (Hibernate.isInitialized(hall.getShowtimes()) && hall.getShowtimes() != null && !hall.getShowtimes().isEmpty()) {
+        if (hall.getShowtimes() != null && !hall.getShowtimes().isEmpty()) {
             builder.showtimes(
                     hall.getShowtimes().stream()
                             .map(showtimeMapper::toSimpleResponse)

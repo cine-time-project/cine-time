@@ -334,7 +334,7 @@ public class CinemaService {
 
     @Transactional(readOnly = true)
     public ResponseMessage<CinemaDetailedResponse> getDetailedCinemaById(Long id) {
-        Cinema cinema = getById(id);
+        Cinema cinema = cinemaRepository.findDetailedCinema(id).orElseThrow(()-> new ResourceNotFoundException(ErrorMessages.CINEMA_NOT_FOUND));
         CinemaDetailedResponse detailedResponse = cinemaMapper.toDetailedResponse(cinema);
         return ResponseMessage.<CinemaDetailedResponse>builder()
                 .message(SuccessMessages.CINEMA_FETCHED)
