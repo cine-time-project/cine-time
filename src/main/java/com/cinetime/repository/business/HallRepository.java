@@ -1,6 +1,8 @@
 package com.cinetime.repository.business;
 
 import com.cinetime.entity.business.Hall;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -17,4 +19,5 @@ public interface HallRepository extends JpaRepository<Hall, Long> {
 
     boolean existsByCinemaIdAndName(Long cinemaId, String name);
 
+    Page<Hall> findByNameContainingIgnoreCaseOrCinema_NameContainingIgnoreCase(String name, String cinemaName, Pageable pageable);
 }
