@@ -28,6 +28,8 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     @NonNull
     Page<Movie> findAll(@NonNull Pageable pageable);
 
+    boolean existsByTitleIgnoreCase(String title);
+
     @Query("SELECT DISTINCT m FROM Movie m JOIN m.cinemas c WHERE LOWER(c.slug) = LOWER(:cinemaSlug)")
     Page<Movie> findAllByCinemaSlugIgnoreCase(@Param("cinemaSlug") String cinemaSlug, Pageable pageable);
 

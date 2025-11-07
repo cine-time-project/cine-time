@@ -33,6 +33,8 @@ public class ErrorMessages {
     public static final String MOVIES_NOT_FOUND_ON_DATE = "No movies found on date";
     public static final String MOVIES_COMING_SOON_NOT_FOUND = "No coming soon movies found";
     public static final String INVALID_STATUS = "Invalid Status: %s";
+    public static final String MOVIE_ALREADY_EXISTS = "A movie with this title already exists.";
+
 
     //image
     // 404 - Not Found

@@ -257,12 +257,23 @@ public class MovieService {
      */
     @Transactional
     public ResponseMessage<MovieResponse> saveMovie(MovieRequest movieRequest) {
+
+        boolean isExist = movieRepository.existsByTitleIgnoreCase(movieRequest.getTitle());
+        if (isExist) {
+            return ResponseMessage.<MovieResponse>builder()
+                    .httpStatus(HttpStatus.CONFLICT)
+                    .message(ErrorMessages.MOVIE_ALREADY_EXISTS)
+                    .returnBody(null)
+                    .build();
+        }
         Movie movie = movieMapper.mapMovieRequestToMovie(movieRequest);
-
-        // Generate unique slug
-        String uniqueSlug = movieServiceHelper.generateUniqueSlug(movieRequest.getTitle(), movieRequest.getSlug(), MAX_LENGTH_FOR_SLUG, null);
+        String uniqueSlug = movieServiceHelper.generateUniqueSlug(
+                movieRequest.getTitle(),
+                movieRequest.getSlug(),
+                MAX_LENGTH_FOR_SLUG,
+                null
+        );
         movie.setSlug(uniqueSlug);
-
         if (movieRequest.getCinemaIds() != null && !movieRequest.getCinemaIds().isEmpty()) {
             movie.setCinemas(cinemaService.getAllByIdIn(movieRequest.getCinemaIds()));
         }
@@ -278,6 +289,7 @@ public class MovieService {
                 .returnBody(movieMapper.mapMovieToMovieResponse(savedMovie))
                 .build();
     }
+
 
     //M12
 
