@@ -35,7 +35,7 @@ public class HallService {
         if (isExist) {
             return ResponseMessage.<HallResponse>builder()
                     .httpStatus(HttpStatus.CONFLICT)
-                    .message(ErrorMessages.HALL_ALREADY_EXISTS )
+                    .message(ErrorMessages.HALL_ALREADY_EXISTS)
                     .returnBody(null)
                     .build();
         }
@@ -112,4 +112,28 @@ public class HallService {
                 .build();
     }
 
+    public ResponseMessage<Page<HallResponse>> searchAllHalls(String search, Pageable pageable) {
+        Page<Hall> halls;
+
+        if (search == null || search.trim().isEmpty()) {
+            halls = hallRepository.findAll(pageable);
+        } else {
+            halls = hallRepository.findByNameContainingIgnoreCaseOrCinema_NameContainingIgnoreCase(search, search, pageable);
+        }
+
+        if (halls.isEmpty()) {
+            Page<HallResponse> emptyPage = Page.empty(pageable);
+            return ResponseMessage.<Page<HallResponse>>builder()
+                    .httpStatus(HttpStatus.OK)
+                    .message("No halls found for the given search criteria.")
+                    .returnBody(emptyPage)
+                    .build();
+        }
+
+        return ResponseMessage.<Page<HallResponse>>builder()
+                .httpStatus(HttpStatus.OK)
+                .message(SuccessMessages.HALLS_FOUND)
+                .returnBody(hallMapper.mapToResponsePage(halls))
+                .build();
+    }
 }
