@@ -165,7 +165,7 @@ class HallServiceTest {
         when(hallRepository.save(hall)).thenReturn(hall);
         when(hallMapper.mapHallToResponse(hall)).thenReturn(hallResponse);
 
-        ResponseMessage<HallResponse> result = hallService.updateHall(updateRequest, 100L);
+        ResponseMessage<HallResponse> result = hallService.updateHallById(updateRequest, 100L);
 
         assertEquals(HttpStatus.OK, result.getHttpStatus());
         assertEquals(SuccessMessages.HALL_UPDATED, result.getMessage());

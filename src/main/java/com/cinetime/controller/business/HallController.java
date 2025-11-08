@@ -7,6 +7,7 @@ import com.cinetime.service.business.HallService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -20,6 +21,23 @@ import org.springframework.web.bind.annotation.*;
 public class HallController {
 
     private final HallService hallService;
+
+
+    @GetMapping("/search-halls")
+    @PreAuthorize("permitAll()")
+    public ResponseMessage<Page<HallResponse>> searchHalls(
+            @RequestParam String query,
+            @PageableDefault(page = 0, size = 10, sort = "name", direction = Sort.Direction.ASC) Pageable pageable )
+
+    {
+
+        System.out.println(">>> search endpoint HIT, query = " + query);
+        return hallService.searchAllHalls(query, pageable);
+
+    }
+
+
+
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN')")
@@ -56,7 +74,7 @@ public class HallController {
             @RequestBody @Valid HallRequest hallRequest,
             @PathVariable Long hallId
     ){
-        return hallService.updateHall(hallRequest, hallId);
+        return hallService.updateHallById(hallRequest, hallId);
     }
 
 }
