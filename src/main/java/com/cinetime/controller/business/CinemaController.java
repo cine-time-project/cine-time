@@ -78,16 +78,15 @@ public class CinemaController {
         return ResponseEntity.ok(cinemaService.getAuthFavoritesByLogin(login, pageable));
     }
 
-    //C03: Cinemas Details By id
+    //C03: Cinemas Summary By id
     @GetMapping("/cinemas/{id}")
     public ResponseEntity<ResponseMessage<CinemaSummaryResponse>> getCinema(@PathVariable Long id){
         return ResponseEntity.ok(cinemaService.getCinemaById(id));
     }
 
-    //C03: Cinemas Details By id For Dashboard
-
+    //C03: Cinemas Details By id
     @PreAuthorize("permitAll()")
-    @GetMapping("/dashboard/cinemas/{id}")
+    @GetMapping("/cinemas/{id}/detail")
     public ResponseMessage<CinemaDetailedResponse> getCinemaDetailed(@PathVariable Long id){
         return cinemaService.getDetailedCinemaById(id);
     }
