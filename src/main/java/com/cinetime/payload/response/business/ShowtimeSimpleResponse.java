@@ -22,5 +22,6 @@ public class ShowtimeSimpleResponse {
     private Long movieId;
     private String movieTitle;
     private String moviePosterUrl;
+    private String movieSlug;
 
 }

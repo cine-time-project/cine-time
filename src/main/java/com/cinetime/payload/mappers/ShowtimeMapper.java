@@ -29,6 +29,7 @@ public class ShowtimeMapper {
                 .startTime(showtime.getStartTime())
                 .endTime(showtime.getEndTime())
                 .movieId(showtime.getMovie().getId())
+                .movieSlug(showtime.getMovie().getSlug())
                 .movieTitle(showtime.getMovie().getTitle())
                 .moviePosterUrl(showtime.getMovie().getPosterUrl())
                 .build();
