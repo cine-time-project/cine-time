@@ -24,4 +24,26 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     void deleteByMovie(Movie movie);
 
     void deleteAllByUser_Id(Long userId);
+
+
+    @Query("""
+    SELECT m.id, m.title, m.releaseDate, m.posterUrl, COUNT(f.id)
+    FROM Favorite f
+    JOIN f.movie m
+    GROUP BY m.id, m.title, m.releaseDate, m.posterUrl
+    ORDER BY COUNT(f.id) DESC
+""")
+    List<Object[]> findMovieFavoriteStats();
+
+
+    @Query("""
+    SELECT f.user.id, CONCAT(f.user.name, ' ', f.user.surname), f.user.email
+    FROM Favorite f
+    WHERE f.movie.id = :movieId
+""")
+    List<Object[]> findUsersByMovieId(@Param("movieId") Long movieId);
+
+
+
+
 }
