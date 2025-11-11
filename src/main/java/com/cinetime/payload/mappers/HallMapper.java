@@ -21,13 +21,19 @@ public class HallMapper {
 
     public SpecialHallResponse toSpecial(Hall hall) {
         if (hall == null) return null;
+
         var cinema = hall.getCinema();
+
         return SpecialHallResponse.builder()
-                .id(hall.getId())
-                .name(hall.getName())
+                .id(null)
+                .hallId(hall.getId())
+                .hallName(hall.getName())
                 .seatCapacity(hall.getSeatCapacity())
                 .cinemaId(cinema != null ? cinema.getId() : null)
                 .cinemaName(cinema != null ? cinema.getName() : null)
+                .typeId(null)
+                .typeName(null)
+                .priceDiffPercent(null)
                 .build();
     }
 

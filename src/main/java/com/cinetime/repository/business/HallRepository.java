@@ -20,4 +20,11 @@ public interface HallRepository extends JpaRepository<Hall, Long> {
     boolean existsByCinemaIdAndName(Long cinemaId, String name);
 
     Page<Hall> findByNameContainingIgnoreCaseOrCinema_NameContainingIgnoreCase(String name, String cinemaName, Pageable pageable);
+
+
+        @Modifying
+        @Query("update Hall h set h.isSpecial = :flag where h.id = :id")
+        int updateIsSpecialById(@Param("id") Long id, @Param("flag") boolean flag);
+
+
 }
