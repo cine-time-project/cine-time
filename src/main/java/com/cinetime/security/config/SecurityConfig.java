@@ -131,7 +131,7 @@ public class SecurityConfig {
             "/api/reset-password-code",
             "/api/reset-password-direct",
             "/api/contactmessages",
-            //"/api/contactmessages/**",
+            "/api/contactmessages/**",
             "/error",
             "/api/cinemaimages",
             "/api/cinemaimages/**",
