@@ -55,7 +55,7 @@ public class HallMapper {
         if (hall.getShowtimes() != null && !hall.getShowtimes().isEmpty()) {
             builder.showtimes(
                     hall.getShowtimes().stream()
-                            .map(showtimeMapper::toSimpleResponse)
+                            .map(showtime -> showtimeMapper.toSimpleResponse(showtime, hall))
                             .collect(Collectors.toSet())
             );
         }
