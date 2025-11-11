@@ -20,66 +20,65 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
-  private final JwtService jwtService;
-  private final UserDetailsServiceImpl userDetailsService;
+    private final JwtService jwtService;
+    private final UserDetailsServiceImpl userDetailsService;
 
-  //  Yeni eklendi: JWT kontrolü yapılmayacak (public) endpoint listesi
-  private static final String[] PUBLIC_ENDPOINTS = {
-          "/api/forgot-password",
-          "/api/reset-password",
-          "/api/reset-password-code",
-          "/api/reset-password-direct",
-          "/api/verify-reset-code",
-          "/api/send-email-code",
-          "/api/register",
-          "/api/contactmessages"
-  };
+    //  Yeni eklendi: JWT kontrolü yapılmayacak (public) endpoint listesi
+    private static final String[] PUBLIC_ENDPOINTS = {
+            "/api/forgot-password",
+            "/api/reset-password",
+            "/api/reset-password-code",
+            "/api/reset-password-direct",
+            "/api/verify-reset-code",
+            "/api/send-email-code",
+            "/api/register",
+    };
 
-  @Override
-  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                  FilterChain filterChain) throws ServletException, IOException {
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
-    try {
-      String path = request.getServletPath();
+        try {
+            String path = request.getServletPath();
 
-      //  Yeni eklendi: Whitelist kontrolü
-      for (String endpoint : PUBLIC_ENDPOINTS) {
-        if (path.startsWith(endpoint)) {
-          filterChain.doFilter(request, response);
-          return; // Bu endpoint JWT doğrulaması istemiyor
+            //  Yeni eklendi: Whitelist kontrolü
+            for (String endpoint : PUBLIC_ENDPOINTS) {
+                if (path.startsWith(endpoint)) {
+                    filterChain.doFilter(request, response);
+                    return; // Bu endpoint JWT doğrulaması istemiyor
+                }
+            }
+
+            //1-from every request, we will get JWT
+            String jwt = parseJwt(request);
+            //validate JWT
+            if (jwt != null && jwtService.validateToken(jwt)) {
+                //3- we need username to get user information
+                String username = jwtService.getUsernameFromToken(jwt);
+                //4- check DB and fetch user and upgrade it to userDetails
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                //5- set attribute with username
+                request.setAttribute("username", username);
+                //6- we load user details information to security context
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } catch (UsernameNotFoundException e) {
+            LOGGER.error("Can not set user authentication", e);
         }
-      }
 
-      //1-from every request, we will get JWT
-      String jwt = parseJwt(request);
-      //validate JWT
-      if (jwt != null && jwtService.validateToken(jwt)) {
-        //3- we need username to get user information
-        String username = jwtService.getUsernameFromToken(jwt);
-        //4- check DB and fetch user and upgrade it to userDetails
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        //5- set attribute with username
-        request.setAttribute("username", username);
-        //6- we load user details information to security context
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-      }
-    } catch (UsernameNotFoundException e) {
-      LOGGER.error("Can not set user authentication", e);
+        filterChain.doFilter(request, response);
     }
 
-    filterChain.doFilter(request, response);
-  }
-
-  //Authorization -> Bearer ljsdfnkltskdfnvszlkfnvaqqdfknvaefkdsnvsacdfjknvcaldknsvcal
-  private String parseJwt(HttpServletRequest request) {
-    String authHeader = request.getHeader("Authorization");
-    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-      return authHeader.substring(7);
+    //Authorization -> Bearer ljsdfnkltskdfnvszlkfnvaqqdfknvaefkdsnvsacdfjknvcaldknsvcal
+    private String parseJwt(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return null;
     }
-    return null;
-  }
 }

@@ -34,21 +34,21 @@ public class ContactMessageController {
     }
 
     // 🔹 Tüm mesajları getir (Sadece Admin veya Employee)
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
     @GetMapping
     public ResponseEntity<List<ContactMessage>> getAll() {
         return ResponseEntity.ok(service.getAll());
     }
 
     // 🔹 ID’ye göre mesaj getir (Sadece Admin veya Employee)
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
     @GetMapping("/{id}")
     public ResponseEntity<ContactMessage> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
     // 🔹 Mesaj sil (Sadece Admin veya Employee)
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiMessageResponse> delete(@PathVariable Long id) {
         service.deleteById(id);

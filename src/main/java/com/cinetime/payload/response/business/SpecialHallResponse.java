@@ -1,18 +1,20 @@
 package com.cinetime.payload.response.business;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import java.math.BigDecimal;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class SpecialHallResponse {
     private Long id;
-    private String name;
+
+    private Long hallId;
+    private String hallName;
     private Integer seatCapacity;
+
     private Long cinemaId;
     private String cinemaName;
+
+    private Long typeId;
+    private String typeName;
+    private BigDecimal priceDiffPercent;
 }
