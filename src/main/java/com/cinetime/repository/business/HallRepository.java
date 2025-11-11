@@ -26,5 +26,22 @@ public interface HallRepository extends JpaRepository<Hall, Long> {
         @Query("update Hall h set h.isSpecial = :flag where h.id = :id")
         int updateIsSpecialById(@Param("id") Long id, @Param("flag") boolean flag);
 
+    @Query(value = """
+      SELECT
+         h.id                                                        AS hall_id,
+         h.name                                                      AS hall_name,
+         (CASE WHEN sh.id IS NOT NULL THEN TRUE ELSE FALSE END)      AS is_special,
+         sht.name                                                    AS type_name,
+         COALESCE(sht.price_diff_percent, 0)                         AS surcharge_percent,
+         0::numeric                                                  AS surcharge_fixed
+      FROM halls h
+      LEFT JOIN special_halls sh
+             ON sh.hall_id = h.id
+      LEFT JOIN special_hall_types sht
+             ON sht.id = sh.type_id
+      WHERE h.cinema_id = :cinemaId
+      ORDER BY h.id
+      """, nativeQuery = true)
+    List<Object[]> findHallPricingRaw(@Param("cinemaId") Long cinemaId);
 
 }

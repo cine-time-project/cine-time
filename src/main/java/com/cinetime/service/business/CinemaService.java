@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import com.cinetime.entity.user.User;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -44,6 +45,7 @@ public class CinemaService {
     private final TicketRepository ticketRepository;
     private final MovieMapper movieMapper;
     private final MovieRepository movieRepository;
+    private final SpecialHallService specialHallService;
 
     public List<CinemaSummaryResponse> cinemasWithShowtimes() {
         return cinemaRepository.findCinemasWithUpcomingShowtimes();
@@ -341,5 +343,30 @@ public class CinemaService {
                 .returnBody(detailedResponse)
                 .httpStatus(HttpStatus.OK)
                 .build();
+    }
+    public List<HallPricingResponse> getHallPricingForCinema(Long cinemaId) {
+        List<Object[]> rows = hallRepository.findHallPricingRaw(cinemaId);
+
+        return rows.stream().map(r -> {
+            Long hallId         = ((Number) r[0]).longValue();
+            String hallName     = (String) r[1];
+
+            Object isSpecRaw    = r[2];
+            boolean isSpecial   = (isSpecRaw instanceof Boolean b) ? b
+                    : "t".equalsIgnoreCase(String.valueOf(isSpecRaw)) || "1".equals(String.valueOf(isSpecRaw));
+
+            String typeName     = (String) r[3];
+            BigDecimal percent  = (r[4] == null) ? BigDecimal.ZERO : new BigDecimal(String.valueOf(r[4]));
+            BigDecimal fixed    = (r[5] == null) ? BigDecimal.ZERO : new BigDecimal(String.valueOf(r[5]));
+
+            return HallPricingResponse.builder()
+                    .hallId(hallId)
+                    .hallName(hallName)
+                    .special(isSpecial)
+                    .typeName(typeName)
+                    .surchargePercent(percent)    // örn. 15.00 -> %15
+                    .surchargeFixed(fixed)        // her zaman 0 (şu anki şemada yok)
+                    .build();
+        }).toList();
     }
 }

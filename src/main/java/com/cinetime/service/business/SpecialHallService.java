@@ -5,6 +5,7 @@ import com.cinetime.entity.business.SpecialHall;
 import com.cinetime.entity.business.SpecialHallType;
 import com.cinetime.payload.mappers.SpecialHallMapper;
 import com.cinetime.payload.request.business.SpecialHallRequest;
+import com.cinetime.payload.response.business.HallPricingResponse;
 import com.cinetime.payload.response.business.SpecialHallResponse;
 import com.cinetime.repository.business.HallRepository;
 import com.cinetime.repository.business.SpecialHallRepository;
@@ -15,6 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class SpecialHallService {
@@ -22,6 +26,7 @@ public class SpecialHallService {
     private final SpecialHallRepository repo;
     private final HallRepository hallRepo;
     private final SpecialHallTypeRepository typeRepo;
+    private final HallRepository hallRepository;
 
     /* =========================
        LIST
@@ -116,5 +121,39 @@ public class SpecialHallService {
 
         // yalnızca isSpecial indir
         hallRepo.updateIsSpecialById(hallId, false);
+    }
+
+
+    public List<HallPricingResponse> getHallPricing(Long cinemaId) {
+        List<Object[]> rows = hallRepository.findHallPricingRaw(cinemaId);
+
+        return rows.stream().map(r -> {
+            Long hallId = ((Number) r[0]).longValue();
+            String hallName = (String) r[1];
+
+            // r[2] -> Boolean | "t"/"f" | 1/0 | null
+            boolean isSpecial;
+            Object v = r[2];
+            if (v instanceof Boolean b) {
+                isSpecial = b;
+            } else if (v instanceof Number n) {
+                isSpecial = n.intValue() != 0;
+            } else {
+                isSpecial = "t".equalsIgnoreCase(String.valueOf(v));
+            }
+
+            String typeName = (String) r[3];
+            BigDecimal percent = r[4] != null ? new BigDecimal(r[4].toString()) : BigDecimal.ZERO;
+            BigDecimal fixed   = r[5] != null ? new BigDecimal(r[5].toString()) : BigDecimal.ZERO;
+
+            return HallPricingResponse.builder()
+                    .hallId(hallId)
+                    .hallName(hallName)
+                    .special(isSpecial)
+                    .typeName(typeName)
+                    .surchargePercent(percent)
+                    .surchargeFixed(fixed)
+                    .build();
+        }).toList();
     }
 }
