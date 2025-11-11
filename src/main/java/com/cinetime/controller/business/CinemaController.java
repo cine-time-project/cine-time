@@ -4,6 +4,7 @@ import com.cinetime.payload.request.business.CinemaCreateRequest;
 import com.cinetime.payload.response.business.SpecialHallResponse;
 import com.cinetime.payload.response.business.*;
 import com.cinetime.service.business.CinemaService;
+import com.cinetime.service.business.SpecialHallService;
 import com.cinetime.service.helper.PageableHelper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class CinemaController {
 
     private final CinemaService cinemaService;
     private final PageableHelper pageableHelper;
+    private final SpecialHallService specialHallService;
 
     //C01: Cinemas based on city and sipecialHalls
     @PreAuthorize("permitAll()")
@@ -141,9 +143,9 @@ public class CinemaController {
         return ResponseEntity.ok(response);
     }
 
-
-
-
-
+    @GetMapping("/cinemas/{cinemaId}/halls/pricing")
+    public ResponseEntity<List<HallPricingResponse>> getHallPricing(@PathVariable Long cinemaId) {
+        return ResponseEntity.ok(cinemaService.getHallPricingForCinema(cinemaId));
+    }
 
 }
