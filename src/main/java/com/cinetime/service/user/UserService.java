@@ -208,9 +208,30 @@ public class UserService {
             throw new ConflictException(ErrorMessages.BUILT_IN_USER_UPDATE_NOT_ALLOWED);
         }
         Authentication caller = SecurityContextHolder.getContext().getAuthentication();
-        if (securityHelper.isCallerEmployee(caller) && !securityHelper.userHasRole(target, RoleName.MEMBER)) {
+
+        // Only ADMIN or EMPLOYEE should be able to reach here, but double‑check defensively
+        boolean callerIsAdmin = securityHelper.isCallerAdmin(caller);
+        boolean callerIsEmployee = securityHelper.isCallerEmployee(caller);
+        if (!callerIsAdmin && !callerIsEmployee) {
             throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
         }
+
+        // Does the request attempt to grant ADMIN?
+        boolean requestWantsAdmin = request.getRoles() != null &&
+                request.getRoles().stream().anyMatch(r -> r != null && r.equalsIgnoreCase(RoleName.ADMIN.name()));
+
+        // If caller is EMPLOYEE (and not ADMIN):
+        //  - they cannot assign ADMIN to anyone
+        //  - they cannot modify an existing ADMIN user
+        if (callerIsEmployee && !callerIsAdmin) {
+            if (requestWantsAdmin) {
+                throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
+            }
+            if (securityHelper.userHasRole(target, RoleName.ADMIN)) {
+                throw new AccessDeniedException(ErrorMessages.ACCESS_DANIED);
+            }
+        }
+
         UserMapper.updateUserFromRequest(request, target,roleRepository);
         userRepository.save(target);
         return ResponseMessage.<UserResponse>builder()
