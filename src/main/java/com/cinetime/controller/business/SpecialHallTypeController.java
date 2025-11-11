@@ -17,7 +17,7 @@ public class SpecialHallTypeController {
     private final SpecialHallTypeService service;
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')") // <-- düzeltildi
+    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
     public ResponseEntity<Page<SpecialHallTypeResponse>> list(
             @RequestParam(defaultValue="0")  int page,
             @RequestParam(defaultValue="20") int size,
@@ -28,7 +28,7 @@ public class SpecialHallTypeController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')") // <-- düzeltildi
+    @PreAuthorize("hasAnyAuthority('ADMIN','EMPLOYEE')")
     public ResponseEntity<SpecialHallTypeResponse> get(@PathVariable Long id){
         return ResponseEntity.ok(service.get(id));
     }

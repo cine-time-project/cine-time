@@ -1,20 +1,25 @@
 package com.cinetime.payload.mappers;
 
-import com.cinetime.entity.business.SpecialHall;
+import com.cinetime.entity.business.*;
 import com.cinetime.payload.response.business.SpecialHallResponse;
 
 public final class SpecialHallMapper {
-    private SpecialHallMapper(){}
+    private SpecialHallMapper() {}
 
-    public static SpecialHallResponse toResponse(SpecialHall ent){
-        var hall = ent.getHall();
-        var cinema = hall.getCinema();
+    public static SpecialHallResponse toResponse(SpecialHall sh) {
+        Hall h = sh.getHall();
+        SpecialHallType t = sh.getType();
+
         return SpecialHallResponse.builder()
-                .id(ent.getId())
-                .name(ent.getType().getName())           // response’taki name = tip adı
-                .seatCapacity(hall.getSeatCapacity())     // Hall’dan
-                .cinemaId(cinema.getId())
-                .cinemaName(cinema.getName())
+                .id(sh.getId())
+                .hallId(h.getId())
+                .hallName(h.getName())
+                .seatCapacity(h.getSeatCapacity())
+                .cinemaId(h.getCinema().getId())
+                .cinemaName(h.getCinema().getName())
+                .typeId(t.getId())
+                .typeName(t.getName())
+                .priceDiffPercent(t.getPriceDiffPercent())
                 .build();
     }
 }
