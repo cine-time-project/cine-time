@@ -19,8 +19,15 @@ public class ShowtimeSimpleResponse {
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
+    //Movie Data
     private Long movieId;
     private String movieTitle;
     private String moviePosterUrl;
+    private String movieSlug;
+    //Hall Data
+    private Long hallId;
+    //CinemaData
+    private Long cinemaId;
+    private Long cityId;
 
 }

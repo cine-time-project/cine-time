@@ -15,5 +15,7 @@ public class MovieMiniResponse {
     private Long id;
     private String title;
     private Integer duration;
+    private String summary;
+    private Double rating;
     private String posterUrl;
 }

@@ -22,15 +22,22 @@ public class ShowtimeMapper {
                 .build();
     }
 
-    public ShowtimeSimpleResponse toSimpleResponse(Showtime showtime) {
+    public ShowtimeSimpleResponse toSimpleResponse(Showtime showtime, Hall hall) {
         return ShowtimeSimpleResponse.builder()
                 .id(showtime.getId())
                 .date(showtime.getDate())
                 .startTime(showtime.getStartTime())
                 .endTime(showtime.getEndTime())
+                //Movie Data
                 .movieId(showtime.getMovie().getId())
+                .movieSlug(showtime.getMovie().getSlug())
                 .movieTitle(showtime.getMovie().getTitle())
                 .moviePosterUrl(showtime.getMovie().getPosterUrl())
+                //Hall Data
+                .hallId(hall.getId())
+                //Cinema Data
+                .cinemaId(hall.getCinema().getId())
+                .cityId(hall.getCinema().getCity().getId())
                 .build();
     }
 

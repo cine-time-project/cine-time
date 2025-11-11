@@ -195,6 +195,8 @@ public class MovieMapper {
         return MovieMiniResponse.builder()
                 .id(movie.getId())
                 .title(movie.getTitle())
+                .rating(movie.getRating())
+                .summary(movie.getSummary())
                 .duration(movie.getDuration())
                 .posterUrl((posterImageResponse == null) ? null : posterImageResponse.getUrl())
                 .build();
