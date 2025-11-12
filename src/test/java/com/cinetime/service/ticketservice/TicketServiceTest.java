@@ -1,5 +1,6 @@
 package com.cinetime.service.business;
 
+import com.cinetime.entity.business.Hall;
 import com.cinetime.entity.business.Payment;
 import com.cinetime.entity.business.Showtime;
 import com.cinetime.entity.business.Ticket;
@@ -76,6 +77,10 @@ public class TicketServiceTest {
                 .surname("One")
                 .build();
 
+        // Tek bir salon yarat, kapasiteyi doldur.
+        Hall hall = new Hall();
+        hall.setSeatCapacity(100);
+
         LocalDate today = LocalDate.now();
         LocalTime now   = LocalTime.now();
 
@@ -84,12 +89,14 @@ public class TicketServiceTest {
         showtimeFuture.setDate(today.plusDays(1));
         showtimeFuture.setStartTime(now);
         showtimeFuture.setEndTime(now.plusHours(2));
+        showtimeFuture.setHall(hall);      // << ÖNEMLİ
 
         showtimePast = new Showtime();
         showtimePast.setId(11L);
         showtimePast.setDate(today.minusDays(1));
         showtimePast.setStartTime(LocalTime.of(18, 0));
         showtimePast.setEndTime(LocalTime.of(20, 0));
+        showtimePast.setHall(hall);        // << ÖNEMLİ
     }
 
     private BuyTicketRequest.SeatInfo seat(String letter, int number) {

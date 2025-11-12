@@ -62,6 +62,8 @@ public class UserService_ResetPasswordForAuthenticatedUser_Test {
         u.setEmail("test@test.com");
         u.setPassword(encodedPassword);
         when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(u));
+        when(securityHelper.loadByLoginProperty("test@test.com")).thenReturn(u);
+
         return u;
     }
 

@@ -5,6 +5,7 @@ import com.cinetime.entity.business.Hall;
 import com.cinetime.entity.business.Movie;
 import com.cinetime.entity.business.Showtime;
 import com.cinetime.exception.ResourceNotFoundException;
+import com.cinetime.payload.mappers.CityMapper;
 import com.cinetime.payload.mappers.ShowtimeMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.messages.SuccessMessages;
@@ -15,6 +16,7 @@ import com.cinetime.payload.response.business.ResponseMessage;
 import com.cinetime.payload.response.business.ShowtimeResponse;
 import com.cinetime.repository.business.CinemaRepository;
 import com.cinetime.repository.business.ShowtimeRepository;
+import com.cinetime.repository.business.TicketRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class ShowtimeServiceTest {
@@ -40,10 +43,12 @@ class ShowtimeServiceTest {
     private MovieService movieService;
     @Mock
     private ShowtimeMapper showtimeMapper;
-
     @Mock
     private CinemaRepository cinemaRepository;
-
+    @Mock
+    private CityMapper cityMapper; // constructor için gerekli
+    @Mock
+    private TicketRepository ticketRepository; // constructor + deleteShowtime için gerekli
 
     @InjectMocks
     private ShowtimeService showtimeService;
@@ -99,6 +104,8 @@ class ShowtimeServiceTest {
                 .build();
     }
 
+    // ======================== CRUD TESTLERI ========================
+
     @Test
     void saveShowtime_Success() {
         when(hallService.findHallById(1L)).thenReturn(hall);
@@ -116,7 +123,7 @@ class ShowtimeServiceTest {
 
     @Test
     void findShowtimeById_Found() {
-        when(showtimeRepository.findById(100L)).thenReturn(Optional.of(showtime));
+        when(showtimeRepository.findWithRefsById(100L)).thenReturn(Optional.of(showtime));
 
         Showtime result = showtimeService.findShowtimeById(100L);
 
@@ -125,24 +132,24 @@ class ShowtimeServiceTest {
 
     @Test
     void findShowtimeById_NotFound() {
-        when(showtimeRepository.findById(200L)).thenReturn(Optional.empty());
+        when(showtimeRepository.findWithRefsById(200L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> showtimeService.findShowtimeById(200L));
     }
 
     @Test
     void deleteShowtimeById_Success() {
-        // given
         when(showtimeRepository.findById(100L)).thenReturn(Optional.of(showtime));
+        when(ticketRepository.existsByShowtime_Id(100L)).thenReturn(false);
+
         assertDoesNotThrow(() -> showtimeService.deleteShowtimeById(100L));
 
         verify(showtimeRepository, times(1)).delete(showtime);
     }
 
-
     @Test
     void getShowtimeById_Success() {
-        when(showtimeRepository.findById(100L)).thenReturn(Optional.of(showtime));
+        when(showtimeRepository.findWithRefsById(100L)).thenReturn(Optional.of(showtime));
         when(showtimeMapper.mapShowtimeToResponse(showtime)).thenReturn(response);
 
         ResponseMessage<ShowtimeResponse> result = showtimeService.getShowtimeById(100L);
@@ -162,16 +169,22 @@ class ShowtimeServiceTest {
                 .movieId(10L)
                 .build();
 
-        when(showtimeRepository.findById(100L)).thenReturn(Optional.of(showtime));
+        when(showtimeRepository.findWithRefsById(100L)).thenReturn(Optional.of(showtime));
         when(hallService.findHallById(1L)).thenReturn(hall);
         when(movieService.findMovieById(10L)).thenReturn(movie);
 
-        // mapper update metodu void olduğundan sadece doNothing
+        // mapper void, biz içeride entity'yi elle güncelliyoruz
         doAnswer(invocation -> {
-            Showtime s = invocation.getArgument(0);
-            s.setDate(updateRequest.getDate());
-            s.setStartTime(updateRequest.getStartTime());
-            s.setEndTime(updateRequest.getEndTime());
+            Showtime s      = invocation.getArgument(0);
+            ShowtimeRequest r = invocation.getArgument(1);
+            Hall h          = invocation.getArgument(2);
+            Movie m         = invocation.getArgument(3);
+
+            s.setDate(r.getDate());
+            s.setStartTime(r.getStartTime());
+            s.setEndTime(r.getEndTime());
+            s.setHall(h);
+            s.setMovie(m);
             return null;
         }).when(showtimeMapper).updateShowtimeFromRequest(eq(showtime), eq(updateRequest), eq(hall), eq(movie));
 
@@ -185,23 +198,21 @@ class ShowtimeServiceTest {
         verify(showtimeRepository, times(1)).save(showtime);
     }
 
+    // ======================== S01 ENDPOINT TESTLERI ========================
 
-    // S01 ENDPOINT TESTS
     @Test
     void getShowtimesByCinemaId_Success_WithMultipleHallsAndMovies() {
-        // Arrange
         Long cinemaId = 1L;
         LocalDate testDate = LocalDate.now().plusDays(1);
 
         List<ShowtimeRepository.HallMovieTimeRow> mockRows = createMockRows(testDate);
 
-        when(cinemaRepository.findById(cinemaId)).thenReturn(Optional.of(cinema)); // uses initialized cinema
+        when(cinemaRepository.findById(cinemaId)).thenReturn(Optional.of(cinema));
         when(showtimeRepository.findShowtimesByCinemaId(cinemaId)).thenReturn(mockRows);
 
-        // Act
-        ResponseMessage<List<HallWithShowtimesResponse>> result = showtimeService.getShowtimesByCinemaId(cinemaId);
+        ResponseMessage<List<HallWithShowtimesResponse>> result =
+                showtimeService.getShowtimesByCinemaId(cinemaId);
 
-        // Assert
         assertNotNull(result);
         assertEquals(HttpStatus.OK, result.getHttpStatus());
         assertEquals(SuccessMessages.SHOWTIMES_FOUND_BY_CINEMA, result.getMessage());
@@ -209,28 +220,23 @@ class ShowtimeServiceTest {
         List<HallWithShowtimesResponse> halls = result.getReturnBody();
         assertEquals(2, halls.size());
 
-        // Verify halls are sorted by name (Hall-A should come before Hall-B)
         assertEquals("Hall-A", halls.get(0).getName());
         assertEquals("Hall-B", halls.get(1).getName());
 
-        // Verify first hall (Hall-A)
         HallWithShowtimesResponse firstHall = halls.get(0);
         assertEquals(1L, firstHall.getId());
         assertEquals(100, firstHall.getSeatCapacity());
         assertFalse(firstHall.getIsSpecial());
         assertEquals(2, firstHall.getMovies().size());
 
-        // Verify movies in first hall are sorted by title
         assertEquals("Movie-Alpha", firstHall.getMovies().get(0).getMovie().getTitle());
         assertEquals("Movie-Beta", firstHall.getMovies().get(1).getMovie().getTitle());
 
-        // Verify showtimes for Movie-Alpha in first hall
         HallMovieShowtimesResponse movieAlphaShowtimes = firstHall.getMovies().get(0);
         assertEquals(2, movieAlphaShowtimes.getTimes().size());
         assertEquals(LocalDateTime.of(testDate, LocalTime.of(14, 0)), movieAlphaShowtimes.getTimes().get(0));
         assertEquals(LocalDateTime.of(testDate, LocalTime.of(18, 0)), movieAlphaShowtimes.getTimes().get(1));
 
-        // Verify second hall (Hall-B)
         HallWithShowtimesResponse secondHall = halls.get(1);
         assertEquals(2L, secondHall.getId());
         assertEquals(200, secondHall.getSeatCapacity());
@@ -261,7 +267,7 @@ class ShowtimeServiceTest {
     @Test
     void getShowtimesByCinemaId_NoShowtimes_ThrowsResourceNotFoundException() {
         Long cinemaId = 1L;
-        when(cinemaRepository.findById(cinemaId)).thenReturn(Optional.of(cinema)); // uses initialized cinema
+        when(cinemaRepository.findById(cinemaId)).thenReturn(Optional.of(cinema));
         when(showtimeRepository.findShowtimesByCinemaId(cinemaId)).thenReturn(new ArrayList<>());
 
         ResourceNotFoundException ex = assertThrows(
@@ -285,22 +291,23 @@ class ShowtimeServiceTest {
                         testDate, LocalTime.of(20, 30))
         );
 
-        when(cinemaRepository.findById(cinemaId)).thenReturn(Optional.of(cinema)); // uses initialized cinema
+        when(cinemaRepository.findById(cinemaId)).thenReturn(Optional.of(cinema));
         when(showtimeRepository.findShowtimesByCinemaId(cinemaId)).thenReturn(mockRows);
 
-        ResponseMessage<List<HallWithShowtimesResponse>> result = showtimeService.getShowtimesByCinemaId(cinemaId);
+        ResponseMessage<List<HallWithShowtimesResponse>> result =
+                showtimeService.getShowtimesByCinemaId(cinemaId);
 
         List<HallWithShowtimesResponse> halls = result.getReturnBody();
         assertEquals(1, halls.size());
 
-        HallWithShowtimesResponse hall = halls.get(0);
-        assertEquals(1L, hall.getId());
-        assertEquals("Hall-Single", hall.getName());
-        assertEquals(150, hall.getSeatCapacity());
-        assertTrue(hall.getIsSpecial());
-        assertEquals(1, hall.getMovies().size());
+        HallWithShowtimesResponse hallResp = halls.get(0);
+        assertEquals(1L, hallResp.getId());
+        assertEquals("Hall-Single", hallResp.getName());
+        assertEquals(150, hallResp.getSeatCapacity());
+        assertTrue(hallResp.getIsSpecial());
+        assertEquals(1, hallResp.getMovies().size());
 
-        HallMovieShowtimesResponse movieShowtime = hall.getMovies().get(0);
+        HallMovieShowtimesResponse movieShowtime = hallResp.getMovies().get(0);
         assertEquals(10L, movieShowtime.getMovie().getId());
         assertEquals("Movie-Single", movieShowtime.getMovie().getTitle());
         assertEquals(1, movieShowtime.getTimes().size());
@@ -313,33 +320,32 @@ class ShowtimeServiceTest {
         LocalDate testDate = LocalDate.now().plusDays(1);
 
         List<ShowtimeRepository.HallMovieTimeRow> mockRows = List.of(
-                // Same movie in different halls
                 createMockRow(1L, "Hall-A", 100, false, 10L, "Popular-Movie",
                         testDate, LocalTime.of(14, 0)),
                 createMockRow(2L, "Hall-B", 200, true, 10L, "Popular-Movie",
                         testDate, LocalTime.of(16, 30))
         );
 
-        when(cinemaRepository.findById(cinemaId)).thenReturn(Optional.of(cinema)); // uses initialized cinema
+        when(cinemaRepository.findById(cinemaId)).thenReturn(Optional.of(cinema));
         when(showtimeRepository.findShowtimesByCinemaId(cinemaId)).thenReturn(mockRows);
 
-        ResponseMessage<List<HallWithShowtimesResponse>> result = showtimeService.getShowtimesByCinemaId(cinemaId);
+        ResponseMessage<List<HallWithShowtimesResponse>> result =
+                showtimeService.getShowtimesByCinemaId(cinemaId);
 
         List<HallWithShowtimesResponse> halls = result.getReturnBody();
         assertEquals(2, halls.size());
 
-        // Each hall should have the same movie separately
         assertEquals("Popular-Movie", halls.get(0).getMovies().get(0).getMovie().getTitle());
         assertEquals("Popular-Movie", halls.get(1).getMovies().get(0).getMovie().getTitle());
 
-        // But different showtimes
         assertEquals(LocalDateTime.of(testDate, LocalTime.of(14, 0)),
                 halls.get(0).getMovies().get(0).getTimes().get(0));
         assertEquals(LocalDateTime.of(testDate, LocalTime.of(16, 30)),
                 halls.get(1).getMovies().get(0).getTimes().get(0));
     }
 
-    // Helper methods to create mock data
+    // ======================== HELPER METOTLAR ========================
+
     private List<ShowtimeRepository.HallMovieTimeRow> createMockRows(LocalDate testDate) {
         return List.of(
                 // Hall 1 - Movie 1 (multiple showtimes)
@@ -361,45 +367,14 @@ class ShowtimeServiceTest {
             Long movieId, String movieTitle, LocalDate date, LocalTime startTime) {
 
         return new ShowtimeRepository.HallMovieTimeRow() {
-            @Override
-            public Long getHallId() {
-                return hallId;
-            }
-
-            @Override
-            public String getHallName() {
-                return hallName;
-            }
-
-            @Override
-            public Integer getSeatCapacity() {
-                return seatCapacity;
-            }
-
-            @Override
-            public Boolean getIsSpecial() {
-                return isSpecial;
-            }
-
-            @Override
-            public Long getMovieId() {
-                return movieId;
-            }
-
-            @Override
-            public String getMovieTitle() {
-                return movieTitle;
-            }
-
-            @Override
-            public LocalDate getDate() {
-                return date;
-            }
-
-            @Override
-            public LocalTime getStartTime() {
-                return startTime;
-            }
+            @Override public Long getHallId() { return hallId; }
+            @Override public String getHallName() { return hallName; }
+            @Override public Integer getSeatCapacity() { return seatCapacity; }
+            @Override public Boolean getIsSpecial() { return isSpecial; }
+            @Override public Long getMovieId() { return movieId; }
+            @Override public String getMovieTitle() { return movieTitle; }
+            @Override public LocalDate getDate() { return date; }
+            @Override public LocalTime getStartTime() { return startTime; }
         };
     }
 }

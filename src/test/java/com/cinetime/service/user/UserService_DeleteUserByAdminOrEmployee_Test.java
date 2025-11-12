@@ -2,6 +2,9 @@ package com.cinetime.service.user;
 
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.ConflictException;
+import com.cinetime.repository.business.FavoriteRepository;
+import com.cinetime.repository.business.PaymentRepository;
+import com.cinetime.repository.business.TicketRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.SecurityHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +27,15 @@ class UserService_DeleteUserByAdminOrEmployee_Test {
 
     @Mock
     private SecurityHelper securityHelper;
+
+    @Mock
+    private TicketRepository ticketRepository;
+
+    @Mock
+    private PaymentRepository paymentRepository;
+
+    @Mock
+    private FavoriteRepository favoriteRepository; // 🔹 EKLENDI
 
     @InjectMocks
     private UserService userService;
@@ -50,7 +62,6 @@ class UserService_DeleteUserByAdminOrEmployee_Test {
         Long userId = 1L;
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
-
         // Admin olduğu için employee checke girmesin
         when(securityHelper.isCallerEmployee(any())).thenReturn(false);
 
@@ -58,8 +69,17 @@ class UserService_DeleteUserByAdminOrEmployee_Test {
 
         assertNotNull(response);
         assertEquals(mockUser.getId(), response.getReturnBody().getId());
+
+        // ilişkili kayıtlar siliniyor mu?
+        verify(favoriteRepository).deleteAllByUser_Id(userId);
+        verify(ticketRepository).deleteAllByUser_Id(userId);
+        verify(paymentRepository).deleteAllByUser_Id(userId);
+
+        // user anonimleştirilip sonra siliniyor (BE’nin yaptığına göre)
+        verify(userRepository).save(mockUser);
         verify(userRepository).delete(mockUser);
     }
+
 
     @Test
     void deleteUserByAdminOrEmployee_BuiltInUser_ShouldThrowConflict() {
@@ -72,4 +92,3 @@ class UserService_DeleteUserByAdminOrEmployee_Test {
                 () -> userService.deleteUserByAdminOrEmployee(userId));
     }
 }
-

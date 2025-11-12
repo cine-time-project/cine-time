@@ -5,6 +5,9 @@ import com.cinetime.exception.ConflictException;
 import com.cinetime.payload.messages.SuccessMessages;
 import com.cinetime.payload.request.user.UserUpdateRequest;
 import com.cinetime.payload.response.user.UserResponse;
+import com.cinetime.repository.business.FavoriteRepository;
+import com.cinetime.repository.business.PaymentRepository;
+import com.cinetime.repository.business.TicketRepository;
 import com.cinetime.repository.user.RoleRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.MailHelper;
@@ -40,6 +43,15 @@ class UserService_UpdateAuthenticatedUser_Test {
     @Mock
     private MailHelper mailHelper;
 
+    @Mock
+    private TicketRepository ticketRepository;
+
+    @Mock
+    private PaymentRepository paymentRepository;
+
+    @Mock
+    private FavoriteRepository favoriteRepository; // önemli: delete için kullanılıyor
+
     @InjectMocks
     private UserService userService;
 
@@ -59,7 +71,6 @@ class UserService_UpdateAuthenticatedUser_Test {
                 new TestingAuthenticationToken("test@cinetime.com", "password")
         );
     }
-
 
     // U06 - updateAuthenticatedUser
     @Test
@@ -89,10 +100,19 @@ class UserService_UpdateAuthenticatedUser_Test {
     @Test
     void deleteAuthenticatedUser_ShouldDeleteAndReturnMessage() {
         when(securityHelper.loadByLoginProperty(anyString())).thenReturn(testUser);
+        // ticket/payment için özel stub’a gerek yok, mock’ların default dönüşü null/false
 
         String result = userService.deleteAuthenticatedUser();
 
         assertEquals(SuccessMessages.USER_DELETED, result);
-        verify(userRepository).delete(testUser);
+
+        // ilişkili kayıtların temizlendiğini kontrol etmek istersen:
+        verify(favoriteRepository).deleteAllByUser_Id(testUser.getId());
+
+        // BE’nin yaptığı gerçek çağrı bu:
+        verify(userRepository).deleteById(testUser.getId());
+
+        // istersen kaydedildiğini de verify edebilirsin (anonimleştiriyor olabilir):
+        // verify(userRepository).save(testUser);
     }
 }
