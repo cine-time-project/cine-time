@@ -68,6 +68,9 @@ public class ErrorMessages {
 
     //Google
     public static final String INVALID_TOKEN_ID = "Invalid Google Token ID";
+
+    //Payment
+    public static final String PAYMENT_NOT_FOUND ="Payment not FOUND";
 }
 
 
