@@ -2,7 +2,9 @@ package com.cinetime.service.business;
 
 import com.cinetime.entity.business.Payment;
 import com.cinetime.entity.enums.PaymentStatus;
+import com.cinetime.exception.ResourceNotFoundException;
 import com.cinetime.payload.mappers.PaymentMapper;
+import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.request.business.PaymentFilter;
 import com.cinetime.payload.response.business.PaymentResponse;
 import com.cinetime.payload.response.user.UserPaymentSummaryResponse;
@@ -52,4 +54,25 @@ public class PaymentService {
         var last  = paymentRepository.lastAtByUserAndStatus(userId, status);
         return new UserPaymentSummaryResponse(total, count, last);
     }
+
+    @Transactional
+    public void deletePaymentById(Long paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.PAYMENT_NOT_FOUND));
+        // CascadeType.ALL on Payment.tickets will remove tickets automatically
+        paymentRepository.delete(payment);
+    }
+
+    @Transactional
+    public void deletePaymentForUser(Long paymentId, Long userId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorMessages.PAYMENT_NOT_FOUND));
+
+        if (!payment.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException(ErrorMessages.ACCESS_DANIED);
+        }
+        paymentRepository.delete(payment);
+    }
 }
+
+
