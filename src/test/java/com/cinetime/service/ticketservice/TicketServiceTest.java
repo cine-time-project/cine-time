@@ -1,5 +1,6 @@
-package com.cinetime.service.business;
+package com.cinetime.service.ticketservice;
 
+import com.cinetime.entity.business.Hall;
 import com.cinetime.entity.business.Payment;
 import com.cinetime.entity.business.Showtime;
 import com.cinetime.entity.business.Ticket;
@@ -18,6 +19,7 @@ import com.cinetime.repository.business.PaymentRepository;
 import com.cinetime.repository.business.ShowtimeRepository;
 import com.cinetime.repository.business.TicketRepository;
 import com.cinetime.repository.user.UserRepository;
+import com.cinetime.service.business.TicketService;
 import com.cinetime.service.helper.MailHelper;
 import com.cinetime.service.helper.PageableHelper;
 import com.cinetime.service.mail.MailService;
@@ -55,7 +57,7 @@ public class TicketServiceTest {
     @Mock TicketMapper ticketMapper;
     @Mock PaymentMapper paymentMapper;
     @Mock PageableHelper pageableHelper;
-    @Mock MailService mailService; // present in service constructor
+    @Mock MailService mailService;
     @Mock MailHelper mailHelper;
 
     @InjectMocks
@@ -66,6 +68,7 @@ public class TicketServiceTest {
     private User user;
     private Showtime showtimeFuture;
     private Showtime showtimePast;
+    private Hall hall;
 
     @BeforeEach
     void setUp() {
@@ -79,17 +82,27 @@ public class TicketServiceTest {
         LocalDate today = LocalDate.now();
         LocalTime now   = LocalTime.now();
 
+        // ✅ Create Hall entity
+        hall = Hall.builder()
+                .id(1L)
+                .name("Main Hall")
+                .seatCapacity(100)
+                .isSpecial(false)
+                .build();
+
         showtimeFuture = new Showtime();
         showtimeFuture.setId(10L);
         showtimeFuture.setDate(today.plusDays(1));
         showtimeFuture.setStartTime(now);
         showtimeFuture.setEndTime(now.plusHours(2));
+        showtimeFuture.setHall(hall);  // ✅ SET HALL
 
         showtimePast = new Showtime();
         showtimePast.setId(11L);
         showtimePast.setDate(today.minusDays(1));
         showtimePast.setStartTime(LocalTime.of(18, 0));
         showtimePast.setEndTime(LocalTime.of(20, 0));
+        showtimePast.setHall(hall);  // ✅ SET HALL
     }
 
     private BuyTicketRequest.SeatInfo seat(String letter, int number) {
@@ -153,6 +166,12 @@ public class TicketServiceTest {
                 .user(user)
                 .build();
         when(paymentRepository.saveAndFlush(any(Payment.class))).thenReturn(pending);
+
+        // ✅ Mock seat capacity check
+        when(ticketRepository.countByShowtime_IdAndStatusIn(
+                eq(10L),
+                eq(List.of(TicketStatus.PAID, TicketStatus.RESERVED))
+        )).thenReturn(5L);  // 5 seats taken, 95 available
 
         // Seats free
         when(ticketRepository.existsByShowtime_IdAndSeatLetterAndSeatNumber(10L, "B", 12)).thenReturn(false);
@@ -275,6 +294,12 @@ public class TicketServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(paymentRepository.saveAndFlush(any(Payment.class))).thenReturn(new Payment());
 
+        // ✅ Mock seat capacity check
+        when(ticketRepository.countByShowtime_IdAndStatusIn(
+                eq(10L),
+                eq(List.of(TicketStatus.PAID, TicketStatus.RESERVED))
+        )).thenReturn(5L);
+
         when(ticketRepository.existsByShowtime_IdAndSeatLetterAndSeatNumber(eq(10L), eq("Z"), eq(6))).thenReturn(true);
 
         BuyTicketRequest req = buyReq("Fight Club","Hall 1","CineTime Downtown",
@@ -294,6 +319,13 @@ public class TicketServiceTest {
         )).thenReturn(Optional.of(showtimeFuture));
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(paymentRepository.saveAndFlush(any(Payment.class))).thenReturn(new Payment());
+
+        // ✅ Mock seat capacity check
+        when(ticketRepository.countByShowtime_IdAndStatusIn(
+                eq(10L),
+                eq(List.of(TicketStatus.PAID, TicketStatus.RESERVED))
+        )).thenReturn(5L);
+
         when(ticketRepository.existsByShowtime_IdAndSeatLetterAndSeatNumber(anyLong(), anyString(), anyInt()))
                 .thenReturn(false);
         when(ticketRepository.saveAllAndFlush(anyList())).thenThrow(new DataIntegrityViolationException("dup"));
@@ -319,6 +351,12 @@ public class TicketServiceTest {
 
         Payment pending = new Payment(); pending.setId(500L);
         when(paymentRepository.saveAndFlush(any(Payment.class))).thenReturn(pending);
+
+        // ✅ Mock seat capacity check
+        when(ticketRepository.countByShowtime_IdAndStatusIn(
+                eq(10L),
+                eq(List.of(TicketStatus.PAID, TicketStatus.RESERVED))
+        )).thenReturn(5L);
 
         when(ticketRepository.existsByShowtime_IdAndSeatLetterAndSeatNumber(anyLong(), anyString(), anyInt()))
                 .thenReturn(false);
