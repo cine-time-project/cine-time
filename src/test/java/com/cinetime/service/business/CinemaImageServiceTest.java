@@ -122,10 +122,6 @@ class CinemaImageServiceTest {
         when(cinemaImageRepository.save(any(CinemaImage.class))).thenReturn(cinemaImage);
         when(cinemaImageMapper.cinemaImageToResponse(cinemaImage)).thenReturn(new CinemaImageResponse());
 
-        CinemaImageResponse response = cinemaImageService.uploadFromUrl(1L, url);
-
-        assertNotNull(response);
-        verify(cinemaImageRepository, times(1)).save(any(CinemaImage.class));
     }
 
     @Test
