@@ -37,9 +37,8 @@ public class ShowtimeMapper {
                 .movieSlug(showtime.getMovie().getSlug())
                 .movieTitle(showtime.getMovie().getTitle())
                 .moviePosterUrl(movieMapper.toMiniResponse(showtime.getMovie()).getPosterUrl())
-                .movieSummary(showtime.getMovie().getSummary())
-                .movieDuration(showtime.getMovie().getDuration())
-                .movieRating(showtime.getMovie().getRating())
+                //Whole movieResponse for MovieList in Cinema
+                .movie(movieMapper.toMiniResponse(showtime.getMovie()))
                 //Hall Data
                 .hallId(hall.getId())
                 //Cinema Data
