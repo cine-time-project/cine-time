@@ -24,6 +24,9 @@ public class ShowtimeSimpleResponse {
     private String movieTitle;
     private String moviePosterUrl;
     private String movieSlug;
+    private Integer movieDuration;
+    private String movieSummary;
+    private Double movieRating;
     //Hall Data
     private Long hallId;
     //CinemaData

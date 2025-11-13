@@ -6,11 +6,15 @@ import com.cinetime.entity.business.Showtime;
 import com.cinetime.payload.request.business.ShowtimeRequest;
 import com.cinetime.payload.response.business.ShowtimeResponse;
 import com.cinetime.payload.response.business.ShowtimeSimpleResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class ShowtimeMapper {
+
+    private final MovieMapper movieMapper;
 
     public Showtime mapRequestToShowtime(ShowtimeRequest request, Hall hall, Movie movie) {
         return Showtime.builder()
@@ -32,7 +36,10 @@ public class ShowtimeMapper {
                 .movieId(showtime.getMovie().getId())
                 .movieSlug(showtime.getMovie().getSlug())
                 .movieTitle(showtime.getMovie().getTitle())
-                .moviePosterUrl(showtime.getMovie().getPosterUrl())
+                .moviePosterUrl(movieMapper.toMiniResponse(showtime.getMovie()).getPosterUrl())
+                .movieSummary(showtime.getMovie().getSummary())
+                .movieDuration(showtime.getMovie().getDuration())
+                .movieRating(showtime.getMovie().getRating())
                 //Hall Data
                 .hallId(hall.getId())
                 //Cinema Data
