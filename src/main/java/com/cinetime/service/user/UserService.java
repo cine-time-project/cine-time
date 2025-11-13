@@ -43,6 +43,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -410,6 +411,15 @@ public class UserService {
         userResponse.setName(user.getName());
         userResponse.setSurname(user.getSurname());
         userResponse.setEmail(user.getEmail());
+        userResponse.setPhoneNumber(user.getPhoneNumber());
+        userResponse.setGender(String.valueOf(user.getGender()));
+        userResponse.setRoles(
+                user.getRoles().stream()
+                        .map(Role::getRoleName)  // returns RoleName enum
+                        .collect(Collectors.toSet())
+        );
+        userResponse.setId(user.getId());
+        userResponse.setBirthDate(user.getBirthDate());
         return userResponse;
     }
 }
