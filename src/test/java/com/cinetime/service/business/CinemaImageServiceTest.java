@@ -110,7 +110,7 @@ class CinemaImageServiceTest {
     }
 
     // ================= uploadFromUrl =================
-    @Test
+      @Test
     void uploadFromUrl_success() {
         when(cinemaRepository.findById(1L)).thenReturn(Optional.of(cinema));
         when(cinemaImageRepository.save(any(CinemaImage.class))).thenReturn(cinemaImage);
@@ -124,6 +124,7 @@ class CinemaImageServiceTest {
         assertNotNull(resp);
         verify(cinemaImageRepository).save(any(CinemaImage.class));
     }
+  
     @Test
     void uploadFromUrl_conflict_whenAlreadyHasImage() {
         cinema.setCinemaImage(cinemaImage);
