@@ -62,7 +62,7 @@ class UserService_DeleteUserByAdminOrEmployee_Test {
         Long userId = 1L;
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
-        // Admin olduğu için employee checke girmesin
+
         when(securityHelper.isCallerEmployee(any())).thenReturn(false);
 
         var response = userService.deleteUserByAdminOrEmployee(userId);
@@ -70,12 +70,12 @@ class UserService_DeleteUserByAdminOrEmployee_Test {
         assertNotNull(response);
         assertEquals(mockUser.getId(), response.getReturnBody().getId());
 
-        // ilişkili kayıtlar siliniyor mu?
+
         verify(favoriteRepository).deleteAllByUser_Id(userId);
         verify(ticketRepository).deleteAllByUser_Id(userId);
         verify(paymentRepository).deleteAllByUser_Id(userId);
 
-        // user anonimleştirilip sonra siliniyor (BE’nin yaptığına göre)
+
         verify(userRepository).save(mockUser);
         verify(userRepository).delete(mockUser);
     }

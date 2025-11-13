@@ -33,7 +33,7 @@ class SpecialHallServiceTest {
     @org.mockito.Mock private SpecialHallRepository repo;
     @org.mockito.Mock private HallRepository hallRepo;
     @org.mockito.Mock private SpecialHallTypeRepository typeRepo;
-    @org.mockito.Mock private HallRepository hallRepository; // getHallPricing için
+    @org.mockito.Mock private HallRepository hallRepository; // for getHallPricing
 
     private SpecialHallService service;
 

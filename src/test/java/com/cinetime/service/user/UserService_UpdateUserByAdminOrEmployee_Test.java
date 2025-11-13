@@ -41,16 +41,15 @@ class UserService_UpdateUserByAdminOrEmployee_Test {
         mockUser = new User();
         mockUser.setId(1L);
         mockUser.setBuiltIn(false);
-        // rollerle uğraşmıyoruz, servisin gerçek davranışını test edeceğiz
 
-        // Çağıran kullanıcıyı sahte bir kullanıcı yapıyoruz
+
         SecurityContextHolder.getContext().setAuthentication(
                 new TestingAuthenticationToken("employee@cinetime.local", "password", "ROLE_EMPLOYEE")
         );
     }
 
     // ---------------- U10 - Update User by Admin/Employee ----------------
-    // Şu anki servisin davranışı: employee non-MEMBER kullanıcıda AccessDenied fırlatıyor.
+
     @Test
     void updateUserByAdminOrEmployee_EmployeeOnNonMember_ShouldThrowAccessDenied() {
         Long userId = 1L;

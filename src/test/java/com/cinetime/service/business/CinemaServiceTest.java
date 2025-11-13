@@ -76,9 +76,6 @@ class CinemaServiceTest {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-
-
-
     }
 
     // ===========================================================
@@ -147,26 +144,26 @@ class CinemaServiceTest {
 
     @Test
     void delete_ShouldDeleteCinema_WhenExists() {
-                when(cinemaRepository.findById(10L)).thenReturn(Optional.of(cinema));
+        when(cinemaRepository.findById(10L)).thenReturn(Optional.of(cinema));
 
-                       var response = cinemaService.deleteMultiple(List.of(10L));
+        var response = cinemaService.deleteMultiple(List.of(10L));
 
-                        assertThat(response.getHttpStatus()).isEqualTo(HttpStatus.OK);
-                // service mesajı ids.size() ile formatlıyor → 1
-                        assertThat(response.getMessage())
-                                .isEqualTo(String.format(SuccessMessages.CINEMA_DELETED, 1));
+        assertThat(response.getHttpStatus()).isEqualTo(HttpStatus.OK);
+        // service formats the message with ids.size() → 1
+        assertThat(response.getMessage())
+                .isEqualTo(String.format(SuccessMessages.CINEMA_DELETED, 1));
 
-                        verify(cinemaRepository).delete(cinema);
-            }
+        verify(cinemaRepository).delete(cinema);
+    }
 
     @Test
     void delete_ShouldThrow_WhenNotFound() {
-                when(cinemaRepository.findById(404L)).thenReturn(Optional.empty());
+        when(cinemaRepository.findById(404L)).thenReturn(Optional.empty());
 
-                        assertThatThrownBy(() -> cinemaService.deleteMultiple(List.of(404L)))
-                                .isInstanceOf(ResourceNotFoundException.class)
-                                .hasMessageContaining(String.format(ErrorMessages.CINEMA_NOT_FOUND, 404L));
-            }
+        assertThatThrownBy(() -> cinemaService.deleteMultiple(List.of(404L)))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(String.format(ErrorMessages.CINEMA_NOT_FOUND, 404L));
+    }
 
     @Test
     void listCinemas_ShouldReturnPage_WhenCityExists() {
@@ -190,7 +187,7 @@ class CinemaServiceTest {
         lenient().when(hallMapper.toSpecial(any()))
                 .thenReturn(SpecialHallResponse.builder()
                         .id(1L)
-                        .hallName("IMAX Hall")   // <-- name() DEĞİL
+                        .hallName("IMAX Hall")   // <-- not name()
                         .build());
 
         var result = cinemaService.getAllSpecialHalls();

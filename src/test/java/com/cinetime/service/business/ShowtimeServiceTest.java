@@ -46,9 +46,9 @@ class ShowtimeServiceTest {
     @Mock
     private CinemaRepository cinemaRepository;
     @Mock
-    private CityMapper cityMapper; // constructor için gerekli
+    private CityMapper cityMapper; // required for constructor
     @Mock
-    private TicketRepository ticketRepository; // constructor + deleteShowtime için gerekli
+    private TicketRepository ticketRepository; // required for constructor + deleteShowtime
 
     @InjectMocks
     private ShowtimeService showtimeService;
@@ -104,7 +104,7 @@ class ShowtimeServiceTest {
                 .build();
     }
 
-    // ======================== CRUD TESTLERI ========================
+    // ======================== CRUD TESTS ========================
 
     @Test
     void saveShowtime_Success() {
@@ -173,7 +173,7 @@ class ShowtimeServiceTest {
         when(hallService.findHallById(1L)).thenReturn(hall);
         when(movieService.findMovieById(10L)).thenReturn(movie);
 
-        // mapper void, biz içeride entity'yi elle güncelliyoruz
+        // mapper is void, we manually update the entity inside
         doAnswer(invocation -> {
             Showtime s      = invocation.getArgument(0);
             ShowtimeRequest r = invocation.getArgument(1);
@@ -198,7 +198,7 @@ class ShowtimeServiceTest {
         verify(showtimeRepository, times(1)).save(showtime);
     }
 
-    // ======================== S01 ENDPOINT TESTLERI ========================
+    // ======================== S01 ENDPOINT TESTS ========================
 
     @Test
     void getShowtimesByCinemaId_Success_WithMultipleHallsAndMovies() {
@@ -344,7 +344,7 @@ class ShowtimeServiceTest {
                 halls.get(1).getMovies().get(0).getTimes().get(0));
     }
 
-    // ======================== HELPER METOTLAR ========================
+    // ======================== HELPER METHODS ========================
 
     private List<ShowtimeRepository.HallMovieTimeRow> createMockRows(LocalDate testDate) {
         return List.of(

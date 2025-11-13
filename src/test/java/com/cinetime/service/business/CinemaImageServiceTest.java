@@ -116,7 +116,7 @@ class CinemaImageServiceTest {
         when(cinemaImageRepository.save(any(CinemaImage.class))).thenReturn(cinemaImage);
         when(cinemaImageMapper.cinemaImageToResponse(cinemaImage)).thenReturn(new CinemaImageResponse());
 
-        // HTTP 200 + image dönen bir URL kullan
+        // Use a URL that returns HTTP 200 + an image
         String url = "https://httpbin.org/image/png";
 
         CinemaImageResponse resp = cinemaImageService.uploadFromUrl(1L, url);

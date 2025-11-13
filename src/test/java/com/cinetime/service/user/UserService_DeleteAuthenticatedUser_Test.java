@@ -72,7 +72,7 @@ public class UserService_DeleteAuthenticatedUser_Test {
         );
     }
 
-    // ✅ U07 - deleteAuthenticatedUser (başarılı senaryo)
+    //  U07 - deleteAuthenticatedUser
     @Test
     void deleteAuthenticatedUser_ShouldDeleteAndReturnMessage() {
         when(securityHelper.loadByLoginProperty(anyString())).thenReturn(testUser);
@@ -81,7 +81,7 @@ public class UserService_DeleteAuthenticatedUser_Test {
 
         assertEquals(SuccessMessages.USER_DELETED, result);
 
-        // ilişkili kayıtların silindiğini doğrula
+
         verify(favoriteRepository).deleteAllByUser_Id(testUser.getId());
         verify(ticketRepository).deleteAllByUser_Id(testUser.getId());
         verify(paymentRepository).deleteAllByUser_Id(testUser.getId());
@@ -91,7 +91,7 @@ public class UserService_DeleteAuthenticatedUser_Test {
         verify(userRepository).deleteById(testUser.getId());
     }
 
-    // ❌ builtIn kullanıcı silinemez
+    // builtIn user can not deleted
     @Test
     void deleteAuthenticatedUser_ShouldThrow_WhenBuiltInUser() {
         testUser.setBuiltIn(true);

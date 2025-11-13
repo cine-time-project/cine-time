@@ -106,13 +106,11 @@ class UserService_UpdateAuthenticatedUser_Test {
 
         assertEquals(SuccessMessages.USER_DELETED, result);
 
-        // ilişkili kayıtların temizlendiğini kontrol etmek istersen:
+
         verify(favoriteRepository).deleteAllByUser_Id(testUser.getId());
 
-        // BE’nin yaptığı gerçek çağrı bu:
+
         verify(userRepository).deleteById(testUser.getId());
 
-        // istersen kaydedildiğini de verify edebilirsin (anonimleştiriyor olabilir):
-        // verify(userRepository).save(testUser);
     }
 }

@@ -32,7 +32,7 @@ class SpecialHallTypeServiceTest {
     private SpecialHallTypeService service;
 
     private SpecialHallTypeService createService() {
-        // @RequiredArgsConstructor tek parametre alıyor
+        // @RequiredArgsConstructor takes a single parameter
         return new SpecialHallTypeService(repo);
     }
 
@@ -107,7 +107,7 @@ class SpecialHallTypeServiceTest {
         SpecialHallTypeRequest req = new SpecialHallTypeRequest();
         req.setName("IMAX");
 
-        // isim daha önce yok
+        // name does not exist yet
         when(repo.findByNameIgnoreCase("IMAX")).thenReturn(Optional.empty());
 
         SpecialHallType entToSave = new SpecialHallType();
@@ -171,7 +171,7 @@ class SpecialHallTypeServiceTest {
         ent.setName("OLD");
 
         when(repo.findById(id)).thenReturn(Optional.of(ent));
-        // aynı entity üzerine aynı isim → conflict yok
+        // same entity with the same name → no conflict
         when(repo.findByNameIgnoreCase("Dolby Atmos")).thenReturn(Optional.of(ent));
 
         SpecialHallTypeResponse dto = new SpecialHallTypeResponse();
@@ -225,7 +225,7 @@ class SpecialHallTypeServiceTest {
         current.setId(id);
 
         SpecialHallType other = new SpecialHallType();
-        other.setId(2L); // farklı id → conflict
+        other.setId(2L); // different id → conflict
 
         when(repo.findById(id)).thenReturn(Optional.of(current));
         when(repo.findByNameIgnoreCase("VIP")).thenReturn(Optional.of(other));
