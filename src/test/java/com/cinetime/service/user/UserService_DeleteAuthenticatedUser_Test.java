@@ -3,6 +3,9 @@ package com.cinetime.service.user;
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.ConflictException;
 import com.cinetime.payload.messages.SuccessMessages;
+import com.cinetime.repository.business.FavoriteRepository;
+import com.cinetime.repository.business.PaymentRepository;
+import com.cinetime.repository.business.TicketRepository;
 import com.cinetime.repository.user.RoleRepository;
 import com.cinetime.repository.user.UserRepository;
 import com.cinetime.service.helper.MailHelper;
@@ -39,6 +42,15 @@ public class UserService_DeleteAuthenticatedUser_Test {
     @Mock
     private MailHelper mailHelper;
 
+    @Mock
+    private TicketRepository ticketRepository;
+
+    @Mock
+    private PaymentRepository paymentRepository;
+
+    @Mock
+    private FavoriteRepository favoriteRepository;
+
     @InjectMocks
     private UserService userService;
 
@@ -54,12 +66,13 @@ public class UserService_DeleteAuthenticatedUser_Test {
         testUser.setPassword("encodedPass");
         testUser.setBuiltIn(false);
 
+        // Authenticated user simülasyonu
         SecurityContextHolder.getContext().setAuthentication(
                 new TestingAuthenticationToken("test@cinetime.com", "password")
         );
     }
 
-    // ✅ U07 - deleteAuthenticatedUser
+    //  U07 - deleteAuthenticatedUser
     @Test
     void deleteAuthenticatedUser_ShouldDeleteAndReturnMessage() {
         when(securityHelper.loadByLoginProperty(anyString())).thenReturn(testUser);
@@ -67,9 +80,18 @@ public class UserService_DeleteAuthenticatedUser_Test {
         String result = userService.deleteAuthenticatedUser();
 
         assertEquals(SuccessMessages.USER_DELETED, result);
-        verify(userRepository).delete(testUser);
+
+
+        verify(favoriteRepository).deleteAllByUser_Id(testUser.getId());
+        verify(ticketRepository).deleteAllByUser_Id(testUser.getId());
+        verify(paymentRepository).deleteAllByUser_Id(testUser.getId());
+
+        // servis içinde önce save, sonra deleteById çağrılıyor
+        verify(userRepository).save(testUser);
+        verify(userRepository).deleteById(testUser.getId());
     }
 
+    // builtIn user can not deleted
     @Test
     void deleteAuthenticatedUser_ShouldThrow_WhenBuiltInUser() {
         testUser.setBuiltIn(true);

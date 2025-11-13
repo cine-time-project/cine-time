@@ -12,13 +12,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
 class UserService_UpdateUserByAdminOrEmployee_Test {
@@ -42,29 +42,23 @@ class UserService_UpdateUserByAdminOrEmployee_Test {
         mockUser.setId(1L);
         mockUser.setBuiltIn(false);
 
-        // Sahte authentication (ADMIN gibi davranıyor)
+
         SecurityContextHolder.getContext().setAuthentication(
-                new TestingAuthenticationToken("admin@cinetime.local", "password", "ROLE_ADMIN")
+                new TestingAuthenticationToken("employee@cinetime.local", "password", "ROLE_EMPLOYEE")
         );
     }
 
     // ---------------- U10 - Update User by Admin/Employee ----------------
+
     @Test
-    void updateUserByAdminOrEmployee_ShouldReturnUpdatedUser() {
+    void updateUserByAdminOrEmployee_EmployeeOnNonMember_ShouldThrowAccessDenied() {
         Long userId = 1L;
         UserUpdateRequest request = new UserUpdateRequest();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
-        when(userRepository.save(any(User.class))).thenReturn(mockUser);
 
-        // Employee/admin kontrolü için sahte izin verelim
-        when(securityHelper.isCallerEmployee(any())).thenReturn(false);
-
-        UserResponse response = userService.updateUserByAdminOrEmployee(userId, request).getReturnBody();
-
-        assertNotNull(response);
-        assertEquals(mockUser.getId(), response.getId());
-        verify(userRepository).save(mockUser);
+        assertThrows(AccessDeniedException.class,
+                () -> userService.updateUserByAdminOrEmployee(userId, request));
     }
 
     @Test
@@ -80,4 +74,3 @@ class UserService_UpdateUserByAdminOrEmployee_Test {
                 () -> userService.updateUserByAdminOrEmployee(userId, new UserUpdateRequest()));
     }
 }
-

@@ -76,9 +76,6 @@ class CinemaServiceTest {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-
-
-
     }
 
     // ===========================================================
@@ -149,11 +146,12 @@ class CinemaServiceTest {
     void delete_ShouldDeleteCinema_WhenExists() {
         when(cinemaRepository.findById(10L)).thenReturn(Optional.of(cinema));
 
-        var response = cinemaService.delete(10L);
+        var response = cinemaService.deleteMultiple(List.of(10L));
 
         assertThat(response.getHttpStatus()).isEqualTo(HttpStatus.OK);
+        // service formats the message with ids.size() → 1
         assertThat(response.getMessage())
-                .isEqualTo(String.format(SuccessMessages.CINEMA_DELETED, 10L));
+                .isEqualTo(String.format(SuccessMessages.CINEMA_DELETED, 1));
 
         verify(cinemaRepository).delete(cinema);
     }
@@ -162,7 +160,7 @@ class CinemaServiceTest {
     void delete_ShouldThrow_WhenNotFound() {
         when(cinemaRepository.findById(404L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> cinemaService.delete(404L))
+        assertThatThrownBy(() -> cinemaService.deleteMultiple(List.of(404L)))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining(String.format(ErrorMessages.CINEMA_NOT_FOUND, 404L));
     }
@@ -187,7 +185,10 @@ class CinemaServiceTest {
     void getAllSpecialHalls_ShouldReturnList() {
         lenient().when(hallRepository.findByIsSpecialTrueOrderByNameAsc()).thenReturn(List.of());
         lenient().when(hallMapper.toSpecial(any()))
-                .thenReturn(SpecialHallResponse.builder().id(1L).name("IMAX Hall").build());
+                .thenReturn(SpecialHallResponse.builder()
+                        .id(1L)
+                        .hallName("IMAX Hall")   // <-- not name()
+                        .build());
 
         var result = cinemaService.getAllSpecialHalls();
 

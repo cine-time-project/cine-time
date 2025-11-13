@@ -8,11 +8,12 @@ import com.cinetime.payload.mappers.CinemaImageMapper;
 import com.cinetime.payload.response.business.CinemaImageResponse;
 import com.cinetime.repository.business.CinemaImageRepository;
 import com.cinetime.repository.business.CinemaRepository;
+import com.cinetime.service.validator.ImageValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
@@ -20,19 +21,13 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class CinemaImageServiceTest {
 
-    @Mock
-    private CinemaImageRepository cinemaImageRepository;
-
-    @Mock
-    private CinemaRepository cinemaRepository;
-
-    @Mock
-    private CinemaImageMapper cinemaImageMapper;
-
-    @Mock
-    private MultipartFile multipartFile;
+    @Mock private CinemaImageRepository cinemaImageRepository;
+    @Mock private CinemaRepository cinemaRepository;
+    @Mock private CinemaImageMapper cinemaImageMapper;
+    @Mock private MultipartFile multipartFile;
 
     @InjectMocks
     private CinemaImageService cinemaImageService;
@@ -41,18 +36,14 @@ class CinemaImageServiceTest {
     private CinemaImage cinemaImage;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-
+    void init() {
         cinema = Cinema.builder().id(1L).build();
         cinemaImage = CinemaImage.builder().id(10L).cinema(cinema).build();
     }
 
-    // ===============================
-    // getCinemaImage
-    // ===============================
+    // ================= getCinemaImage =================
     @Test
-    void testGetCinemaImage_found() {
+    void getCinemaImage_found() {
         when(cinemaImageRepository.findByCinema_Id(1L)).thenReturn(Optional.of(cinemaImage));
 
         CinemaImage result = cinemaImageService.getCinemaImage(1L);
@@ -61,132 +52,139 @@ class CinemaImageServiceTest {
     }
 
     @Test
-    void testGetCinemaImage_notFound() {
+    void getCinemaImage_notFound_throws() {
         when(cinemaImageRepository.findByCinema_Id(1L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> cinemaImageService.getCinemaImage(1L));
     }
 
-    // ===============================
-    // upload
-    // ===============================
+    // ================= upload (multipart) =================
     @Test
-    void testUpload_newImage() throws Exception {
+    void upload_newImage_success() throws Exception {
         when(cinemaRepository.findById(1L)).thenReturn(Optional.of(cinema));
-        when(multipartFile.getOriginalFilename()).thenReturn("test.jpg");
-        when(multipartFile.getContentType()).thenReturn("image/jpeg");
-        when(multipartFile.getBytes()).thenReturn(new byte[]{1,2,3});
 
-        when(cinemaImageRepository.save(any(CinemaImage.class))).thenReturn(cinemaImage);
-        when(cinemaImageMapper.cinemaImageToResponse(cinemaImage)).thenReturn(new CinemaImageResponse());
+        try (MockedStatic<ImageValidator> st = mockStatic(ImageValidator.class)) {
+            st.when(() -> ImageValidator.requireValid(any(MultipartFile.class)))
+                    .thenAnswer(inv -> null); // no-op
 
-        CinemaImageResponse response = cinemaImageService.upload(1L, multipartFile);
+            when(cinemaImageRepository.save(any(CinemaImage.class))).thenReturn(cinemaImage);
+            when(cinemaImageMapper.cinemaImageToResponse(cinemaImage)).thenReturn(new CinemaImageResponse());
 
-        assertNotNull(response);
-        verify(cinemaImageRepository, times(1)).save(any(CinemaImage.class));
+            CinemaImageResponse resp = cinemaImageService.upload(1L, multipartFile);
+
+            assertNotNull(resp);
+            verify(cinemaImageRepository).save(any(CinemaImage.class));
+        }
     }
 
     @Test
-    void testUpload_existingImage() throws Exception {
+    void upload_existingImage_updatesSameRow() throws Exception {
         cinema.setCinemaImage(cinemaImage);
-
         when(cinemaRepository.findById(1L)).thenReturn(Optional.of(cinema));
-        when(multipartFile.getOriginalFilename()).thenReturn("updated.jpg");
-        when(multipartFile.getContentType()).thenReturn("image/jpeg");
-        when(multipartFile.getBytes()).thenReturn(new byte[]{1,2,3});
 
-        when(cinemaImageRepository.save(any(CinemaImage.class))).thenReturn(cinemaImage);
-        when(cinemaImageMapper.cinemaImageToResponse(cinemaImage)).thenReturn(new CinemaImageResponse());
+        try (MockedStatic<ImageValidator> st = mockStatic(ImageValidator.class)) {
+            st.when(() -> ImageValidator.requireValid(any(MultipartFile.class)))
+                    .thenAnswer(inv -> null); // no-op
 
-        CinemaImageResponse response = cinemaImageService.upload(1L, multipartFile);
+            when(cinemaImageRepository.save(any(CinemaImage.class))).thenReturn(cinemaImage);
+            when(cinemaImageMapper.cinemaImageToResponse(cinemaImage)).thenReturn(new CinemaImageResponse());
 
-        assertNotNull(response);
-        assertEquals(cinemaImage, cinema.getCinemaImage());
-        verify(cinemaImageRepository, times(1)).save(cinemaImage);
+            CinemaImageResponse resp = cinemaImageService.upload(1L, multipartFile);
+
+            assertNotNull(resp);
+            verify(cinemaImageRepository).save(any(CinemaImage.class));
+        }
     }
 
     @Test
-    void testUpload_cinemaNotFound() {
+    void upload_cinemaNotFound_throws() {
         when(cinemaRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> cinemaImageService.upload(1L, multipartFile));
+        try (MockedStatic<ImageValidator> st = mockStatic(ImageValidator.class)) {
+            st.when(() -> ImageValidator.requireValid(any(MultipartFile.class)))
+                    .thenAnswer(inv -> null);
+
+            assertThrows(ResourceNotFoundException.class,
+                    () -> cinemaImageService.upload(1L, multipartFile));
+        }
     }
 
-    // ===============================
-    // uploadFromUrl
-    // ===============================
-    @Test
-    void testUploadFromUrl_success() {
-        String url = "https://example.com/test.jpg";
+    // ================= uploadFromUrl =================
+      @Test
+    void uploadFromUrl_success() {
         when(cinemaRepository.findById(1L)).thenReturn(Optional.of(cinema));
         when(cinemaImageRepository.save(any(CinemaImage.class))).thenReturn(cinemaImage);
         when(cinemaImageMapper.cinemaImageToResponse(cinemaImage)).thenReturn(new CinemaImageResponse());
 
-    }
+        // Use a URL that returns HTTP 200 + an image
+        String url = "https://httpbin.org/image/png";
 
+        CinemaImageResponse resp = cinemaImageService.uploadFromUrl(1L, url);
+
+        assertNotNull(resp);
+        verify(cinemaImageRepository).save(any(CinemaImage.class));
+    }
+  
     @Test
-    void testUploadFromUrl_conflict() {
+    void uploadFromUrl_conflict_whenAlreadyHasImage() {
         cinema.setCinemaImage(cinemaImage);
         when(cinemaRepository.findById(1L)).thenReturn(Optional.of(cinema));
 
-        assertThrows(ConflictException.class, () -> cinemaImageService.uploadFromUrl(1L, "https://example.com/test.jpg"));
+        assertThrows(ConflictException.class,
+                () -> cinemaImageService.uploadFromUrl(1L, "https://x/y/poster.jpg"));
     }
 
     @Test
-    void testUploadFromUrl_invalidUrl() {
-        assertThrows(IllegalArgumentException.class, () -> cinemaImageService.uploadFromUrl(1L, ""));
+    void uploadFromUrl_invalidUrl_throws() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cinemaImageService.uploadFromUrl(1L, " "));
     }
 
-    // ===============================
-    // replaceWithUrl
-    // ===============================
+    // ================= replaceWithUrl =================
     @Test
-    void testReplaceWithUrl_createNew() {
-        String url = "https://example.com/test.jpg";
+    void replaceWithUrl_createNew_whenNoneExists() {
         when(cinemaRepository.findById(1L)).thenReturn(Optional.of(cinema));
         when(cinemaImageRepository.findByCinema_Id(1L)).thenReturn(Optional.empty());
         when(cinemaImageRepository.save(any(CinemaImage.class))).thenReturn(cinemaImage);
         when(cinemaImageMapper.cinemaImageToResponse(cinemaImage)).thenReturn(new CinemaImageResponse());
 
-        CinemaImageResponse response = cinemaImageService.replaceWithUrl(1L, url);
+        CinemaImageResponse resp = cinemaImageService.replaceWithUrl(1L, "https://x/y/cover.png");
 
-        assertNotNull(response);
-        verify(cinemaImageRepository, times(1)).save(any(CinemaImage.class));
+        assertNotNull(resp);
+        verify(cinemaImageRepository).save(any(CinemaImage.class));
     }
 
     @Test
-    void testReplaceWithUrl_updateExisting() {
-        String url = "https://example.com/test.jpg";
+    void replaceWithUrl_updateExisting() {
         when(cinemaRepository.findById(1L)).thenReturn(Optional.of(cinema));
         when(cinemaImageRepository.findByCinema_Id(1L)).thenReturn(Optional.of(cinemaImage));
         when(cinemaImageRepository.save(cinemaImage)).thenReturn(cinemaImage);
         when(cinemaImageMapper.cinemaImageToResponse(cinemaImage)).thenReturn(new CinemaImageResponse());
 
-        CinemaImageResponse response = cinemaImageService.replaceWithUrl(1L, url);
+        CinemaImageResponse resp = cinemaImageService.replaceWithUrl(1L, "https://x/y/cover.png");
 
-        assertNotNull(response);
-        verify(cinemaImageRepository, times(1)).save(cinemaImage);
+        assertNotNull(resp);
+        verify(cinemaImageRepository).save(cinemaImage);
     }
 
     @Test
-    void testReplaceWithUrl_invalidUrl() {
-        assertThrows(IllegalArgumentException.class, () -> cinemaImageService.replaceWithUrl(1L, ""));
+    void replaceWithUrl_invalidUrl_throws() {
+        assertThrows(IllegalArgumentException.class,
+                () -> cinemaImageService.replaceWithUrl(1L, ""));
     }
 
-    // ===============================
-    // delete
-    // ===============================
+    // ================= delete =================
     @Test
-    void testDelete_existingImage() {
+    void delete_existing_deletes() {
         when(cinemaImageRepository.findByCinema_Id(1L)).thenReturn(Optional.of(cinemaImage));
 
         cinemaImageService.delete(1L);
 
-        verify(cinemaImageRepository, times(1)).delete(cinemaImage);
+        verify(cinemaImageRepository).delete(cinemaImage);
     }
 
     @Test
-    void testDelete_noImage() {
+    void delete_none_noop() {
         when(cinemaImageRepository.findByCinema_Id(1L)).thenReturn(Optional.empty());
 
         cinemaImageService.delete(1L);

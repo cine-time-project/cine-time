@@ -4,7 +4,6 @@ import com.cinetime.entity.enums.RoleName;
 import com.cinetime.entity.user.GoogleUser;
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.ConflictException;
-import com.cinetime.payload.mappers.UserMapper;
 import com.cinetime.payload.messages.ErrorMessages;
 import com.cinetime.payload.request.user.GoogleRegisterRequest;
 import com.cinetime.payload.request.user.UserRegisterRequest;
@@ -29,39 +28,29 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceUnitTest {
+class UserService_SaveUser_Test {
 
-    @Mock
-    private UserRepository userRepository;
-    @Mock
-    private GoogleUserRepository googleUserRepository;
-    @Mock
-    private RoleRepository roleRepository;
-    @Mock
-    private RoleService roleService;
-    @Mock
-    private PasswordEncoder passwordEncoder;
-    @Mock
-    private UserMapper userMapper;  // ✅ EKLENDI
-    @Mock
-    private JavaMailSender mailSender;  // ✅ EKLENDI
-    @Mock
-    private MailHelper mailHelper;  // ✅ EKLENDI
-    @Mock
-    private SecurityHelper securityHelper;  // ✅ EKLENDI
-    @Mock
-    private TicketRepository ticketRepository;  // ✅ EKLENDI
-    @Mock
-    private FavoriteRepository favoriteRepository;  // ✅ EKLENDI
-    @Mock
-    private PaymentRepository paymentRepository;  // ✅ EKLENDI
+    @Mock private UserRepository userRepository;
+    @Mock private GoogleUserRepository googleUserRepository;
+    @Mock private RoleRepository roleRepository;
+    @Mock private PasswordEncoder encoder;
+    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private RoleService roleService;
+    @Mock private JavaMailSender mailSender;
+    @Mock private MailHelper mailHelper;
+    @Mock private SecurityHelper securityHelper;
+    @Mock private TicketRepository ticketRepository;
+    @Mock private FavoriteRepository favoriteRepository;
+    @Mock private PaymentRepository paymentRepository;
 
     private UserService userService;
 
@@ -71,25 +60,27 @@ class UserServiceUnitTest {
                 userRepository,
                 googleUserRepository,
                 roleRepository,
-                passwordEncoder,
-                userMapper,           // ✅ DÜZELTILDI - null yerine mock
-                passwordEncoder,
+                encoder,           // 1. encoder alanı
+                null,              // UserMapper: serviste static kullanılıyor, bu field’a ihtiyacımız yok
+                passwordEncoder,   // 2. encoder alanı
                 roleService,
-                mailSender,           // ✅ EKLENDI
-                mailHelper,           // ✅ EKLENDI
-                securityHelper,       // ✅ EKLENDI
-                ticketRepository,     // ✅ EKLENDI
-                favoriteRepository,   // ✅ EKLENDI
-                paymentRepository     // ✅ EKLENDI
+                mailSender,
+                mailHelper,
+                securityHelper,
+                ticketRepository,
+                favoriteRepository,
+                paymentRepository
         );
+
+        // genel lenient stub’lar
+        lenient().when(roleRepository.findByRoleName(RoleName.MEMBER))
+                .thenReturn(Optional.of(mock(com.cinetime.entity.business.Role.class)));
+        lenient().when(encoder.encode(anyString())).thenReturn("ENCODED");
+        lenient().when(passwordEncoder.encode(anyString())).thenReturn("ENCODED2");
     }
 
-    // ---------------------------------------
-    // Test saveUser (normal user)
-    // ---------------------------------------
     @Test
     void saveUser_ShouldSaveNormalUser_WhenValidRequest() {
-        // Arrange
         UserRegisterRequest req = new UserRegisterRequest();
         req.setEmail("test@example.com");
         req.setPassword("password123");
@@ -99,53 +90,36 @@ class UserServiceUnitTest {
 
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(userRepository.existsByPhoneNumber(anyString())).thenReturn(false);
-        when(roleRepository.findByRoleName(RoleName.MEMBER))
-                .thenReturn(java.util.Optional.of(mock(com.cinetime.entity.business.Role.class)));
-        when(passwordEncoder.encode(anyString())).thenReturn("ENCODED_PASSWORD");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // Mock save to return a User with roles set
-        User savedUser = new User();
-        savedUser.setEmail("test@example.com");
-        savedUser.setName("John");
-        savedUser.setSurname("Doe");
-        savedUser.setRoles(java.util.Set.of());
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
-
-        // Mock PhoneUtils.toE164
         try (MockedStatic<PhoneUtils> phoneUtilsMock = mockStatic(PhoneUtils.class)) {
             phoneUtilsMock.when(() -> PhoneUtils.toE164(anyString(), anyString()))
                     .thenReturn("+905301234567");
 
-            // Act
             UserResponse response = userService.saveUser(req);
 
-            // Assert
+            // mapper gerçek çalıştığı için email’in aynen dönmesini bekliyoruz
             assertThat(response).isNotNull();
             assertThat(response.getEmail()).isEqualTo("test@example.com");
+
             verify(userRepository).save(any(User.class));
         }
     }
 
     @Test
     void saveUser_ShouldThrowConflict_WhenEmailExists() {
-        // Arrange
         UserRegisterRequest req = new UserRegisterRequest();
         req.setEmail("test@example.com");
 
         when(userRepository.existsByEmail(anyString())).thenReturn(true);
 
-        // Act & Assert
         assertThatThrownBy(() -> userService.saveUser(req))
                 .isInstanceOf(ConflictException.class)
                 .hasMessageContaining(ErrorMessages.EMAIL_NOT_UNIQUE);
     }
 
-    // ---------------------------------------
-    // Test saveGoogleUser
-    // ---------------------------------------
     @Test
     void saveGoogleUser_ShouldSave_WhenValidRequest() throws Exception {
-        // Arrange
         GoogleRegisterRequest req = new GoogleRegisterRequest();
         req.setEmail("google@example.com");
         req.setPassword("password123");
@@ -155,29 +129,18 @@ class UserServiceUnitTest {
         req.setLastName("Doe");
         req.setBirthDate(LocalDate.of(2000, 1, 1));
 
-        when(roleRepository.findByRoleName(RoleName.MEMBER))
-                .thenReturn(java.util.Optional.of(mock(com.cinetime.entity.business.Role.class)));
-        when(passwordEncoder.encode(anyString())).thenReturn("ENCODED_PASSWORD");
+        when(googleUserRepository.save(any(GoogleUser.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
-        // Mock save to return a GoogleUser with roles set
-        GoogleUser savedUser = new GoogleUser();
-        savedUser.setEmail("google@example.com");
-        savedUser.setName("John");
-        savedUser.setSurname("Doe");
-        savedUser.setRoles(java.util.Set.of());
-        when(googleUserRepository.save(any(GoogleUser.class))).thenReturn(savedUser);
-
-        // Mock PhoneUtils.toE164
         try (MockedStatic<PhoneUtils> phoneUtilsMock = mockStatic(PhoneUtils.class)) {
             phoneUtilsMock.when(() -> PhoneUtils.toE164(anyString(), anyString()))
                     .thenReturn("+905301234567");
 
-            // Act
             UserResponse response = userService.saveUser(req);
 
-            // Assert
             assertThat(response).isNotNull();
             assertThat(response.getEmail()).isEqualTo("google@example.com");
+
             verify(googleUserRepository).save(any(GoogleUser.class));
         }
     }

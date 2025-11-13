@@ -1,6 +1,5 @@
 package com.cinetime.service.user;
 
-
 import com.cinetime.entity.user.User;
 import com.cinetime.exception.BadRequestException;
 import com.cinetime.payload.request.user.ResetPasswordRequest;
@@ -28,16 +27,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * U04 – resetPasswordForAuthenticatedUser() unit tests
- * Covers: success, old password mismatch, new==old edge-case
+ * U04 – resetPasswordForAuthenticatedUser() unit tests.
+ * Covers: success, old password mismatch, new == old edge case.
  */
 public class UserService_ResetPasswordForAuthenticatedUser_Test {
 
     @Mock private UserRepository userRepository;
     @Mock private RoleRepository roleRepository;
-    @Mock private PasswordEncoder encoder;
+    @Mock private PasswordEncoder passwordEncoder; // this is the encoder used inside UserService
     @Mock private UserMapper userMapper;
-    @Mock private PasswordEncoder passwordEncoder; // kept because it's a final field in the service
     @Mock private RoleService roleService;
     @Mock private JavaMailSender mailSender;
     @Mock private MailHelper mailHelper;
@@ -49,11 +47,14 @@ public class UserService_ResetPasswordForAuthenticatedUser_Test {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+
         // Default security context for each test
         Authentication auth = mock(Authentication.class);
         when(auth.getName()).thenReturn("test@test.com");
+
         SecurityContext securityContext = mock(SecurityContext.class);
         when(securityContext.getAuthentication()).thenReturn(auth);
+
         SecurityContextHolder.setContext(securityContext);
     }
 
@@ -61,7 +62,10 @@ public class UserService_ResetPasswordForAuthenticatedUser_Test {
         User u = new User();
         u.setEmail("test@test.com");
         u.setPassword(encodedPassword);
+
         when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(u));
+        when(securityHelper.loadByLoginProperty("test@test.com")).thenReturn(u);
+
         return u;
     }
 
@@ -74,10 +78,10 @@ public class UserService_ResetPasswordForAuthenticatedUser_Test {
 
         User u = mockExistingUser("$encoded-old$");
 
-        // encoder behavior
-        when(encoder.matches("Old_Pass1!", "$encoded-old$")).thenReturn(true);  // old matches
-        when(encoder.matches("New_Pass1!", "$encoded-old$")).thenReturn(false); // new != old
-        when(encoder.encode("New_Pass1!")).thenReturn("$encoded-new$");
+        // encoder behavior for success scenario
+        when(passwordEncoder.matches("Old_Pass1!", "$encoded-old$")).thenReturn(true);   // old password matches
+        when(passwordEncoder.matches("New_Pass1!", "$encoded-old$")).thenReturn(false);  // new password is different
+        when(passwordEncoder.encode("New_Pass1!")).thenReturn("$encoded-new$");
 
         // when
         assertDoesNotThrow(() -> userService.resetPasswordForAuthenticatedUser(req));
@@ -96,10 +100,13 @@ public class UserService_ResetPasswordForAuthenticatedUser_Test {
 
         mockExistingUser("$encoded-old$");
 
-        when(encoder.matches("Wrong_Old1!", "$encoded-old$")).thenReturn(false);
+        // old password does not match
+        when(passwordEncoder.matches("Wrong_Old1!", "$encoded-old$")).thenReturn(false);
 
         // when / then
-        assertThrows(BadRequestException.class, () -> userService.resetPasswordForAuthenticatedUser(req));
+        assertThrows(BadRequestException.class,
+                () -> userService.resetPasswordForAuthenticatedUser(req));
+
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -112,13 +119,13 @@ public class UserService_ResetPasswordForAuthenticatedUser_Test {
 
         mockExistingUser("$encoded-same$");
 
-        // old matches
-        when(encoder.matches("Same_Pass1!", "$encoded-same$")).thenReturn(true);
-        // new also matches old (edge-case guarded in service)
-        when(encoder.matches("Same_Pass1!", "$encoded-same$")).thenReturn(true);
+        // both old and new match the current encoded password
+        when(passwordEncoder.matches("Same_Pass1!", "$encoded-same$")).thenReturn(true);
 
         // when / then
-        assertThrows(BadRequestException.class, () -> userService.resetPasswordForAuthenticatedUser(req));
+        assertThrows(BadRequestException.class,
+                () -> userService.resetPasswordForAuthenticatedUser(req));
+
         verify(userRepository, never()).save(any(User.class));
     }
 }
