@@ -190,7 +190,13 @@ public class MovieMapper {
     }
 
     public MovieMiniResponse toMiniResponse(Movie movie) {
-        Image image = movie.getImages().stream().findFirst().orElse(null);
+
+        Image image = movie.getImages().stream()
+                .filter(Image::isPoster)
+                .findFirst()
+                .orElseGet(() -> movie.getImages().stream().findFirst().orElse(null));
+
+
         ImageResponse posterImageResponse = (image == null) ? null : imageMapper.toResponse(image);
         return MovieMiniResponse.builder()
                 .id(movie.getId())

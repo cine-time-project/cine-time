@@ -1,6 +1,7 @@
 package com.cinetime.payload.mappers;
 
 import com.cinetime.entity.business.Cinema;
+import com.cinetime.entity.business.CinemaImage;
 import com.cinetime.entity.business.City;
 import com.cinetime.entity.business.Country;
 import com.cinetime.payload.response.business.*;
@@ -23,15 +24,18 @@ public class CinemaMapper {
     public CinemaSummaryResponse toSummary(Cinema cinema) {
         if (cinema == null) return null;
 
+        // -----------------------------
+        // city & country
+        // -----------------------------
         CityMiniResponse cityMiniResponse = null;
         CountryMiniResponse countryMiniResponse = null;
         if (cinema.getCity() != null) {
             City city = cinema.getCity();
-
             cityMiniResponse = CityMiniResponse.builder()
                     .id(city.getId())
                     .name(city.getName())
                     .build();
+
             if (city.getCountry() != null) {
                 Country country = city.getCountry();
                 countryMiniResponse = CountryMiniResponse.builder()
@@ -41,72 +45,111 @@ public class CinemaMapper {
             }
         }
 
-
-        // Build imageUrl: prefer external URL; otherwise expose your binary endpoint
+        // -----------------------------
+        // imageUrl & cinemaImageUrl
+        // -----------------------------
         String imageUrl = null;
-        if (cinema.getCinemaImage() != null) {
-            String storedUrl = cinema.getCinemaImage().getUrl();
-            if (storedUrl != null && !storedUrl.isBlank()) {
-                imageUrl = storedUrl;
-            } else {
-                imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+        String cinemaImageUrl = null;
+
+        CinemaImage cinemaImage = cinema.getCinemaImage();
+        if (cinemaImage != null) {
+            if (cinemaImage.getData() != null && cinemaImage.getData().length > 0) {
+                // DB’de binary data varsa endpoint öncelikli
+                cinemaImageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
                         .path("/api/cinemaimages/")
                         .path(String.valueOf(cinema.getId()))
                         .toUriString();
             }
+
+            // Dış URL varsa fallback
+            if (cinemaImage.getUrl() != null && !cinemaImage.getUrl().isBlank()) {
+                imageUrl = cinemaImage.getUrl();
+            }
+
+            // Eğer binary data varsa, imageUrl’yi de endpoint olarak atayabiliriz
+            if (cinemaImageUrl != null && imageUrl == null) {
+                imageUrl = cinemaImageUrl;
+            }
         }
 
+        // -----------------------------
+        // build response
+        // -----------------------------
         return CinemaSummaryResponse.builder()
                 .id(cinema.getId())
                 .name(cinema.getName())
                 .city(cityMiniResponse)
                 .country(countryMiniResponse)
                 .imageUrl(imageUrl)
+                .cinemaImageUrl(cinemaImageUrl)
                 .build();
     }
 
+
+
+
     public CinemaDetailedResponse toDetailedResponse(Cinema cinema) {
+        if (cinema == null) return null;
+
+        // -----------------------------
+        // imageUrl & cinemaImageUrl
+        // -----------------------------
         String imageUrl = null;
-        if (cinema.getCinemaImage() != null) {
-            String storedUrl = cinema.getCinemaImage().getUrl();
-            if (storedUrl != null && !storedUrl.isBlank()) {
-                imageUrl = storedUrl;
-            } else {
-                imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+        String cinemaImageUrl = null;
+
+        CinemaImage cinemaImage = cinema.getCinemaImage();
+        if (cinemaImage != null) {
+            if (cinemaImage.getData() != null && cinemaImage.getData().length > 0) {
+                // DB’de binary data varsa endpoint üzerinden fetch
+                cinemaImageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
                         .path("/api/cinemaimages/")
                         .path(String.valueOf(cinema.getId()))
                         .toUriString();
             }
+
+            // DB’de URL varsa fallback
+            if (cinemaImage.getUrl() != null && !cinemaImage.getUrl().isBlank()) {
+                imageUrl = cinemaImage.getUrl();
+            }
+
+            // Eğer binary data varsa ve imageUrl null ise endpoint kullan
+            if (cinemaImageUrl != null && imageUrl == null) {
+                imageUrl = cinemaImageUrl;
+            }
         }
 
-        CinemaImageResponse cinemaImageResponse = (
-                cinema.getCinemaImage() == null
-                        ? null
-                        : cinemaImageMapper.cinemaImageToResponse(cinema.getCinemaImage())
-        );
-
+        // -----------------------------
+        // city mapper
+        // -----------------------------
         CityMiniResponse cityMiniResponse = cityMapper.cityToCityMiniResponse(cinema.getCity());
 
-        Set<HallResponse> hallResponses = (
-                (cinema.getHalls() != null && !cinema.getHalls().isEmpty())
-                        ? cinema.getHalls().stream().map(hallMapper::mapHallToResponse).collect(Collectors.toSet())
-                        : null);
+        // -----------------------------
+        // halls & showtimes
+        // -----------------------------
+        Set<HallResponse> hallResponses = (cinema.getHalls() != null && !cinema.getHalls().isEmpty())
+                ? cinema.getHalls().stream()
+                .map(hallMapper::mapHallToResponse)
+                .collect(Collectors.toSet())
+                : null;
 
-        Set<MovieMiniResponse> movieMiniResponses = (
-                cinema.getMovies() != null && !cinema.getMovies().isEmpty()
-                        ? cinema.getMovies().stream().map(movieMapper::toMiniResponse).collect(Collectors.toSet())
-                        : null);
+        // -----------------------------
+        // movies
+        // -----------------------------
+        Set<MovieMiniResponse> movieMiniResponses = (cinema.getMovies() != null && !cinema.getMovies().isEmpty())
+                ? cinema.getMovies().stream()
+                .map(movieMapper::toMiniResponse)
+                .collect(Collectors.toSet())
+                : null;
 
+        // -----------------------------
+        // Build response
+        // -----------------------------
         return CinemaDetailedResponse.builder()
                 .id(cinema.getId())
                 .name(cinema.getName())
                 .slug(cinema.getSlug())
                 .imageUrl(imageUrl)
-                .cinemaImageUrl(
-                        cinemaImageResponse == null
-                                ? null
-                                : cinemaImageResponse.getUrl()
-                )
+                .cinemaImageUrl(cinemaImageUrl)
                 .createdAt(cinema.getCreatedAt())
                 .updatedAt(cinema.getUpdatedAt())
                 .city(cityMiniResponse)
@@ -114,4 +157,7 @@ public class CinemaMapper {
                 .movies(movieMiniResponses)
                 .build();
     }
+
+
+
 }
